@@ -1,0 +1,21 @@
+# generated at build time (python3 build/gen.py)
+dist/
+build/fonts/
+build/fonts.css
+build/og/png/
+src/jobs/og-*.png
+# tooling
+node_modules/
+.wrangler/
+# session scratch
+*.zip
+package/
+dist-before/
+preview/
+sol-preview.html
+shot*.js
+pv.js
+rdtest.js
+verify.js
+livecheck.js
+cf-*.json
