@@ -265,7 +265,7 @@ SCHEMA = """<script type="application/ld+json">
 # ==========================================================================
 def build_home():
     facts = [
-        ('Opening', 'Khai trương', 'October 2026', 'Tháng 10 năm 2026'),
+        ('Opening', 'Khai trương', 'Soon', 'Sắp tới'),
         ('Where', 'Địa điểm', 'Tây Hồ, Hanoi', 'Tây Hồ, Hà Nội'),
         ('Kitchen', 'Bếp', 'Wood-fired, Italian-American', 'Lò củi, ẩm thực Ý–Mỹ'),
         ('Hours', 'Giờ mở cửa', 'Tue – Sun, 17:00 – 23:00', 'Thứ Ba – CN, 17:00 – 23:00'),
@@ -369,14 +369,14 @@ def build_home():
 </section>
 </main>
 """.format(
-        eyebrow=t('Opening October 2026 · Tây Hồ, Hanoi',
-                  'Khai trương tháng 10 năm 2026 · Tây Hồ, Hà Nội'),
+        eyebrow=t('Opening soon · Tây Hồ, Hanoi',
+                  'Sắp khai trương · Tây Hồ, Hà Nội'),
         h1=t('Sol comes back to Tây Hồ.', 'Sol trở lại Tây Hồ.'),
         sub=t('Italian-American, cooked over wood.', 'Ẩm thực Ý–Mỹ, nấu trên lửa củi.'),
-        sf_en='Sol Pizza closed last year. What opens this October on the same '
+        sf_en='Sol Pizza closed last year. What opens on the same '
               'stretch of Tây Hồ is the same idea with more room to breathe — a '
               'proper kitchen, a proper bar, and the oven we always wanted.',
-        sf_vi='Sol Pizza đã đóng cửa năm ngoái. Tháng 10 này, ngay trên con phố ấy '
+        sf_vi='Sol Pizza đã đóng cửa năm ngoái. Sắp tới, ngay trên con phố ấy '
               'ở Tây Hồ, chúng tôi mở lại với nhiều không gian hơn — một căn bếp '
               'đúng nghĩa, một quầy bar đúng nghĩa, và chiếc lò chúng tôi luôn mong muốn.',
         cta1=t('Book a table', 'Đặt bàn'), cta2=t('See the menu', 'Xem thực đơn'),
@@ -427,9 +427,9 @@ def build_home():
     return page('/', 'home',
         'Sol — Italian-American in Tây Hồ, Hanoi',
         'Sol — Ẩm thực Ý–Mỹ tại Tây Hồ, Hà Nội',
-        'Sol is an Italian-American restaurant opening in Tây Hồ, Hanoi in October 2026. '
+        'Sol is an Italian-American restaurant opening soon in Tây Hồ, Hanoi. '
         'Wood-fired pizza, pasta made in-house, and a bar built around amaro and Italian wine.',
-        'Sol là nhà hàng Ý–Mỹ khai trương tại Tây Hồ, Hà Nội vào tháng 10 năm 2026.',
+        'Sol là nhà hàng Ý–Mỹ sắp khai trương tại Tây Hồ, Hà Nội.',
         body, head_extra=SCHEMA)
 
 
@@ -1075,9 +1075,9 @@ def build_story():
 
     return page('/story/', 'story',
         'Story — Sol, Tây Hồ, Hanoi', 'Câu chuyện — Sol, Tây Hồ, Hà Nội',
-        'Sol Pizza closed last year. Sol opens in Tây Hồ, Hanoi in October 2026 — '
+        'Sol Pizza closed last year. Sol opens soon in Tây Hồ, Hanoi — '
         'the same idea, a bigger room and a Pavesi wood-fired oven.',
-        'Sol Pizza đã đóng cửa năm ngoái. Sol khai trương tại Tây Hồ, Hà Nội tháng 10 năm 2026.',
+        'Sol Pizza đã đóng cửa năm ngoái. Sol sắp khai trương tại Tây Hồ, Hà Nội.',
         body, ogtype='article')
 
 
@@ -1231,8 +1231,8 @@ def build_visit():
 """.format(
         eyebrow=t('Visit', 'Ghé thăm'),
         h1=t('Find us, and book a table', 'Tìm chúng tôi và đặt bàn'),
-        sf_en='Sol is on the first two floors of a building in Tây Hồ. From October 2026.',
-        sf_vi='Sol nằm ở hai tầng đầu của một toà nhà tại Tây Hồ. Từ tháng 10 năm 2026.',
+        sf_en='Sol is on the first two floors of a building in Tây Hồ. Opening soon.',
+        sf_vi='Sol nằm ở hai tầng đầu của một toà nhà tại Tây Hồ. Sắp khai trương.',
         k1=t('Reservations', 'Đặt bàn'),
         h2a=t('Book a table', 'Đặt bàn'),
         nojs=t('Booking needs JavaScript. Please call us on ' + PHONE + ' or email '
@@ -1244,8 +1244,8 @@ def build_visit():
         bnote_vi='Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn.',
         h2b=t('Hours', 'Giờ mở cửa'), cap=t('Opening hours', 'Giờ mở cửa'),
         hrows=hrows,
-        hnote_en='From our opening in October 2026.',
-        hnote_vi='Từ khi khai trương vào tháng 10 năm 2026.',
+        hnote_en='From the day we open.',
+        hnote_vi='Từ ngày chúng tôi khai trương.',
         h2c=t('Contact', 'Liên hệ'),
         l_addr=t('Address', 'Địa chỉ'), l_phone=t('Phone', 'Điện thoại'),
         l_email=t('Email', 'Email'),
@@ -1271,11 +1271,11 @@ def build_visit():
             '<div class="fallback">'
             '<h3><span data-l="en" lang="en">Booking opens soon</span>'
             '<span data-l="vi" lang="vi">Sắp mở đặt bàn</span></h3>'
-            '<p data-l="en" lang="en">Online reservations open closer to our October '
-            'opening. Until then, email <a href="mailto:' + EMAIL + '">' + EMAIL + '</a> '
+            '<p data-l="en" lang="en">Online reservations open closer to the day we '
+            'open. Until then, email <a href="mailto:' + EMAIL + '">' + EMAIL + '</a> '
             'and we will hold you a table on the first week.</p>'
-            '<p data-l="vi" lang="vi">Đặt bàn trực tuyến sẽ mở gần ngày khai trương '
-            'tháng 10. Trong thời gian này, hãy gửi email tới '
+            '<p data-l="vi" lang="vi">Đặt bàn trực tuyến sẽ mở gần ngày khai trương. '
+            'Trong thời gian này, hãy gửi email tới '
             '<a href="mailto:' + EMAIL + '">' + EMAIL + '</a> và chúng tôi sẽ giữ bàn '
             'cho bạn trong tuần đầu tiên.</p>'
             '<p style="margin-bottom:0"><a class="btn solid" href="mailto:' + EMAIL + '">'
@@ -1287,8 +1287,8 @@ def build_visit():
     return page('/visit/', 'visit',
         'Visit & book — Sol, Tây Hồ, Hanoi', 'Ghé thăm & đặt bàn — Sol, Tây Hồ, Hà Nội',
         'Address, opening hours and table reservations for Sol in Tây Hồ, Hanoi. '
-        'Opening October 2026.',
-        'Địa chỉ, giờ mở cửa và đặt bàn tại Sol, Tây Hồ, Hà Nội. Khai trương tháng 10 năm 2026.',
+        'Opening soon.',
+        'Địa chỉ, giờ mở cửa và đặt bàn tại Sol, Tây Hồ, Hà Nội. Sắp khai trương.',
         body, head_extra=SCHEMA)
 
 
@@ -1382,7 +1382,7 @@ def build_jobs():
         <span class="rc-go"><a href="mailto:jobs@sol.pizza?subject=Opening%%20team%%20%%E2%%80%%94%%20">%s</a></span>
       </div>""" % (
         t('Opening team — floor and kitchen', 'Đội ngũ khai trương — phục vụ và bếp'),
-        t('Hiring now for our October opening', 'Tuyển ngay cho khai trương tháng 10'),
+        t('Hiring now for our opening', 'Tuyển ngay cho ngày khai trương'),
         'Servers, bartenders, baristas, line cooks and kitchen porters for the first team '
         'in the new room. The Restaurant Supervisor and Head Chef are finalising each role; '
         'send us a CV now and we will come back to you as they open.',
@@ -1463,9 +1463,9 @@ def build_jobs():
 """.format(
         eyebrow=t('We are hiring · Tây Hồ, Hanoi', 'Tuyển dụng · Tây Hồ, Hà Nội'),
         h1=t('Come and build the new Sol', 'Cùng xây dựng Sol mới'),
-        sf_en='We open this October. The kitchen and the floor are being hired now, '
+        sf_en='We open soon. The kitchen and the floor are being hired now, '
               'and every application gets a reply.',
-        sf_vi='Chúng tôi khai trương tháng 10 này. Bếp và khu phục vụ đang tuyển ngay bây giờ, '
+        sf_vi='Chúng tôi sắp khai trương. Bếp và khu phục vụ đang tuyển ngay bây giờ, '
               'và mọi hồ sơ đều nhận được phản hồi.',
         k1=t('Open roles', 'Vị trí đang tuyển'),
         h2a=t('Where we need you', 'Chúng tôi cần bạn ở đâu'),
@@ -1505,9 +1505,9 @@ def build_jobs():
 
     page('/jobs/', 'jobs',
          'Careers at Sol — Tây Hồ, Hanoi', 'Tuyển dụng tại Sol — Tây Hồ, Hà Nội',
-         'Sol is hiring in Tây Hồ, Hanoi ahead of its October opening: Restaurant Accountant, '
+         'Sol is hiring in Tây Hồ, Hanoi ahead of opening: Restaurant Accountant, '
          'plus the opening floor and kitchen team.',
-         'Sol đang tuyển dụng tại Tây Hồ, Hà Nội trước khai trương tháng 10: Kế toán nhà hàng '
+         'Sol đang tuyển dụng tại Tây Hồ, Hà Nội trước ngày khai trương: Kế toán nhà hàng '
          'và đội ngũ phục vụ, bếp.',
          body, body_attrs=' data-page="index"', sticky='jobs')
 
