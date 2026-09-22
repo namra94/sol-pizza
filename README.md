@@ -1,6 +1,6 @@
 # sol.pizza — the main site
 
-Four new pages (home, menu, story, visit) added to the site that already
+Five pages (home, menu, wine, story, visit) alongside the site that already
 serves `/jobs/` and `/privacy/`. Static HTML, no framework, deploys to
 Cloudflare Pages the same way you've been deploying the careers site.
 
@@ -63,7 +63,8 @@ scrolling. Currently flagged:
 |---|---|
 | Everywhere (footer, home, visit) | Street address, phone number |
 | `visit/` | Opening hours, getting here, parking, max group size |
-| `menu/` | All dish names and every price |
+| `menu/` | Prices — every dish is listed, none of them priced yet |
+| `menu/` | Happy hour and wine night times — carried over from Sol Pizza, unconfirmed |
 | `story/` | What closing Sol Pizza meant; a paragraph on Ngoc |
 | Home + menu | Confirm ASU House Bakery is doing the puddings |
 | `build/gen.py` | Real Google Maps pin URL, real Instagram handle |
@@ -99,17 +100,36 @@ Edit both, or the two languages drift apart.
 
 ### The tidier way
 
-`build/gen.py` generates all four pages from one file, so the menu lives in
+`build/gen.py` generates all five pages from one file, so the menu lives in
 one Python list rather than scattered through HTML. To change a dish:
 
 ```python
-('Margherita', 'Margherita',
- 'Fior di latte, basil, olive oil.', 'Fior di latte, húng quế, dầu ô liu.',
- '180,000₫', ['v']),
-#  ↑name EN    ↑name VI    ↑desc EN    ↑desc VI    ↑price   ↑tags
+('Pepperoni', 'Pepperoni',
+ 'Tomatoes, mozzarella, pepperoni, parmigiano, basil.',
+ 'Cà chua, mozzarella, pepperoni, parmigiano, húng quế.',
+ '', ['hot']),
+#  ↑name EN   ↑name VI   ↑desc EN   ↑desc VI   ↑price   ↑tags
 ```
 
-Then run `python3 build/gen.py` and re-upload `dist/`.
+**Prices.** Every dish currently has `''` for a price, so no price column is
+drawn. Put a string in — `'340,000₫'` — and it appears on the right of that
+row. Nothing else has to change; you can price the menu one dish at a time.
+
+The four lists to edit, all near the top of their section in `build/gen.py`:
+
+| List | What it is |
+|---|---|
+| `MENU` | Small plates, pizza, pasta |
+| `TOPPINGS` | The chips under the pizza section |
+| `BAR` | Cocktails, beer, sake, soft drinks — everything but wine |
+| `WINES` | The `/wine/` page, by section |
+
+A wine row is `(name, grape, producer, region EN, region VI, tags)`, and the
+tags are `'glass'` (poured by the glass), `'house'` (house pour) and `'nat'`
+(natural / low-intervention) — the three keys in the legend at the top of the
+page. Dish tags are `'v'`, `'hot'` and `'new'`.
+
+Then run `python3 build/gen.py` and deploy.
 
 Use whichever you prefer — but pick one. If you hand-edit the HTML and then
 run the generator, the generator wins and your edits are gone.
@@ -134,7 +154,8 @@ partly a judgement call about what to translate and what to leave in Italian.
 
 ```
 index.html            Home
-menu/index.html       Menu
+menu/index.html       Menu — food, toppings, the bar
+wine/index.html       The wine list
 story/index.html      Story
 visit/index.html      Visit + ResDiary booking
 404.html              Not-found page
@@ -144,6 +165,7 @@ assets/fonts.css      Self-hosted webfonts
 assets/fonts/         EB Garamond + Be Vietnam Pro (woff2)
 assets/elevation.svg  The building elevation drawing used in the hero
 og-*.png              Share cards for WhatsApp / Facebook / Zalo
+                      (re-render with `node og.js`, then `python3 build/pack_assets.py`)
 sitemap.xml robots.txt _redirects
 jobs/ privacy/        Your existing pages, unchanged
 build/                The generator — not uploaded, keep it for editing

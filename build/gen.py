@@ -56,6 +56,7 @@ INSTAGRAM  = 'https://instagram.com/'                        # TODO: real handle
 NAV = [
     ('/',       'Home',  'Trang chủ'),
     ('/menu/',  'Menu',  'Thực đơn'),
+    ('/wine/',  'Wine',  'Vang'),
     ('/story/', 'Story', 'Câu chuyện'),
     ('/visit/', 'Visit', 'Ghé thăm'),
 ]
@@ -435,144 +436,467 @@ def build_home():
 # ==========================================================================
 # MENU
 # ==========================================================================
+# Transcribed from the Sol Pizza menu book (April 2025) — the kitchen Sol
+# Hanoi picks up from. Dish names are left as you order them; only the
+# descriptions are translated.
+#
 # Each dish: (name_en, name_vi, desc_en, desc_vi, price, tags)
-# price is a plain string — put the real number in when you have it.
+#   price  '' prints nothing. Put '270,000₫' in when the number is fixed and
+#          it appears on the right of the row — no other change needed.
+#   tags   'v' veg · 'hot' spicy · 'new' new
 MENU = [
- ('Antipasti', 'Khai vị',
-  'To share, while the oven catches up.',
-  'Để chia sẻ, trong lúc chờ lò nóng.',
+ ('Small Plates', 'Khai vị',
+  'To start, while the oven catches up.',
+  'Để mở đầu, trong lúc chờ lò nóng.',
   [
-   ('Focaccia, olive oil, sea salt', 'Focaccia, dầu ô liu, muối biển',
-    'Baked to order in the wood oven.', 'Nướng theo yêu cầu trong lò củi.',
-    '—', ['v']),
-   ('Whipped ricotta, honey, black pepper', 'Ricotta đánh bông, mật ong, tiêu đen',
-    'With grilled bread.', 'Ăn kèm bánh mì nướng.', '—', ['v']),
-   ('Meatballs, sugo, pecorino', 'Thịt viên, sốt cà chua, pecorino',
-    'Beef and pork, slow-cooked in tomato.', 'Bò và heo, om chậm trong cà chua.',
-    '—', []),
-   ('Chopped salad', 'Salad trộn',
-    'Little gem, salami, chickpeas, red onion, oregano.',
-    'Xà lách, salami, đậu gà, hành tím, oregano.', '—', []),
-   ('Clams, white wine, garlic, chilli', 'Nghêu, rượu vang trắng, tỏi, ớt',
-    'Local clams, plenty of bread.', 'Nghêu địa phương, ăn kèm nhiều bánh mì.',
-    '—', ['hot']),
+   ('Marinated Olives', 'Ô liu ướp', '', '', '', ['v']),
+   ('Antipasto', 'Antipasto',
+    'Wood roasted vegetables, 24 month prosciutto, marinated olives, and a bite of cheese.',
+    'Rau củ nướng lò củi, prosciutto ủ 24 tháng, ô liu ướp và một miếng phô mai.',
+    '', []),
+   ('Hummus', 'Hummus',
+    'Served with house bread.', 'Ăn kèm bánh mì nhà làm.', '', ['v']),
+   ('Meatballs with Ricotta', 'Thịt viên với ricotta', '', '', '', []),
+   ("Bain's Spinach Salad", "Salad rau chân vịt Bain",
+    'Da Lat baby spinach, 12 year aged balsamic, 24 month parmigiano, extra virgin olive oil.',
+    'Rau chân vịt non Đà Lạt, giấm balsamic ủ 12 năm, parmigiano 24 tháng, dầu ô liu nguyên chất.',
+    '', ['v']),
+   ('Caesar Salad', 'Salad Caesar',
+    'Add a chicken cutlet if you like.', 'Có thể thêm ức gà chiên xù.', '', []),
+   ('Prosciutto', 'Prosciutto',
+    '24 month prosciutto and house bread.',
+    'Prosciutto ủ 24 tháng và bánh mì nhà làm.', '', []),
   ]),
 
  ('Pizza', 'Pizza',
-  'Naturally leavened dough, fermented 48 hours, cooked in the Pavesi wood oven. '
-  'Twelve inches. We do not do half-and-half — sorry.',
-  'Bột lên men tự nhiên trong 48 giờ, nướng trong lò củi Pavesi. Đường kính 30 cm. '
-  'Chúng tôi không làm nửa nọ nửa kia — mong bạn thông cảm.',
+  'Cooked in the Pavesi wood oven. We do not do half-and-half — sorry.',
+  'Nướng trong lò củi Pavesi. Chúng tôi không làm nửa nọ nửa kia — mong bạn thông cảm.',
   [
-   ('Marinara', 'Marinara',
-    'Tomato, garlic, oregano, olive oil. No cheese, and none needed.',
-    'Cà chua, tỏi, oregano, dầu ô liu. Không phô mai, và không cần phô mai.',
-    '—', ['v']),
-   ('Margherita', 'Margherita',
-    'Fior di latte, basil, olive oil.', 'Fior di latte, húng quế, dầu ô liu.',
-    '—', ['v']),
-   ('Diavola', 'Diavola',
-    'Spicy salami, fior di latte, chilli honey.',
-    'Salami cay, fior di latte, mật ong ớt.', '—', ['hot']),
-   ('Quattro formaggi', 'Bốn loại phô mai',
-    'Four cheeses, walnut, thyme.', 'Bốn loại phô mai, óc chó, húng tây.',
-    '—', ['v']),
-   ('The Tây Hồ', 'Tây Hồ',
-    'Our house pie — ' + todo('[decide the toppings]') + '.',
-    'Pizza đặc trưng của quán — ' + todo('[chọn topping]') + '.',
-    '—', ['new']),
-   ('Bianca', 'Bianca',
-    'No tomato: mozzarella, potato, rosemary, black pepper.',
-    'Không cà chua: mozzarella, khoai tây, hương thảo, tiêu đen.', '—', ['v']),
+   ('Plain', 'Plain',
+    'Tomatoes, mozzarella, Sicilian oregano, olive oil, pecorino, basil.',
+    'Cà chua, mozzarella, oregano Sicily, dầu ô liu, pecorino, húng quế.', '', []),
+   ('Sol', 'Sol',
+    'Tomatoes, mozzarella, Calabrian chilli flakes, Sicilian oregano, caciocavallo, '
+    'olive oil, parmigiano, basil.',
+    'Cà chua, mozzarella, ớt Calabria, oregano Sicily, caciocavallo, dầu ô liu, '
+    'parmigiano, húng quế.', '', ['hot']),
+   ('White', 'White',
+    'Mozzarella, ricotta, caramelised onions, parmigiano, olive oil, parsley.',
+    'Mozzarella, ricotta, hành tây caramel, parmigiano, dầu ô liu, mùi tây.', '', ['v']),
+   ('Red', 'Red',
+    'Tomatoes, garlic, Sicilian oregano, olive oil, basil. No cheese, and none needed.',
+    'Cà chua, tỏi, oregano Sicily, dầu ô liu, húng quế. Không phô mai, và không cần phô mai.',
+    '', ['v']),
+   ('Pepperoni', 'Pepperoni',
+    'Tomatoes, mozzarella, pepperoni, parmigiano, basil.',
+    'Cà chua, mozzarella, pepperoni, parmigiano, húng quế.', '', []),
+   ('Nduja Know?', 'Nduja Know?',
+    "Tomatoes, nduja, sausage, roasted peppers, mozzarella, olive oil, pecorino, basil.",
+    'Cà chua, nduja, xúc xích, ớt chuông nướng, mozzarella, dầu ô liu, pecorino, húng quế.',
+    '', ['hot']),
+   ("Porchetta 'bout it!", "Porchetta 'bout it!",
+    'Porchetta, Sicilian oregano, taleggio, garlic, onion, parmigiano, lemon, parsley.',
+    'Porchetta, oregano Sicily, taleggio, tỏi, hành tây, parmigiano, chanh vàng, mùi tây.',
+    '', []),
+   ('Gricia', 'Gricia',
+    'Guanciale, taleggio, parmigiano, mozzarella, Phu Quoc black pepper, parsley.',
+    'Guanciale, taleggio, parmigiano, mozzarella, tiêu đen Phú Quốc, mùi tây.', '', []),
+   ('Speckenwolf', 'Speckenwolf',
+    'Mozzarella, parmigiano, onion, mushroom, speck, Phu Quoc black pepper, parsley.',
+    'Mozzarella, parmigiano, hành tây, nấm, speck, tiêu đen Phú Quốc, mùi tây.', '', []),
+   ('Falco', 'Falco',
+    'Tomatoes, Sicilian oregano, parmigiano, garlic, onions, sausage, basil, olive oil.',
+    'Cà chua, oregano Sicily, parmigiano, tỏi, hành tây, xúc xích, húng quế, dầu ô liu.',
+    '', []),
   ]),
 
  ('Pasta', 'Mì Ý',
-  'Made in-house every morning.',
-  'Làm tươi mỗi sáng tại nhà hàng.',
+  'Dinner only.', 'Chỉ phục vụ buổi tối.',
   [
-   ('Cacio e pepe', 'Cacio e pepe',
-    'Pecorino, black pepper, nothing else.', 'Pecorino, tiêu đen, không gì khác.',
-    '—', ['v']),
-   ('Rigatoni alla vodka', 'Rigatoni sốt vodka',
-    'The Italian-American one. Tomato, cream, a little heat.',
-    'Món Ý–Mỹ kinh điển. Cà chua, kem, chút cay.', '—', []),
-   ('Linguine alle vongole', 'Linguine nghêu',
-    'Clams, white wine, parsley.', 'Nghêu, vang trắng, mùi tây.', '—', []),
-   ('Lasagne', 'Lasagne',
-    'Slow ragù, béchamel, baked to order.',
-    'Ragù om chậm, sốt béchamel, nướng theo yêu cầu.', '—', []),
-  ]),
-
- ('From the fire', 'Món nướng lửa',
-  'Larger plates, for the middle of the table.',
-  'Món lớn, đặt giữa bàn để cùng thưởng thức.',
-  [
-   ('Whole fish, lemon, oregano', 'Cá nguyên con, chanh, oregano',
-    todo('[market fish]') + ', cooked in the oven.',
-    todo('[cá theo chợ]') + ', nướng trong lò.', '—', []),
-   ('Chicken alla diavola', 'Gà alla diavola',
-    'Half chicken, chilli, lemon, roasted hard.',
-    'Nửa con gà, ớt, chanh, nướng già lửa.', '—', ['hot']),
-   ('Chicken parmigiana', 'Gà parmigiana',
-    'Breaded, tomato, mozzarella. The most American thing we make.',
-    'Tẩm bột chiên, cà chua, mozzarella. Món Mỹ nhất trong bếp chúng tôi.',
-    '—', []),
-  ]),
-
- ('Sides', 'Món phụ', '', '',
-  [
-   ('Roast potatoes, rosemary', 'Khoai tây nướng, hương thảo', '', '', '—', ['v']),
-   ('Greens, garlic, chilli', 'Rau xanh, tỏi, ớt', '', '', '—', ['v']),
-   ('Tomato salad', 'Salad cà chua', '', '', '—', ['v']),
-  ]),
-
- ('Dolci', 'Tráng miệng', '', '',
-  [
-   ('Tiramisù', 'Tiramisù', '', '', '—', []),
-   ('Affogato', 'Affogato', 'Vietnamese coffee, vanilla gelato.',
-    'Cà phê Việt Nam, kem vani.', '—', []),
-   ('Lemon tart', 'Tart chanh', '', '', '—', []),
-  ]),
-
- ('Bar', 'Quầy bar',
-  'Amaro, vermouth, and a short Italian wine list that changes. '
-  'Ask us what just landed.',
-  'Amaro, vermouth và một danh sách vang Ý ngắn, thay đổi thường xuyên. '
-  'Hãy hỏi chúng tôi chai nào vừa về.',
-  [
-   ('Negroni', 'Negroni', '', '', '—', []),
-   ('Americano', 'Americano', '', '', '—', []),
-   ('Spritz', 'Spritz', 'Aperol, Select, or ' + todo('[house]') + '.',
-    'Aperol, Select, hoặc ' + todo('[đặc chế của quán]') + '.', '—', []),
-   ('Wine by the glass', 'Vang ly', 'Ask — the list moves.',
-    'Hãy hỏi — danh sách luôn thay đổi.', '—', []),
+   ('Norcina', 'Norcina',
+    'Rigatoni, house sausage, mushrooms, cream, white wine, parmigiano, parsley.',
+    'Rigatoni, xúc xích nhà làm, nấm, kem, vang trắng, parmigiano, mùi tây.', '', []),
+   ('Amatriciana', 'Amatriciana',
+    'Spaghettini, guanciale, tomatoes, white wine, chilli flakes, pecorino, basil.',
+    'Spaghettini, guanciale, cà chua, vang trắng, ớt khô, pecorino, húng quế.', '', ['hot']),
+   ('Chicken Parmesan', 'Chicken Parmesan',
+    'Spaghettini, fried chicken cutlet, tomatoes, vodka sauce, parmigiano, basil.',
+    'Spaghettini, ức gà chiên xù, cà chua, sốt vodka, parmigiano, húng quế.', '', []),
+   ('S&M', 'S&M',
+    'Spaghettini, meatballs, organic tomatoes, parmigiano, ricotta, basil.',
+    'Spaghettini, thịt viên, cà chua hữu cơ, parmigiano, ricotta, húng quế.', '', []),
   ]),
 ]
 
-TAGNAMES = {'v': ('Veg', 'Chay'), 'hot': ('Spicy', 'Cay'), 'new': ('New', 'Mới')}
+# Pizza toppings — add to any pie. (name_en, name_vi)
+TOPPINGS = [
+    ('Garlic', 'Tỏi'), ('Onion', 'Hành tây'), ('Basil', 'Húng quế'),
+    ('Parmigiano', 'Parmigiano'), ('Pecorino', 'Pecorino'),
+    ('Calabrian chillies', 'Ớt Calabria'), ('Mushrooms', 'Nấm'),
+    ('Roasted peppers', 'Ớt chuông nướng'), ('Mozzarella', 'Mozzarella'),
+    ('Kalamata olives', 'Ô liu Kalamata'), ('Pickled chillies', 'Ớt ngâm'),
+    ('Pepperoni', 'Pepperoni'), ('Nduja', 'Nduja'), ('Speck', 'Speck'),
+    ('Anchovy', 'Cá cơm muối'), ('Sausage', 'Xúc xích'), ('Sobrassada', 'Sobrassada'),
+]
+
+# The bar — everything except wine, which has its own page.
+BAR = [
+ ('Cocktails', 'Cocktail',
+  'A full bar, so ask for anything you like — these are the ones we pour most.',
+  'Quầy bar đầy đủ, bạn cứ gọi món mình thích — đây là những ly chúng tôi pha nhiều nhất.',
+  [
+   ('Sol Margarita', 'Sol Margarita',
+    'Don Julio reposado, agave, dry curaçao.', 'Don Julio reposado, agave, dry curaçao.',
+    '', []),
+   ('Proper G&T', 'Proper G&T',
+    'Beefeater 24, Fentimans yuzu tonic.', 'Beefeater 24, tonic yuzu Fentimans.', '', []),
+   ('Negroni', 'Negroni',
+    'Barrel aged gin, Campari, Antica Formula.',
+    'Gin ủ thùng gỗ, Campari, Antica Formula.', '', []),
+   ('Black Manhattan', 'Black Manhattan',
+    'Rittenhouse rye whiskey, Nonino, Averna, bitters.',
+    'Rittenhouse rye whiskey, Nonino, Averna, bitters.', '', []),
+   ('Last Word', 'Last Word',
+    'Beefeater, green Chartreuse, Luxardo, lime.',
+    'Beefeater, Chartreuse xanh, Luxardo, chanh.', '', []),
+   ('Pisco Sour', 'Pisco Sour',
+    'Pisco, lemon, lime, spring bitters.',
+    'Pisco, chanh vàng, chanh xanh, spring bitters.', '', []),
+   ('Sazerac', 'Sazerac',
+    'Rittenhouse rye whiskey, La Fée absinthe, chocolate bitters.',
+    'Rittenhouse rye whiskey, absinthe La Fée, chocolate bitters.', '', []),
+   ('Sbagliato', 'Sbagliato',
+    'Antica Formula, Campari, prosecco, orange.',
+    'Antica Formula, Campari, prosecco, cam.', '', []),
+   ('Daiquiri', 'Daiquiri',
+    "Clément barrel selection, Bob's daiquiri bitters.",
+    "Clément barrel selection, bitters daiquiri của Bob's.", '', []),
+  ]),
+
+ ('Beer', 'Bia', '', '',
+  [
+   ('Bia Craft Lager', 'Bia Craft Lager', 'On draft.', 'Bia tươi.', '', []),
+   ('Seasonal', 'Bia theo mùa', 'On draft — ask what is on.',
+    'Bia tươi — hỏi nhân viên hôm nay có loại gì.', '', []),
+   ('Dream Alone Pale Ale', 'Dream Alone Pale Ale', '', '', '', []),
+   ("Kurtz's Insane IPA", "Kurtz's Insane IPA", '', '', '', []),
+   ('Loose Rivet Hazy', 'Loose Rivet Hazy', '', '', '', []),
+   ('Eloquent Phantom Stout', 'Eloquent Phantom Stout', '', '', '', []),
+  ]),
+
+ ('Sake', 'Sake', '', '',
+  [
+   ('House sake', 'Sake của quán', 'On draft, 100ml.', 'Rót tươi, 100ml.', '', []),
+   ('Mimurosugi, Dio Abita', 'Mimurosugi, Dio Abita',
+    'Genshu junmai · Nara, Japan. By the glass or the bottle.',
+    'Genshu junmai · Nara, Nhật Bản. Phục vụ theo ly hoặc chai.', '', []),
+  ]),
+
+ ('Soft drinks', 'Đồ uống không cồn', '', '',
+  [
+   ('Still water', 'Nước suối', '', '', '', []),
+   ('Sparkling water', 'Nước có ga', '', '', '', []),
+   ('Lemonade', 'Nước chanh', '', '', '', []),
+   ('Alishan iced tea', 'Trà đá Alishan', '', '', '', []),
+   ('Dr Pepper', 'Dr Pepper', '', '', '', []),
+   ('Ginger beer', 'Bia gừng', '', '', '', []),
+   ('Kombucha', 'Kombucha', '', '', '', []),
+  ]),
+]
+
+TAGNAMES = {
+    'v':     ('Veg', 'Chay'),
+    'hot':   ('Spicy', 'Cay'),
+    'new':   ('New', 'Mới'),
+    'nat':   ('Natural', 'Tự nhiên'),
+    'house': ('House', 'Vang quán'),
+    'glass': ('By the glass', 'Theo ly'),
+}
+
+
+def dish_rows(dishes):
+    """Render a list of (name_en, name_vi, desc_en, desc_vi, price, tags)."""
+    rows = []
+    for d_en, d_vi, desc_en, desc_vi, price, tags in dishes:
+        tag_html = ''
+        if tags:
+            tag_html = '<span class="tags">' + ''.join(
+                '<span class="tag %s">%s</span>' % (tg, t(*TAGNAMES[tg]))
+                for tg in tags) + '</span>'
+        desc = ''
+        if desc_en or desc_vi:
+            desc = ('<p class="d-desc" data-l="en" lang="en">%s</p>'
+                    '<p class="d-desc" data-l="vi" lang="vi">%s</p>' % (desc_en, desc_vi))
+        price_html = '<p class="d-price">%s</p>' % price if price else ''
+        rows.append(
+            """      <div class="dish">
+        <div class="d-main">
+          <p class="d-name">%s%s</p>
+          %s
+        </div>
+        %s
+      </div>""" % (t(d_en, d_vi), tag_html, desc, price_html))
+    return rows
+
+
+def menu_sections(groups):
+    secs = []
+    for name_en, name_vi, note_en, note_vi, dishes in groups:
+        note = ''
+        if note_en or note_vi:
+            note = ('<p class="secnote" data-l="en" lang="en">%s</p>'
+                    '<p class="secnote" data-l="vi" lang="vi">%s</p>' % (note_en, note_vi))
+        secs.append("""    <div class="menusec">
+      <h2>%s</h2>
+      %s
+%s
+    </div>""" % (t(name_en, name_vi), note, '\n'.join(dish_rows(dishes))))
+    return secs
+
 
 def build_menu():
+    secs = menu_sections(MENU)
+
+    chips = '\n'.join('        <li>%s</li>' % t(en, vi) for en, vi in TOPPINGS)
+    toppings = """    <div class="menusec">
+      <h2>{h}</h2>
+      <p class="secnote" data-l="en" lang="en">{n_en}</p>
+      <p class="secnote" data-l="vi" lang="vi">{n_vi}</p>
+      <ul class="chips">
+{chips}
+      </ul>
+    </div>""".format(h=t('Toppings', 'Topping thêm'),
+                     n_en='Add any of these to any pizza.',
+                     n_vi='Thêm bất kỳ thứ nào bên dưới vào bất kỳ chiếc pizza nào.',
+                     chips=chips)
+
+    wine_card = """    <div class="card">
+      <h3 style="margin-top:0">{h}</h3>
+      <p data-l="en" lang="en">{p_en}</p>
+      <p data-l="vi" lang="vi">{p_vi}</p>
+      <p style="margin-bottom:0"><a class="btn solid" href="/wine/">{cta}</a></p>
+    </div>""".format(
+        h=t('Wine', 'Vang'),
+        p_en='Around forty bottles, most of them open by the glass, with a handful of '
+             'natural and low-intervention growers among them.',
+        p_vi='Khoảng bốn mươi chai, phần lớn phục vụ theo ly, trong đó có một số nhà làm '
+             'vang tự nhiên và ít can thiệp.',
+        cta=t('See the wine list', 'Xem danh sách vang'))
+
+    bar = menu_sections(BAR)
+
+    body = """<main id="main">
+<section class="pagehead">
+  <div class="wrap">
+    <p class="eyebrow">{eyebrow}</p>
+    <h1>{h1}</h1>
+    <p class="standfirst" data-l="en" lang="en">{sf_en}</p>
+    <p class="standfirst" data-l="vi" lang="vi">{sf_vi}</p>
+  </div>
+</section>
+
+<section class="band" style="padding-top:44px">
+  <div class="wrap prose">
+    <div class="card green" style="margin-bottom:38px">
+      <h2 style="margin-top:0;font-size:24px">{warn_h}</h2>
+      <p data-l="en" lang="en" style="margin-bottom:0">{warn_en}</p>
+      <p data-l="vi" lang="vi" style="margin-bottom:0">{warn_vi}</p>
+    </div>
+{secs}
+{toppings}
+{wine_card}
+
+    <h2 style="margin-top:46px">{bar_h}</h2>
+    <p class="lede" data-l="en" lang="en">{bar_en}</p>
+    <p class="lede" data-l="vi" lang="vi">{bar_vi}</p>
+{bar}
+
+    <div class="card green">
+      <h3 style="margin-top:0">{hh_h}</h3>
+      <p data-l="en" lang="en">{hh_en}</p>
+      <p data-l="vi" lang="vi">{hh_vi}</p>
+      <p data-l="en" lang="en" style="margin-bottom:0">{wn_en}</p>
+      <p data-l="vi" lang="vi" style="margin-bottom:0">{wn_vi}</p>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">{alg_h}</h3>
+      <p data-l="en" lang="en">{alg_en}</p>
+      <p data-l="vi" lang="vi">{alg_vi}</p>
+      <h3>{hr_h}</h3>
+      <ul data-l="en" lang="en" style="margin-bottom:0">{hr_en}</ul>
+      <ul data-l="vi" lang="vi" style="margin-bottom:0">{hr_vi}</ul>
+    </div>
+    <p style="margin-top:30px"><a class="btn solid" href="/visit/#book">{cta}</a></p>
+  </div>
+</section>
+</main>
+""".format(
+        eyebrow=t('Menu', 'Thực đơn'),
+        h1=t('What we are cooking', 'Chúng tôi nấu gì'),
+        sf_en='Wood-fired pizza, pasta made in-house, small plates to start, and a bar '
+              'that knows what it is doing.',
+        sf_vi='Pizza lò củi, mì Ý làm tại nhà hàng, món khai vị để mở đầu, và một quầy bar '
+              'biết mình đang làm gì.',
+        warn_h=t('A first draft', 'Bản nháp đầu tiên'),
+        warn_en='This is the menu we cooked at Sol Pizza, and it is where Sol Hanoi starts. '
+                'Dishes will move as the kitchen settles and the market changes, and prices '
+                'go up here once they are fixed.',
+        warn_vi='Đây là thực đơn chúng tôi từng nấu tại Sol Pizza, và là điểm khởi đầu của '
+                'Sol Hanoi. Các món sẽ còn thay đổi khi căn bếp ổn định và theo mùa của chợ; '
+                'giá sẽ được đăng khi đã chốt.',
+        secs='\n'.join(secs),
+        toppings=toppings,
+        wine_card=wine_card,
+        bar_h=t('The bar', 'Quầy bar'),
+        bar_en='Cocktails, draft beer from Bia Craft, sake, and everything else.',
+        bar_vi='Cocktail, bia tươi Bia Craft, sake và mọi thứ còn lại.',
+        bar='\n'.join(bar),
+        hh_h=t('Happy hour', 'Happy hour'),
+        hh_en='50% off house wine, sake and draft beer, ' + todo('5–7pm every day') + '.',
+        hh_vi='Giảm 50% vang quán, sake và bia tươi, ' + todo('17:00–19:00 mỗi ngày') + '.',
+        wn_en='Wine night ' + todo('every Thursday') + ' — 50% off every wine by the glass.',
+        wn_vi='Đêm vang ' + todo('thứ Năm hằng tuần') + ' — giảm 50% mọi loại vang theo ly.',
+        alg_h=t('Allergies', 'Dị ứng thực phẩm'),
+        alg_en='Please tell your server before you order. Our kitchen handles wheat, '
+               'dairy, egg, nuts, shellfish and fish, so we cannot promise a dish is '
+               'free of any of them.',
+        alg_vi='Vui lòng báo nhân viên trước khi gọi món. Bếp của chúng tôi sử dụng lúa mì, '
+               'sữa, trứng, các loại hạt, động vật có vỏ và cá, nên chúng tôi không thể '
+               'cam kết món ăn hoàn toàn không chứa các thành phần này.',
+        hr_h=t('House rules', 'Quy định của quán'),
+        hr_en='<li>All prices are subject to a 5% service charge and VAT.</li>'
+              '<li>No half-and-half pizzas — sorry.</li>'
+              '<li>Please turn off your camera flash in the dining room.</li>'
+              '<li>Misbehaved children will not be tolerated.</li>',
+        hr_vi='<li>Giá chưa bao gồm 5% phí dịch vụ và VAT.</li>'
+              '<li>Chúng tôi không làm pizza nửa nọ nửa kia — mong bạn thông cảm.</li>'
+              '<li>Vui lòng tắt đèn flash trong phòng ăn.</li>'
+              '<li>Không chấp nhận trẻ em quấy phá.</li>',
+        cta=t('Book a table', 'Đặt bàn'),
+    )
+
+    return page('/menu/', 'menu',
+        'Menu — Sol, Tây Hồ, Hanoi', 'Thực đơn — Sol, Tây Hồ, Hà Nội',
+        'Wood-fired pizza, pasta made in-house, small plates and a full bar. '
+        'Sol, Tây Hồ, Hanoi.',
+        'Pizza lò củi, mì Ý tươi, món khai vị và quầy bar đầy đủ. Sol, Tây Hồ, Hà Nội.',
+        body)
+
+
+# ==========================================================================
+# WINE  — /wine/
+# ==========================================================================
+# Transcribed from the Sol Pizza wine list (May 2025).
+# Each wine: (name, grape, producer, region_en, region_vi, tags)
+#   tags  'glass' poured by the glass · 'house' house wine ·
+#         'nat'   natural / low intervention
+WINES = [
+ ('Bubbles', 'Vang sủi', '', '',
+  [
+   ('Prosecco, Gemma Di Luna', 'Glera', '',
+    'Veneto, Italy', 'Veneto, Ý', ['glass', 'house', 'nat']),
+   ('Cuvée de Réserve NV', 'Chardonnay', 'Pierre Péters',
+    'Champagne, France', 'Champagne, Pháp', ['glass', 'house']),
+   ("Rollaball '22", 'Carignan, Mourvèdre', 'Matassa',
+    'Languedoc, France', 'Languedoc, Pháp', ['nat']),
+  ]),
+
+ ('Whites', 'Vang trắng', '', '',
+  [
+   ("Kim Crawford '23", 'Sauvignon Blanc', '',
+    'Marlborough, New Zealand', 'Marlborough, New Zealand', ['glass', 'house']),
+   ("Edda '22", 'Chardonnay blend', 'Cantine San Marzano',
+    'Puglia, Italy', 'Puglia, Ý', ['glass', 'house']),
+   ("Cavallo Delle Fate '22", 'Grillo', 'Tenuta Regaleali',
+    'Sicily, Italy', 'Sicily, Ý', ['glass', 'house']),
+   ("Tenuta Montecchiesi '21", 'Vermentino, Chardonnay', '',
+    'Tuscany, Italy', 'Toscana, Ý', ['glass']),
+   ("Pomino Bianco Riserva '21", 'Chardonnay', 'Benefizio Frescobaldi',
+    'Tuscany, Italy', 'Toscana, Ý', ['glass']),
+   ("Chablis 1er Côte de Léchet '21", 'Chardonnay', 'La Chablisienne',
+    'Burgundy, France', 'Bourgogne, Pháp', ['glass']),
+   ("Malterdinger '20", 'Chardonnay', 'Bernhard Huber',
+    'Baden, Germany', 'Baden, Đức', ['glass']),
+   ("Sancerre Blanc '22", 'Sauvignon Blanc', 'Lucien Crochet',
+    'Loire, France', 'Loire, Pháp', ['glass']),
+   ("Blanc '20", 'Sauvignon Blanc, Sémillon', 'Le Colombier de Brown',
+    'Bordeaux, France', 'Bordeaux, Pháp', []),
+   ("Théo Cuvée '23", 'Riesling', 'Domaine Weinbach',
+    'Alsace, France', 'Alsace, Pháp', ['glass']),
+  ]),
+
+ ('Reds', 'Vang đỏ', '', '',
+  [
+   ("30 Year Vines '18", 'Garnacha', 'Castillo de Monseran',
+    'Spain', 'Tây Ban Nha', ['glass', 'house']),
+   ("Rosso '22", 'Corvina, Rondinella, Merlot', "Torre d'Orti",
+    'Veneto, Italy', 'Veneto, Ý', ['glass', 'house']),
+   ("Chianti Classico Squarcialupi '20", 'Sangiovese', 'La Castellina',
+    'Tuscany, Italy', 'Toscana, Ý', ['glass', 'house']),
+   ("Primitivo di Manduria Vendemmia '20", 'Primitivo', 'Vanità',
+    'Puglia, Italy', 'Puglia, Ý', ['glass']),
+   ("Taraboste '18", 'Cabernet Sauvignon, Merlot', 'Château Vartely',
+    'Moldova', 'Moldova', ['glass']),
+   ("Individo '20", 'Rara Neagră, Malbec, Syrah', 'Château Vartely',
+    'Moldova', 'Moldova', ['glass']),
+   ("Rosso di Montalcino '21", 'Sangiovese', 'Capanna',
+    'Tuscany, Italy', 'Toscana, Ý', ['glass']),
+   ("Rioja Reserva '20", 'Tempranillo', 'Muga',
+    'Rioja, Spain', 'Rioja, Tây Ban Nha', ['glass']),
+   ("Arbois '22", 'Trousseau', 'Domaine Rolet',
+    'Jura, France', 'Jura, Pháp', ['glass', 'nat']),
+   ("Crozes-Hermitage '21", 'Syrah', 'Domaine Alain Graillot',
+    'Rhône Valley, France', 'Thung lũng Rhône, Pháp', ['glass']),
+   ("Tattouine Rouge '23", 'Grenache blend', 'Matassa',
+    'Languedoc, France', 'Languedoc, Pháp', ['glass', 'nat']),
+   ("Morgon '22", 'Gamay', 'Domaine Marcel Lapierre',
+    'Beaujolais, France', 'Beaujolais, Pháp', ['glass', 'nat']),
+   ("Savigny-lès-Beaune '19", 'Pinot Noir', 'Michel Noëllat',
+    'Burgundy, France', 'Bourgogne, Pháp', ['glass']),
+   ("Statera '21", 'Pinot Noir', 'Domaine du Bellevue',
+    'Loire Valley, France', 'Thung lũng Loire, Pháp', ['glass', 'nat']),
+   ("Malterdinger '14", 'Pinot Noir', 'Bernhard Huber',
+    'Baden, Germany', 'Baden, Đức', ['glass']),
+   ("Amarone della Valpolicella '19", 'Corvina, Rondinella', "Torre d'Orti",
+    'Veneto, Italy', 'Veneto, Ý', []),
+  ]),
+
+ ('Orange', 'Vang cam', '', '',
+  [
+   ("OKR '23", 'Grüner Veltliner, Sauvignon Blanc', 'Milan Nestarec',
+    'Czech Republic · 1 litre', 'Cộng hòa Séc · 1 lít', ['nat']),
+  ]),
+
+ ('Sake', 'Sake', '', '',
+  [
+   ('Mimurosugi, Dio Abita', 'Genshu junmai', '',
+    'Nara, Japan', 'Nara, Nhật Bản', ['glass']),
+  ]),
+]
+
+
+def build_wine():
     secs = []
-    for name_en, name_vi, note_en, note_vi, dishes in MENU:
+    for name_en, name_vi, note_en, note_vi, wines in WINES:
         rows = []
-        for d_en, d_vi, desc_en, desc_vi, price, tags in dishes:
+        for wname, grape, producer, reg_en, reg_vi, tags in wines:
             tag_html = ''
             if tags:
                 tag_html = '<span class="tags">' + ''.join(
                     '<span class="tag %s">%s</span>' % (tg, t(*TAGNAMES[tg]))
                     for tg in tags) + '</span>'
-            desc = ''
-            if desc_en or desc_vi:
-                desc = ('<p class="d-desc" data-l="en" lang="en">%s</p>'
-                        '<p class="d-desc" data-l="vi" lang="vi">%s</p>' % (desc_en, desc_vi))
+            bits = [grape] + ([producer] if producer else [])
+            desc_en = ' · '.join(bits + [reg_en])
+            desc_vi = ' · '.join(bits + [reg_vi])
             rows.append(
                 """      <div class="dish">
         <div class="d-main">
           <p class="d-name">%s%s</p>
-          %s
+          <p class="d-desc" data-l="en" lang="en">%s</p>
+          <p class="d-desc" data-l="vi" lang="vi">%s</p>
         </div>
-        <p class="d-price">%s</p>
-      </div>""" % (t(d_en, d_vi), tag_html, desc, todo(price)))
+      </div>""" % (wname, tag_html, desc_en, desc_vi))
         note = ''
         if note_en or note_vi:
             note = ('<p class="secnote" data-l="en" lang="en">%s</p>'
@@ -600,45 +924,62 @@ def build_menu():
       <p data-l="en" lang="en" style="margin-bottom:0">{warn_en}</p>
       <p data-l="vi" lang="vi" style="margin-bottom:0">{warn_vi}</p>
     </div>
-{secs}
-    <div class="card">
-      <h3 style="margin-top:0">{alg_h}</h3>
-      <p data-l="en" lang="en" style="margin-bottom:0">{alg_en}</p>
-      <p data-l="vi" lang="vi" style="margin-bottom:0">{alg_vi}</p>
+
+    <div class="legend">
+      <span><span class="tag glass">{k_glass}</span> {l_glass}</span>
+      <span><span class="tag house">{k_house}</span> {l_house}</span>
+      <span><span class="tag nat">{k_nat}</span> {l_nat}</span>
     </div>
-    <p style="margin-top:30px"><a class="btn solid" href="/visit/#book">{cta}</a></p>
+
+{secs}
+
+    <div class="card">
+      <h3 style="margin-top:0">{ask_h}</h3>
+      <p data-l="en" lang="en" style="margin-bottom:0">{ask_en}</p>
+      <p data-l="vi" lang="vi" style="margin-bottom:0">{ask_vi}</p>
+    </div>
+    <p style="margin-top:30px">
+      <a class="btn solid" href="/visit/#book">{cta}</a>
+      <a class="btn ghost" href="/menu/" style="margin-left:10px">{cta2}</a>
+    </p>
   </div>
 </section>
 </main>
 """.format(
-        eyebrow=t('Menu', 'Thực đơn'),
-        h1=t('What we are cooking', 'Chúng tôi nấu gì'),
-        sf_en='Short, seasonal, and built around the oven. Everything changes when '
-              'the market changes.',
-        sf_vi='Ngắn gọn, theo mùa, và xoay quanh chiếc lò. Mọi thứ thay đổi khi chợ '
-              'thay đổi.',
-        warn_h=t('This menu is a draft', 'Thực đơn này là bản nháp'),
-        warn_en='Dishes and prices below are placeholders while we finish the kitchen. '
-                'Replace them in <code>build/gen.py</code> (the <code>MENU</code> list) '
-                'or directly in this page.',
-        warn_vi='Các món và giá bên dưới chỉ là tạm thời trong lúc chúng tôi hoàn thiện '
-                'căn bếp.',
+        eyebrow=t('Wine', 'Vang'),
+        h1=t('The wine list', 'Danh sách vang'),
+        sf_en='Around forty bottles from Italy, France, Spain, Germany and further out, '
+              'most of them open by the glass.',
+        sf_vi='Khoảng bốn mươi chai từ Ý, Pháp, Tây Ban Nha, Đức và xa hơn nữa, phần lớn '
+              'được phục vụ theo ly.',
+        warn_h=t('A first draft', 'Bản nháp đầu tiên'),
+        warn_en='This is the list as it stood at Sol Pizza. Vintages move, bottles run out, '
+                'and the Sol Hanoi list is still being built — ask what is open tonight.',
+        warn_vi='Đây là danh sách như tại Sol Pizza. Niên vụ thay đổi, chai hết hàng, và '
+                'danh sách của Sol Hanoi vẫn đang được xây dựng — hãy hỏi tối nay có gì.',
+        k_glass=t('By the glass', 'Theo ly'),
+        l_glass=t('Poured by the glass as well as the bottle.',
+                  'Phục vụ theo ly, ngoài cách bán theo chai.'),
+        k_house=t('House', 'Vang quán'),
+        l_house=t('Our house pour.', 'Vang nhà của quán.'),
+        k_nat=t('Natural', 'Tự nhiên'),
+        l_nat=t('Natural or low-intervention.', 'Vang tự nhiên hoặc ít can thiệp.'),
         secs='\n'.join(secs),
-        alg_h=t('Allergies', 'Dị ứng thực phẩm'),
-        alg_en='Please tell your server before you order. Our kitchen handles wheat, '
-               'dairy, egg, nuts, shellfish and fish, so we cannot promise a dish is '
-               'free of any of them.',
-        alg_vi='Vui lòng báo nhân viên trước khi gọi món. Bếp của chúng tôi sử dụng lúa mì, '
-               'sữa, trứng, các loại hạt, động vật có vỏ và cá, nên chúng tôi không thể '
-               'cam kết món ăn hoàn toàn không chứa các thành phần này.',
+        ask_h=t('Not on the list?', 'Không có trong danh sách?'),
+        ask_en='Tell us what you drink and roughly what you want to spend, and we will '
+               'find you something. Prices are on the printed list in the room.',
+        ask_vi='Hãy cho chúng tôi biết bạn thích uống gì và tầm giá mong muốn, chúng tôi sẽ '
+               'tìm cho bạn một chai phù hợp. Giá có trên danh sách in tại nhà hàng.',
         cta=t('Book a table', 'Đặt bàn'),
+        cta2=t('See the food menu', 'Xem thực đơn món ăn'),
     )
 
-    return page('/menu/', 'menu',
-        'Menu — Sol, Tây Hồ, Hanoi', 'Thực đơn — Sol, Tây Hồ, Hà Nội',
-        'Wood-fired pizza, pasta made in-house, antipasti and a bar list built around '
-        'amaro and Italian wine. Sol, Tây Hồ, Hanoi.',
-        'Pizza lò củi, mì Ý tươi, khai vị và quầy bar với amaro và vang Ý. Sol, Tây Hồ, Hà Nội.',
+    return page('/wine/', 'wine',
+        'Wine list — Sol, Tây Hồ, Hanoi', 'Danh sách vang — Sol, Tây Hồ, Hà Nội',
+        'Around forty bottles from Italy, France, Spain and beyond, most of them open '
+        'by the glass, with natural and low-intervention growers among them. Sol, Tây Hồ, Hanoi.',
+        'Khoảng bốn mươi chai vang từ Ý, Pháp, Tây Ban Nha và xa hơn, phần lớn phục vụ theo ly. '
+        'Sol, Tây Hồ, Hà Nội.',
         body)
 
 
@@ -1235,11 +1576,11 @@ def _rewrap_role(r, open_roles):
 # SUPPORT FILES
 # ==========================================================================
 def build_support():
-    pages = ['/', '/menu/', '/story/', '/visit/', '/jobs/'] + \
+    pages = ['/', '/menu/', '/wine/', '/story/', '/visit/', '/jobs/'] + \
             ['/jobs/%s.html' % r['slug'] for r in ROLES if r['status'] == 'open']
     urls = []
     for p in pages:
-        pri = '1.0' if p == '/' else ('0.9' if p in ('/menu/', '/visit/') else '0.6')
+        pri = '1.0' if p == '/' else ('0.9' if p in ('/menu/', '/wine/', '/visit/') else '0.6')
         urls.append(
             '  <url><loc>%s%s</loc><lastmod>%s</lastmod><priority>%s</priority>\n'
             '    <xhtml:link rel="alternate" hreflang="en" href="%s%s"/>\n'
@@ -1262,7 +1603,11 @@ def build_support():
         '/careers/*    /jobs/:splat  301\n'
         '/book         /visit/#book  301\n'
         '/reservations /visit/#book  301\n'
-        '/menu.html    /menu/        301\n')
+        '/menu.html    /menu/        301\n'
+        '/wines        /wine/        301\n'
+        '/wine-list    /wine/        301\n'
+        '/winelist     /wine/        301\n'
+        '/drinks       /wine/        301\n')
 
     # 404
     body404 = """<main id="main">
@@ -1461,7 +1806,7 @@ if __name__ == '__main__':
         shutil.rmtree(DIST)
     os.makedirs(DIST)
     copy_existing()
-    for fn in (build_home, build_menu, build_story, build_visit):
+    for fn in (build_home, build_menu, build_wine, build_story, build_visit):
         print('wrote', fn())
     build_jobs(); print('wrote /jobs/')
     build_support()
