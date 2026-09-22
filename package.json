@@ -1,6 +1,17 @@
 {
-  "name": "sol-pizza-deploy",
+  "name": "sol-pizza",
   "private": true,
-  "scripts": { "deploy": "wrangler deploy" },
-  "devDependencies": { "wrangler": "^4.102.0" }
+  "description": "sol.pizza \u2014 static site, built by build/gen.py into dist/, served by the sol-pizza Cloudflare Worker",
+  "scripts": {
+    "build": "python3 build/gen.py",
+    "deploy": "wrangler deploy",
+    "pack-assets": "python3 build/pack_assets.py"
+  },
+  "devDependencies": {
+    "csso": "^5.0.5",
+    "terser": "^5.31.0",
+    "wrangler": "^4.102.0",
+    "@fontsource/eb-garamond": "^5.2.0",
+    "@fontsource/be-vietnam-pro": "^5.2.0"
+  }
 }
