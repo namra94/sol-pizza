@@ -1,0 +1,4 @@
+# 200 = serve the page at the apex without a redirect.
+# Meta's pixel checker does not follow redirects, so a 302 here made
+# sol.pizza look like it had no pixel on it.
+/    /jobs/index.html    200
