@@ -47,20 +47,22 @@ SUN_SPRITE = read(os.path.join(ASSETS, 'suns-sprite.svg')).strip()
 
 # --------------------------------------------------------------------------
 # fonts
-#   Gryphius MVB and Plunct: Sol's Adobe Fonts web project, loaded from the kit
-#   below on every page. Adobe Fonts can't be self-hosted: never download,
-#   commit or deploy those files.
+#   Two typefaces (build/design/tokens.css): a display face for headings, a
+#   serif for everything else (small labels are the serif in capitals).
+#   Gryphius MVB: Sol's Adobe Fonts web project, loaded from the kit below on
+#   every page. Adobe Fonts can't be self-hosted: never download, commit or
+#   deploy those files. (The kit also holds Gryphius MVB Small Caps and Plunct;
+#   the site no longer uses them.)
 #   BN Arora: the web licence is NOT confirmed, so headings use Philosopher.
 #   Once it is, build/README.md ("BN Arora") says what to change.
 #   Free faces (always loaded; they carry every Vietnamese letter): npm @fontsource.
 # --------------------------------------------------------------------------
 TYPEKIT_KIT  = 'https://use.typekit.net/umo0non.css'
-BRAND_FONTS  = 'serif hand'        # 'display serif hand' once BN Arora is licensed
+BRAND_FONTS  = 'serif'             # 'display serif' once BN Arora is licensed
 FONT_PLAN = [
     # (npm package under @fontsource, CSS family, [(weight, style)])
     ('philosopher', 'Philosopher', [(400, 'normal')]),
     ('eb-garamond',  'EB Garamond', [(400, 'normal'), (400, 'italic')]),
-    ('alegreya-sc',  'Alegreya SC', [(400, 'normal')]),
 ]
 FONT_SUBSETS = ['latin', 'latin-ext', 'vietnamese']
 PRELOAD_FONT = '/assets/fonts/philosopher-latin-400-normal.woff2'   # headings, above the fold
@@ -110,8 +112,9 @@ def esc(s):
 
 
 def nbsp(markup):
-    """Tây Hồ never splits across two lines in the visible text."""
-    return markup.replace('Tây Hồ', 'Tây&nbsp;Hồ').replace('T&acirc;y H&#7891;', 'T&acirc;y&nbsp;H&#7891;')
+    """Tây Hồ and Sol Pizza never split across two lines in the visible text."""
+    return (markup.replace('Tây Hồ', 'Tây&nbsp;Hồ').replace('T&acirc;y H&#7891;', 'T&acirc;y&nbsp;H&#7891;')
+            .replace('Sol Pizza', 'Sol&nbsp;Pizza'))
 
 
 def slug(s):
@@ -594,7 +597,7 @@ def build_food():
     for i, sec in enumerate(food['sections']):
         items = ''.join(
             item(d['name'], d['description'], d.get('description_vi'),
-                 ''.join(' <span class="tag">%s</span>' % t(tag, TAGS_VI.get(tag, tag)) for tag in d['tags']))
+                 ''.join('&ensp;<span class="tag">%s</span>' % t(tag, TAGS_VI.get(tag, tag)) for tag in d['tags']))
             for d in sec['items'])
         parts.append(menu_section(sec, 1 + i, '<ul class="menu-grid">%s</ul>' % items))
     top = food['toppings']
@@ -643,7 +646,7 @@ def build_wine():
         for w in sec['items']:
             marks = ''
             if w['marks']:
-                marks = ' <span class="marks">%s</span>' % t(' · '.join(w['marks']),
+                marks = '&ensp;<span class="marks">%s</span>' % t(' · '.join(w['marks']),
                                                               ' · '.join(MARKS_VI[m] for m in w['marks']))
             rows.append(item(w['name'], w['details'], w.get('details_vi'), marks, ' class="wine"'))
         sid = 's-' + slug(sec['name'])        # the count line stands in for an intro

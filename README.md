@@ -93,17 +93,23 @@ Vietnamese letters.
 
 ## Fonts
 
-- **Gryphius MVB and Plunct** (body, small caps, the handwritten lines) come
-  from Sol's Adobe Fonts web project, kit `umo0non`, linked on every page. They
-  can't be self-hosted, so never download or commit them. Keep the Creative
+Two typefaces and seven sizes, set in `build/design/tokens.css`: a display face
+for headings and a serif for everything else. Small labels are the serif in
+capitals.
+
+- **Gryphius MVB** (everything that isn't a heading) comes from Sol's Adobe
+  Fonts web project, kit `umo0non`, linked on every page. It can't be
+  self-hosted, so never download or commit it. The kit also holds Gryphius MVB
+  Small Caps and Plunct, which the site no longer uses; removing them from the
+  web project makes the kit a little lighter. Keep the Creative
   Cloud plan behind the web project active; if it lapses the site falls back to
   the free fonts. In Adobe Fonts, set the web project's font display to
   **swap**.
 - **BN Arora** (headings) is waiting on confirmation that its licence covers
   the web. Until then headings use Philosopher. `build/README.md` says what to
   change once it's confirmed.
-- **Free fonts**, always loaded and Vietnamese-complete: Philosopher, EB
-  Garamond and Alegreya SC, from the `@fontsource` npm packages. The build
+- **Free fonts**, always loaded and Vietnamese-complete: Philosopher and EB
+  Garamond, from the `@fontsource` npm packages. The build
   copies only the Latin, Latin Extended and Vietnamese files into
   `dist/assets/fonts/`.
 

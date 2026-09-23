@@ -14,34 +14,26 @@ html[lang="vi"] [data-l="en"] { display: none !important; }
 .prose h2 {
   margin-top: 48px;
   font-family: var(--display);
-  font-size: calc(var(--ds) * 34px);
-  line-height: 38px;
+  font-size: var(--fs-h3);
+  line-height: 1.15;
   color: var(--sol-red);
 }
 .prose h2 + p, .prose h3 + p, .prose h4 + p, .prose h4 + ul { margin-top: 12px; }
-.prose h4 {
+.prose h4 {             /* type: the labels rule in printed-menu.css */
   margin-top: 26px;
-  font-family: var(--sc);
-  font-size: 13px;
-  line-height: 18px;
-  letter-spacing: .12em;
   color: var(--sol-red);
 }
 .prose ul + p, .prose .tablewrap + p { margin-top: 18px; }
 .prose li + li { margin-top: 6px; }
 .prose .eyebrow { margin-top: 48px; }
 .prose .eyebrow + p { margin-top: 10px; }
-.prose .updated { font-style: italic; color: var(--ink-muted); }
+.prose .updated { color: var(--ink-muted); }
 
 /* the full job description, folded */
 .prose details { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--line-brand); }
-.prose summary {
+.prose summary {        /* type: the labels rule in printed-menu.css */
   display: inline-block;
   cursor: pointer;
-  font-family: var(--sc);
-  font-size: 13px;
-  line-height: 18px;
-  letter-spacing: .12em;
   color: var(--sol-red);
   border-bottom: 1px solid currentColor;
   padding-bottom: 1px;
@@ -51,19 +43,16 @@ html[lang="vi"] [data-l="en"] { display: none !important; }
 
 /* privacy notice tables */
 .tablewrap { margin-top: 18px; overflow-x: auto; }
-.prose table { width: 100%; border-collapse: collapse; font-size: 16px; line-height: 24px; }
+.prose table { width: 100%; border-collapse: collapse; font-size: var(--fs-small); line-height: 1.5; }
 .prose th, .prose td { padding: 10px 14px 10px 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
-.prose thead th {
+.prose thead th {       /* type: the labels rule in printed-menu.css */
   font-weight: 400;
-  font-family: var(--sc);
-  font-size: 12px;
-  letter-spacing: .14em;
   color: var(--sol-red);
   border-bottom-color: var(--line-brand);
 }
 
 /* role pages: the Vietnamese note above an English-only description */
-.prose .vi-note { font-style: italic; color: var(--ink-muted); }
+.prose .vi-note { color: var(--ink-muted); }
 html:not([lang="vi"]) .prose .vi-note + p { margin-top: 0; }   /* the hidden note is still a sibling */
 
 /* links in the "Recently filled" list on /jobs/ */
@@ -71,7 +60,5 @@ html:not([lang="vi"]) .prose .vi-note + p { margin-top: 0; }   /* the hidden not
 .filled a:hover { color: var(--sol-red); }
 
 @media (max-width: 760.98px) {
-  .prose h2 { margin-top: 40px; font-size: calc(var(--ds) * 28px); line-height: 32px; }
-  .prose li { font-size: 16px; line-height: 26px; }
-  .prose table { font-size: 15px; line-height: 22px; }
+  .prose h2 { margin-top: 40px; }
 }
