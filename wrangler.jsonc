@@ -4,6 +4,9 @@
   // Build first: python3 build/gen.py   (writes ./dist)
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "sol-pizza",
+  // The Cloudflare account that serves sol.pizza ("Polarized Jar"). Pinned because
+  // the same login also sees another account with an unused sol-pizza Worker.
+  "account_id": "8c4ec4948dc4732b29398c10fcb2020b",
   "compatibility_date": "2026-09-22",
   "assets": {
     "directory": "./dist",

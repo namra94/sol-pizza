@@ -1,0 +1,62 @@
+/* Sol — design tokens for the Printed menu site.
+   Colours and type roles come from the Sol brand standards (June 2025).
+
+   FONTS: the brand faces are opt-in. <html data-brand-fonts="…"> lists the ones
+   loaded on the page:
+     serif   → Gryphius MVB + Gryphius MVB Small Caps  (Sol's Adobe Fonts kit umo0non)
+     hand    → Plunct                                   (Sol's Adobe Fonts kit umo0non)
+     display → BN Arora   (self-hosted, only once its web licence is confirmed)
+   Live today: data-brand-fonts="serif hand".
+   Anything not listed renders in the free, Vietnamese-complete faces below
+   (Philosopher, EB Garamond, Alegreya SC — all on npm as @fontsource packages).
+   Vietnamese pages (<html lang="vi">, matched with :lang(vi)) always use the free
+   faces: the brand fonts don't include the Vietnamese letters. */
+
+:root {
+  /* brand colours */
+  --sol-red: #a72024;
+  --wood: #4e2428;
+  --sun: #f2cc73;
+  --cream: #f9e9d3;
+  --basil: #506d55;
+  --white: #ffffff;
+
+  /* roles */
+  --surface: var(--cream);
+  --ink: var(--wood);
+  --ink-muted: #6b4448;   /* 6.9:1 on cream */
+  --ink-brand: var(--sol-red);
+  --line: #e3cdb0;        /* quiet hairline */
+  --line-brand: var(--sol-red);
+
+  /* type: free faces by default */
+  --display: "Philosopher", Georgia, serif;
+  --serif: "EB Garamond", Georgia, serif;
+  --sc: "Alegreya SC", "EB Garamond", Georgia, serif;
+  --hand: "EB Garamond", Georgia, serif;
+  --hand-style: italic;
+  --ds: 0.9;              /* display size factor: Philosopher runs wider than BN Arora */
+
+  /* layout */
+  --wrap: 1040px;
+  --gutter: 24px;
+}
+
+/* brand faces, per licence (English pages only) */
+html[data-brand-fonts~="display"]:not(:lang(vi)) {
+  --display: "BN Arora", "Philosopher", Georgia, serif;
+  --ds: 1;
+}
+html[data-brand-fonts~="serif"]:not(:lang(vi)) {
+  /* family names as the Adobe Fonts kit (use.typekit.net/umo0non.css) defines them */
+  --serif: "gryphius-mvb", "EB Garamond", Georgia, serif;
+  --sc: "gryphius-mvb-small-caps", "Alegreya SC", Georgia, serif;
+}
+html[data-brand-fonts~="hand"]:not(:lang(vi)) {
+  --hand: "plunct", "EB Garamond", Georgia, serif;
+  --hand-style: normal;
+}
+
+@media (max-width: 760.98px) {
+  :root { --gutter: 20px; }
+}

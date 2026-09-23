@@ -1,0 +1,77 @@
+/* Sol — what the sol.pizza repo adds to the Printed menu design.
+   Load after tokens.css and printed-menu.css. Only rules the design files don't
+   cover: the EN / VI switch, and the long-text pages (privacy notice, role pages)
+   that carry their own markup. Existing tokens only: no new colours. */
+
+/* ------------------------------------------------------------------ EN / VI
+   Every translated line is in the HTML twice, <span data-l="en" lang="en"> and
+   <span data-l="vi" lang="vi">. <html lang> (set before first paint by the head
+   script, and by printed-menu.js on a click) decides which one shows. */
+html:not([lang="vi"]) [data-l="vi"],
+html[lang="vi"] [data-l="en"] { display: none !important; }
+
+/* ------------------------------------------------------------------ long text */
+.prose h2 {
+  margin-top: 48px;
+  font-family: var(--display);
+  font-size: calc(var(--ds) * 34px);
+  line-height: 38px;
+  color: var(--sol-red);
+}
+.prose h2 + p, .prose h3 + p, .prose h4 + p, .prose h4 + ul { margin-top: 12px; }
+.prose h4 {
+  margin-top: 26px;
+  font-family: var(--sc);
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: .12em;
+  color: var(--sol-red);
+}
+.prose ul + p, .prose .tablewrap + p { margin-top: 18px; }
+.prose li + li { margin-top: 6px; }
+.prose .eyebrow { margin-top: 48px; }
+.prose .eyebrow + p { margin-top: 10px; }
+.prose .updated { font-style: italic; color: var(--ink-muted); }
+
+/* the full job description, folded */
+.prose details { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--line-brand); }
+.prose summary {
+  display: inline-block;
+  cursor: pointer;
+  font-family: var(--sc);
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: .12em;
+  color: var(--sol-red);
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 1px;
+}
+.prose summary::-webkit-details-marker { display: none; }
+.prose summary:hover { color: var(--wood); }
+
+/* privacy notice tables */
+.tablewrap { margin-top: 18px; overflow-x: auto; }
+.prose table { width: 100%; border-collapse: collapse; font-size: 16px; line-height: 24px; }
+.prose th, .prose td { padding: 10px 14px 10px 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.prose thead th {
+  font-weight: 400;
+  font-family: var(--sc);
+  font-size: 12px;
+  letter-spacing: .14em;
+  color: var(--sol-red);
+  border-bottom-color: var(--line-brand);
+}
+
+/* role pages: the Vietnamese note above an English-only description */
+.prose .vi-note { font-style: italic; color: var(--ink-muted); }
+html:not([lang="vi"]) .prose .vi-note + p { margin-top: 0; }   /* the hidden note is still a sibling */
+
+/* links in the "Recently filled" list on /jobs/ */
+.filled a { border-bottom: 1px solid var(--line-brand); }
+.filled a:hover { color: var(--sol-red); }
+
+@media (max-width: 760.98px) {
+  .prose h2 { margin-top: 40px; font-size: calc(var(--ds) * 28px); line-height: 32px; }
+  .prose li { font-size: 16px; line-height: 26px; }
+  .prose table { font-size: 15px; line-height: 22px; }
+}

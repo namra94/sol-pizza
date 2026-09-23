@@ -1,4 +1,17 @@
-# 200 = serve the page at the apex without a redirect.
-# Meta's pixel checker does not follow redirects, so a 302 here made
-# sol.pizza look like it had no pixel on it.
-/    /jobs/index.html    200
+# sol.pizza redirects. build/gen.py copies this file to dist/_redirects and
+# Cloudflare applies it (the Worker is assets-only). Keep the splat rule last.
+
+# Wine moved under Menu (Printed menu build)
+/wine /menu/wine/ 301
+/wine/ /menu/wine/ 301
+
+# Older addresses, kept so no shared link breaks
+/careers      /jobs/          301
+/book         /visit/#book    301
+/reservations /visit/#book    301
+/menu.html    /menu/          301
+/wines        /menu/wine/     301
+/wine-list    /menu/wine/     301
+/winelist     /menu/wine/     301
+/drinks       /menu/bar/      301
+/careers/*    /jobs/:splat    301

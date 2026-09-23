@@ -1,0 +1,696 @@
+{
+  "note": "Menu content for /menu/, /menu/wine/ and /menu/bar/. Names are kept as the kitchen and bar write them. Prices are intentionally absent until they are set.",
+  "note_vi": "Every *_vi field is the Vietnamese twin of the field above it. Dish, wine and drink names stay as written in both languages.",
+  "food": {
+    "sections": [
+      {
+        "name": "Small plates",
+        "name_vi": "Khai vị",
+        "intro": "To start, while the oven catches up.",
+        "intro_vi": "Để mở đầu, trong lúc chờ pizza ra lò.",
+        "items": [
+          {
+            "name": "Marinated olives",
+            "description": "",
+            "description_vi": "",
+            "tags": [
+              "Veg"
+            ]
+          },
+          {
+            "name": "Antipasto",
+            "description": "Wood-roasted vegetables, 24-month prosciutto, marinated olives and a bite of cheese.",
+            "description_vi": "Rau củ nướng lò củi, prosciutto ủ 24 tháng, ô liu ướp và một miếng phô mai.",
+            "tags": []
+          },
+          {
+            "name": "Hummus",
+            "description": "With house bread.",
+            "description_vi": "Ăn kèm bánh mì nhà làm.",
+            "tags": [
+              "Veg"
+            ]
+          },
+          {
+            "name": "Meatballs with ricotta",
+            "description": "",
+            "description_vi": "",
+            "tags": []
+          },
+          {
+            "name": "Bain’s spinach salad",
+            "description": "Đà Lạt baby spinach, 12-year aged balsamic, 24-month parmigiano, extra virgin olive oil.",
+            "description_vi": "Rau chân vịt non Đà Lạt, giấm balsamic ủ 12 năm, parmigiano 24 tháng, dầu ô liu nguyên chất.",
+            "tags": [
+              "Veg"
+            ]
+          },
+          {
+            "name": "Caesar salad",
+            "description": "Add a chicken cutlet if you like.",
+            "description_vi": "Có thể thêm ức gà chiên xù.",
+            "tags": []
+          },
+          {
+            "name": "Prosciutto",
+            "description": "24-month prosciutto with house bread.",
+            "description_vi": "Prosciutto ủ 24 tháng và bánh mì nhà làm.",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "name": "Pizza",
+        "name_vi": "Pizza",
+        "intro": "Straight from the Pavesi wood oven. No half-and-half, sorry.",
+        "intro_vi": "Nướng trong lò củi Pavesi. Chúng tôi không làm nửa nọ nửa kia — mong bạn thông cảm.",
+        "items": [
+          {
+            "name": "Plain",
+            "description": "Tomatoes, mozzarella, Sicilian oregano, olive oil, pecorino, basil.",
+            "description_vi": "Cà chua, mozzarella, oregano Sicily, dầu ô liu, pecorino, húng quế.",
+            "tags": []
+          },
+          {
+            "name": "Sol",
+            "description": "Tomatoes, mozzarella, Calabrian chilli flakes, Sicilian oregano, caciocavallo, olive oil, parmigiano, basil.",
+            "description_vi": "Cà chua, mozzarella, ớt Calabria, oregano Sicily, caciocavallo, dầu ô liu, parmigiano, húng quế.",
+            "tags": [
+              "Spicy"
+            ]
+          },
+          {
+            "name": "White",
+            "description": "Mozzarella, ricotta, caramelised onions, parmigiano, olive oil, parsley.",
+            "description_vi": "Mozzarella, ricotta, hành tây caramel, parmigiano, dầu ô liu, mùi tây.",
+            "tags": [
+              "Veg"
+            ]
+          },
+          {
+            "name": "Red",
+            "description": "Tomatoes, garlic, Sicilian oregano, olive oil, basil. No cheese, and none needed.",
+            "description_vi": "Cà chua, tỏi, oregano Sicily, dầu ô liu, húng quế. Không phô mai, và không cần phô mai.",
+            "tags": [
+              "Veg"
+            ]
+          },
+          {
+            "name": "Pepperoni",
+            "description": "Tomatoes, mozzarella, pepperoni, parmigiano, basil.",
+            "description_vi": "Cà chua, mozzarella, pepperoni, parmigiano, húng quế.",
+            "tags": []
+          },
+          {
+            "name": "Nduja know?",
+            "description": "Tomatoes, nduja, sausage, roasted peppers, mozzarella, olive oil, pecorino, basil.",
+            "description_vi": "Cà chua, nduja, xúc xích, ớt chuông nướng, mozzarella, dầu ô liu, pecorino, húng quế.",
+            "tags": [
+              "Spicy"
+            ]
+          },
+          {
+            "name": "Porchetta ’bout it!",
+            "description": "Porchetta, Sicilian oregano, taleggio, garlic, onion, parmigiano, lemon, parsley.",
+            "description_vi": "Porchetta, oregano Sicily, taleggio, tỏi, hành tây, parmigiano, chanh vàng, mùi tây.",
+            "tags": []
+          },
+          {
+            "name": "Gricia",
+            "description": "Guanciale, taleggio, parmigiano, mozzarella, Phú Quốc black pepper, parsley.",
+            "description_vi": "Guanciale, taleggio, parmigiano, mozzarella, tiêu đen Phú Quốc, mùi tây.",
+            "tags": []
+          },
+          {
+            "name": "Speckenwolf",
+            "description": "Mozzarella, parmigiano, onion, mushroom, speck, Phú Quốc black pepper, parsley.",
+            "description_vi": "Mozzarella, parmigiano, hành tây, nấm, speck, tiêu đen Phú Quốc, mùi tây.",
+            "tags": []
+          },
+          {
+            "name": "Falco",
+            "description": "Tomatoes, Sicilian oregano, parmigiano, garlic, onions, sausage, basil, olive oil.",
+            "description_vi": "Cà chua, oregano Sicily, parmigiano, tỏi, hành tây, xúc xích, húng quế, dầu ô liu.",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "name": "Pasta",
+        "name_vi": "Mì Ý",
+        "intro": "Made in-house.",
+        "intro_vi": "Làm tại nhà hàng.",
+        "items": [
+          {
+            "name": "Norcina",
+            "description": "Rigatoni, house sausage, mushrooms, cream, white wine, parmigiano, parsley.",
+            "description_vi": "Rigatoni, xúc xích nhà làm, nấm, kem, vang trắng, parmigiano, mùi tây.",
+            "tags": []
+          },
+          {
+            "name": "Amatriciana",
+            "description": "Spaghettini, guanciale, tomatoes, white wine, chilli flakes, pecorino, basil.",
+            "description_vi": "Spaghettini, guanciale, cà chua, vang trắng, ớt khô, pecorino, húng quế.",
+            "tags": [
+              "Spicy"
+            ]
+          },
+          {
+            "name": "Chicken parmesan",
+            "description": "Spaghettini, fried chicken cutlet, tomatoes, vodka sauce, parmigiano, basil.",
+            "description_vi": "Spaghettini, ức gà chiên xù, cà chua, sốt vodka, parmigiano, húng quế.",
+            "tags": []
+          },
+          {
+            "name": "S&M",
+            "description": "Spaghettini, meatballs, organic tomatoes, parmigiano, ricotta, basil.",
+            "description_vi": "Spaghettini, thịt viên, cà chua hữu cơ, parmigiano, ricotta, húng quế.",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "toppings": {
+      "intro": "Add any of these to any pizza.",
+      "intro_vi": "Thêm bất kỳ thứ nào bên dưới vào bất kỳ chiếc pizza nào.",
+      "items": [
+        "Garlic",
+        "Onion",
+        "Basil",
+        "Parmigiano",
+        "Pecorino",
+        "Calabrian chillies",
+        "Mushrooms",
+        "Roasted peppers",
+        "Mozzarella",
+        "Kalamata olives",
+        "Pickled chillies",
+        "Pepperoni",
+        "Nduja",
+        "Speck",
+        "Anchovy",
+        "Sausage",
+        "Sobrassada"
+      ],
+      "items_vi": [
+        "Tỏi",
+        "Hành tây",
+        "Húng quế",
+        "Parmigiano",
+        "Pecorino",
+        "Ớt Calabria",
+        "Nấm",
+        "Ớt chuông nướng",
+        "Mozzarella",
+        "Ô liu Kalamata",
+        "Ớt ngâm",
+        "Pepperoni",
+        "Nduja",
+        "Speck",
+        "Cá cơm muối",
+        "Xúc xích",
+        "Sobrassada"
+      ]
+    },
+    "tag_meaning": {
+      "Veg": "vegetarian",
+      "Spicy": "spicy"
+    },
+    "tag_labels_vi": {
+      "Veg": "Chay",
+      "Spicy": "Cay"
+    }
+  },
+  "wine": {
+    "legend": [
+      {
+        "mark": "glass",
+        "mark_vi": "theo ly",
+        "meaning": "open by the glass and the bottle",
+        "meaning_vi": "có theo ly và theo chai"
+      },
+      {
+        "mark": "house",
+        "mark_vi": "vang quán",
+        "meaning": "our house pour",
+        "meaning_vi": "vang nhà của quán"
+      },
+      {
+        "mark": "natural",
+        "mark_vi": "tự nhiên",
+        "meaning": "natural or low-intervention",
+        "meaning_vi": "vang tự nhiên hoặc ít can thiệp"
+      }
+    ],
+    "sections": [
+      {
+        "name": "Bubbles",
+        "name_vi": "Vang sủi",
+        "items": [
+          {
+            "name": "Prosecco, Gemma Di Luna",
+            "details": "Glera · Veneto, Italy",
+            "details_vi": "Glera · Veneto, Ý",
+            "marks": [
+              "glass",
+              "house",
+              "natural"
+            ]
+          },
+          {
+            "name": "Cuvée de Réserve NV",
+            "details": "Chardonnay · Pierre Péters · Champagne, France",
+            "details_vi": "Chardonnay · Pierre Péters · Champagne, Pháp",
+            "marks": [
+              "glass",
+              "house"
+            ]
+          },
+          {
+            "name": "Rollaball ’22",
+            "details": "Carignan, Mourvèdre · Matassa · Languedoc, France",
+            "details_vi": "Carignan, Mourvèdre · Matassa · Languedoc, Pháp",
+            "marks": [
+              "natural"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Whites",
+        "name_vi": "Vang trắng",
+        "items": [
+          {
+            "name": "Kim Crawford ’23",
+            "details": "Sauvignon Blanc · Marlborough, New Zealand",
+            "details_vi": "Sauvignon Blanc · Marlborough, New Zealand",
+            "marks": [
+              "glass",
+              "house"
+            ]
+          },
+          {
+            "name": "Edda ’22",
+            "details": "Chardonnay blend · Cantine San Marzano · Puglia, Italy",
+            "details_vi": "Chardonnay blend · Cantine San Marzano · Puglia, Ý",
+            "marks": [
+              "glass",
+              "house"
+            ]
+          },
+          {
+            "name": "Cavallo Delle Fate ’22",
+            "details": "Grillo · Tenuta Regaleali · Sicily, Italy",
+            "details_vi": "Grillo · Tenuta Regaleali · Sicily, Ý",
+            "marks": [
+              "glass",
+              "house"
+            ]
+          },
+          {
+            "name": "Tenuta Montecchiesi ’21",
+            "details": "Vermentino, Chardonnay · Tuscany, Italy",
+            "details_vi": "Vermentino, Chardonnay · Toscana, Ý",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Pomino Bianco Riserva ’21",
+            "details": "Chardonnay · Benefizio Frescobaldi · Tuscany, Italy",
+            "details_vi": "Chardonnay · Benefizio Frescobaldi · Toscana, Ý",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Chablis 1er Côte de Léchet ’21",
+            "details": "Chardonnay · La Chablisienne · Burgundy, France",
+            "details_vi": "Chardonnay · La Chablisienne · Bourgogne, Pháp",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Malterdinger ’20",
+            "details": "Chardonnay · Bernhard Huber · Baden, Germany",
+            "details_vi": "Chardonnay · Bernhard Huber · Baden, Đức",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Sancerre Blanc ’22",
+            "details": "Sauvignon Blanc · Lucien Crochet · Loire, France",
+            "details_vi": "Sauvignon Blanc · Lucien Crochet · Loire, Pháp",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Blanc ’20",
+            "details": "Sauvignon Blanc, Sémillon · Le Colombier de Brown · Bordeaux, France",
+            "details_vi": "Sauvignon Blanc, Sémillon · Le Colombier de Brown · Bordeaux, Pháp",
+            "marks": []
+          },
+          {
+            "name": "Théo Cuvée ’23",
+            "details": "Riesling · Domaine Weinbach · Alsace, France",
+            "details_vi": "Riesling · Domaine Weinbach · Alsace, Pháp",
+            "marks": [
+              "glass"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Reds",
+        "name_vi": "Vang đỏ",
+        "items": [
+          {
+            "name": "30 Year Vines ’18",
+            "details": "Garnacha · Castillo de Monseran · Spain",
+            "details_vi": "Garnacha · Castillo de Monseran · Tây Ban Nha",
+            "marks": [
+              "glass",
+              "house"
+            ]
+          },
+          {
+            "name": "Rosso ’22",
+            "details": "Corvina, Rondinella, Merlot · Torre d’Orti · Veneto, Italy",
+            "details_vi": "Corvina, Rondinella, Merlot · Torre d’Orti · Veneto, Ý",
+            "marks": [
+              "glass",
+              "house"
+            ]
+          },
+          {
+            "name": "Chianti Classico Squarcialupi ’20",
+            "details": "Sangiovese · La Castellina · Tuscany, Italy",
+            "details_vi": "Sangiovese · La Castellina · Toscana, Ý",
+            "marks": [
+              "glass",
+              "house"
+            ]
+          },
+          {
+            "name": "Primitivo di Manduria Vendemmia ’20",
+            "details": "Primitivo · Vanità · Puglia, Italy",
+            "details_vi": "Primitivo · Vanità · Puglia, Ý",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Taraboste ’18",
+            "details": "Cabernet Sauvignon, Merlot · Château Vartely · Moldova",
+            "details_vi": "Cabernet Sauvignon, Merlot · Château Vartely · Moldova",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Individo ’20",
+            "details": "Rara Neagră, Malbec, Syrah · Château Vartely · Moldova",
+            "details_vi": "Rara Neagră, Malbec, Syrah · Château Vartely · Moldova",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Rosso di Montalcino ’21",
+            "details": "Sangiovese · Capanna · Tuscany, Italy",
+            "details_vi": "Sangiovese · Capanna · Toscana, Ý",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Rioja Reserva ’20",
+            "details": "Tempranillo · Muga · Rioja, Spain",
+            "details_vi": "Tempranillo · Muga · Rioja, Tây Ban Nha",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Arbois ’22",
+            "details": "Trousseau · Domaine Rolet · Jura, France",
+            "details_vi": "Trousseau · Domaine Rolet · Jura, Pháp",
+            "marks": [
+              "glass",
+              "natural"
+            ]
+          },
+          {
+            "name": "Crozes-Hermitage ’21",
+            "details": "Syrah · Domaine Alain Graillot · Rhône Valley, France",
+            "details_vi": "Syrah · Domaine Alain Graillot · Thung lũng Rhône, Pháp",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Tattouine Rouge ’23",
+            "details": "Grenache blend · Matassa · Languedoc, France",
+            "details_vi": "Grenache blend · Matassa · Languedoc, Pháp",
+            "marks": [
+              "glass",
+              "natural"
+            ]
+          },
+          {
+            "name": "Morgon ’22",
+            "details": "Gamay · Domaine Marcel Lapierre · Beaujolais, France",
+            "details_vi": "Gamay · Domaine Marcel Lapierre · Beaujolais, Pháp",
+            "marks": [
+              "glass",
+              "natural"
+            ]
+          },
+          {
+            "name": "Savigny-lès-Beaune ’19",
+            "details": "Pinot Noir · Michel Noëllat · Burgundy, France",
+            "details_vi": "Pinot Noir · Michel Noëllat · Bourgogne, Pháp",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Statera ’21",
+            "details": "Pinot Noir · Domaine du Bellevue · Loire Valley, France",
+            "details_vi": "Pinot Noir · Domaine du Bellevue · Thung lũng Loire, Pháp",
+            "marks": [
+              "glass",
+              "natural"
+            ]
+          },
+          {
+            "name": "Malterdinger ’14",
+            "details": "Pinot Noir · Bernhard Huber · Baden, Germany",
+            "details_vi": "Pinot Noir · Bernhard Huber · Baden, Đức",
+            "marks": [
+              "glass"
+            ]
+          },
+          {
+            "name": "Amarone della Valpolicella ’19",
+            "details": "Corvina, Rondinella · Torre d’Orti · Veneto, Italy",
+            "details_vi": "Corvina, Rondinella · Torre d’Orti · Veneto, Ý",
+            "marks": []
+          }
+        ]
+      },
+      {
+        "name": "Orange",
+        "name_vi": "Vang cam",
+        "items": [
+          {
+            "name": "OKR ’23",
+            "details": "Grüner Veltliner, Sauvignon Blanc · Milan Nestarec · Czech Republic · 1 litre",
+            "details_vi": "Grüner Veltliner, Sauvignon Blanc · Milan Nestarec · Cộng hòa Séc · 1 lít",
+            "marks": [
+              "natural"
+            ]
+          }
+        ]
+      }
+    ],
+    "counts": {
+      "wines": 30,
+      "by_the_glass": 26,
+      "natural": 7
+    }
+  },
+  "bar": {
+    "sections": [
+      {
+        "name": "Cocktails",
+        "name_vi": "Cocktail",
+        "intro": "The ones we pour most.",
+        "intro_vi": "Những ly chúng tôi pha nhiều nhất.",
+        "items": [
+          {
+            "name": "Sol margarita",
+            "description": "Don Julio reposado, agave, dry curaçao.",
+            "description_vi": "Don Julio reposado, agave, dry curaçao."
+          },
+          {
+            "name": "Proper G&T",
+            "description": "Beefeater 24, Fentimans yuzu tonic.",
+            "description_vi": "Beefeater 24, tonic yuzu Fentimans."
+          },
+          {
+            "name": "Negroni",
+            "description": "Barrel-aged gin, Campari, Antica Formula.",
+            "description_vi": "Gin ủ thùng gỗ, Campari, Antica Formula."
+          },
+          {
+            "name": "Black Manhattan",
+            "description": "Rittenhouse rye whiskey, Nonino, Averna, bitters.",
+            "description_vi": "Rittenhouse rye whiskey, Nonino, Averna, bitters."
+          },
+          {
+            "name": "Last Word",
+            "description": "Beefeater, green Chartreuse, Luxardo, lime.",
+            "description_vi": "Beefeater, Chartreuse xanh, Luxardo, chanh."
+          },
+          {
+            "name": "Pisco sour",
+            "description": "Pisco, lemon, lime, spring bitters.",
+            "description_vi": "Pisco, chanh vàng, chanh xanh, spring bitters."
+          },
+          {
+            "name": "Sazerac",
+            "description": "Rittenhouse rye whiskey, La Fée absinthe, chocolate bitters.",
+            "description_vi": "Rittenhouse rye whiskey, absinthe La Fée, chocolate bitters."
+          },
+          {
+            "name": "Sbagliato",
+            "description": "Antica Formula, Campari, prosecco, orange.",
+            "description_vi": "Antica Formula, Campari, prosecco, cam."
+          },
+          {
+            "name": "Daiquiri",
+            "description": "Clément barrel selection, Bob’s daiquiri bitters.",
+            "description_vi": "Clément barrel selection, bitters daiquiri của Bob’s."
+          }
+        ]
+      },
+      {
+        "name": "Beer",
+        "name_vi": "Bia",
+        "intro": "From Bia Craft and friends.",
+        "intro_vi": "Từ Bia Craft và những người bạn.",
+        "items": [
+          {
+            "name": "Bia Craft lager",
+            "description": "On draft.",
+            "description_vi": "Bia tươi."
+          },
+          {
+            "name": "Seasonal",
+            "description": "On draft — ask what’s pouring.",
+            "description_vi": "Bia tươi — hỏi nhân viên hôm nay có loại gì."
+          },
+          {
+            "name": "Dream Alone Pale Ale",
+            "description": "",
+            "description_vi": ""
+          },
+          {
+            "name": "Kurtz’s Insane IPA",
+            "description": "",
+            "description_vi": ""
+          },
+          {
+            "name": "Loose Rivet Hazy",
+            "description": "",
+            "description_vi": ""
+          },
+          {
+            "name": "Eloquent Phantom Stout",
+            "description": "",
+            "description_vi": ""
+          }
+        ]
+      },
+      {
+        "name": "Sake",
+        "name_vi": "Sake",
+        "intro": "Japanese, cold.",
+        "intro_vi": "Sake Nhật, uống lạnh.",
+        "items": [
+          {
+            "name": "House sake",
+            "description": "On draft, 100ml.",
+            "description_vi": "Rót tươi, 100ml."
+          },
+          {
+            "name": "Mimurosugi, Dio Abita",
+            "description": "Genshu junmai · Nara, Japan. By the glass or the bottle.",
+            "description_vi": "Genshu junmai · Nara, Nhật Bản. Phục vụ theo ly hoặc chai."
+          }
+        ]
+      },
+      {
+        "name": "Soft drinks",
+        "name_vi": "Đồ uống không cồn",
+        "intro": "Everything else.",
+        "intro_vi": "Và mọi thứ còn lại.",
+        "items": [
+          {
+            "name": "Still water",
+            "description": "",
+            "description_vi": ""
+          },
+          {
+            "name": "Sparkling water",
+            "description": "",
+            "description_vi": ""
+          },
+          {
+            "name": "Lemonade",
+            "description": "",
+            "description_vi": ""
+          },
+          {
+            "name": "Alishan iced tea",
+            "description": "",
+            "description_vi": ""
+          },
+          {
+            "name": "Dr Pepper",
+            "description": "",
+            "description_vi": ""
+          },
+          {
+            "name": "Ginger beer",
+            "description": "",
+            "description_vi": ""
+          },
+          {
+            "name": "Kombucha",
+            "description": "",
+            "description_vi": ""
+          }
+        ]
+      }
+    ]
+  },
+  "good_to_know": {
+    "allergies": "Tell your server about any allergy before you order. Our kitchen handles wheat, dairy, egg, nuts, shellfish and fish, so we can’t promise any dish is free of them.",
+    "allergies_vi": "Nếu bạn bị dị ứng với bất kỳ thực phẩm nào, vui lòng báo nhân viên trước khi gọi món. Bếp của chúng tôi sử dụng lúa mì, sữa, trứng, các loại hạt, động vật có vỏ và cá, nên chúng tôi không thể cam kết món ăn hoàn toàn không chứa các thành phần này.",
+    "rules": [
+      "A 5% service charge and VAT are added to every bill.",
+      "Photos are welcome — just turn off the flash.",
+      "Children are very welcome. Please keep them at the table — there’s a live fire in the room."
+    ],
+    "rules_vi": [
+      "Giá chưa bao gồm 5% phí dịch vụ và VAT.",
+      "Cứ thoải mái chụp ảnh — chỉ cần tắt đèn flash.",
+      "Trẻ em luôn được chào đón. Vui lòng để các bé ngồi tại bàn — lò củi trong phòng luôn đỏ lửa."
+    ]
+  }
+}

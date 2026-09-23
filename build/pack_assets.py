@@ -7,6 +7,9 @@ import base64, json, os, glob
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 files = sorted(glob.glob(os.path.join(HERE, 'og', 'png', '*.png'))) + \
         sorted(glob.glob(os.path.join(ROOT, 'src', 'jobs', 'og-*.png')))
-m = {os.path.relpath(f, ROOT): base64.b64encode(open(f, 'rb').read()).decode() for f in files}
-json.dump(m, open(os.path.join(HERE, 'assets.b64.json'), 'w'), indent=0)
+# Keys use / on every OS: the Linux build machine unpacks them.
+m = {os.path.relpath(f, ROOT).replace(os.sep, '/'): base64.b64encode(open(f, 'rb').read()).decode()
+     for f in files}
+with open(os.path.join(HERE, 'assets.b64.json'), 'w', newline='\n') as out:
+    json.dump(m, out, indent=0)
 print('packed', len(m), 'files')

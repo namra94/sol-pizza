@@ -1,1720 +1,1176 @@
 #!/usr/bin/env python3
 """
-Build the sol.pizza static site.
+Build the sol.pizza static site: the "Printed menu" design.
 
-    python3 build/gen.py
+    npm run build          (= python3 build/gen.py; run `npm ci` once first, for the fonts)
 
-Writes plain, readable HTML into dist/. Everything a human needs to edit
-day-to-day (dish names, prices, hours, copy) lives in this file in one place,
-in both English and Vietnamese, so the two never drift apart.
+Writes plain, readable HTML into dist/, which the sol-pizza Worker serves.
+Every page is generated here. Each line of copy appears twice, English then
+Vietnamese, so the two never drift apart; the menu lives in build/menu-data.json.
+
+  build/design/        tokens.css + printed-menu.css (the design), site.css (what
+                       this repo adds), printed-menu.js (header, nav sheet, EN / VI)
+  build/assets/        logo, illustrations and the sun pattern (SVG)
+  build/menu-data.json food, wine and bar: names as the kitchen and bar write them
+  src/                 role pages and privacy notice (re-wrapped here, copy
+                       untouched), _redirects, favicon.svg, pixel.js
 """
-import os, re, shutil, html as _html
+import os, re, sys, json, stat, shutil, hashlib, subprocess, base64, html as _html
 from datetime import date
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
-DIST = os.path.join(ROOT, 'dist')
-SRC  = os.path.join(ROOT, 'src')       # the existing deployed site (jobs, privacy)
-PART = os.path.join(ROOT, 'partials')
+HERE   = os.path.dirname(os.path.abspath(__file__))
+ROOT   = os.path.dirname(HERE)
+DIST   = os.path.join(ROOT, 'dist')
+SRC    = os.path.join(ROOT, 'src')
+DESIGN = os.path.join(HERE, 'design')
+ASSETS = os.path.join(HERE, 'assets')
 
 SITE   = 'https://sol.pizza'
 GA_ID  = 'G-SLBWDVH550'
 FB_PIX = '856214124247013'
 TODAY  = date.today().isoformat()
 
-MARK_SOL   = open(os.path.join(PART, 'mark-sol.svg')).read()
-MARK_LOCK  = open(os.path.join(PART, 'mark-sol-hanoi.svg')).read()
+
+def read(path):
+    with open(path, encoding='utf-8') as f:
+        return f.read()
+
+
+def write(path, text):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(text)
+
+
+MENU = json.loads(read(os.path.join(HERE, 'menu-data.json')))
+SUN_SPRITE = read(os.path.join(ASSETS, 'suns-sprite.svg')).strip()
 
 # --------------------------------------------------------------------------
-# bilingual helpers
+# fonts
+#   Gryphius MVB and Plunct: Sol's Adobe Fonts web project, loaded from the kit
+#   below on every page. Adobe Fonts can't be self-hosted: never download,
+#   commit or deploy those files.
+#   BN Arora: the web licence is NOT confirmed, so headings use Philosopher.
+#   Once it is, build/README.md ("BN Arora") says what to change.
+#   Free faces (always loaded; they carry every Vietnamese letter): npm @fontsource.
 # --------------------------------------------------------------------------
-def t(en, vi, tag='span'):
-    """Inline bilingual pair."""
-    return ('<{tag} data-l="en" lang="en">{en}</{tag}>'
-            '<{tag} data-l="vi" lang="vi">{vi}</{tag}>').format(tag=tag, en=en, vi=vi)
-
-def tb(en, vi, tag='div', cls=''):
-    """Block-level bilingual pair."""
-    c = ' class="%s"' % cls if cls else ''
-    return ('\n<{tag}{c} data-l="en" lang="en">{en}</{tag}>'
-            '\n<{tag}{c} data-l="vi" lang="vi">{vi}</{tag}>').format(tag=tag, c=c, en=en, vi=vi)
-
-def todo(s):
-    return '<span class="todo">%s</span>' % s
+TYPEKIT_KIT  = 'https://use.typekit.net/umo0non.css'
+BRAND_FONTS  = 'serif hand'        # 'display serif hand' once BN Arora is licensed
+FONT_PLAN = [
+    # (npm package under @fontsource, CSS family, [(weight, style)])
+    ('philosopher', 'Philosopher', [(400, 'normal')]),
+    ('eb-garamond',  'EB Garamond', [(400, 'normal'), (400, 'italic')]),
+    ('alegreya-sc',  'Alegreya SC', [(400, 'normal')]),
+]
+FONT_SUBSETS = ['latin', 'latin-ext', 'vietnamese']
+PRELOAD_FONT = '/assets/fonts/philosopher-latin-400-normal.woff2'   # headings, above the fold
 
 # --------------------------------------------------------------------------
-# site-wide facts — EDIT THESE, they appear on every page
+# site-wide facts: EDIT THESE, they appear on every page
 # --------------------------------------------------------------------------
 ADDRESS_EN = 'No 7, Lane 88 Quang An Street, Tây Hồ, Hanoi'
 ADDRESS_VI = 'Số 7, Ngõ 88 Quảng An, Tây Hồ, Hà Nội'
 PHONE      = '+84 866 161 600'
 PHONE_TEL  = 'tel:+84866161600'
 EMAIL      = 'hello@sol.pizza'
-MAPS_URL   = 'https://www.google.com/maps/search/?api=1&amp;query=Sol+Hanoi%2C+7+Ng%C3%B5+88+Qu%E1%BA%A3ng+An%2C+T%C3%A2y+H%E1%BB%93%2C+H%C3%A0+N%E1%BB%99i'
-INSTAGRAM  = 'https://instagram.com/'                        # TODO: real handle
+MAPS_URL   = ('https://www.google.com/maps/search/?api=1&amp;query=Sol+Hanoi%2C+7+Ng%C3%B5+88+'
+              'Qu%E1%BA%A3ng+An%2C+T%C3%A2y+H%E1%BB%93%2C+H%C3%A0+N%E1%BB%99i')
+INSTAGRAM  = 'https://www.instagram.com/solhanoi/'
 
-NAV = [
-    ('/',       'Home',  'Trang chủ'),
-    ('/menu/',  'Menu',  'Thực đơn'),
-    ('/wine/',  'Wine',  'Vang'),
-    ('/story/', 'Story', 'Câu chuyện'),
-    ('/visit/', 'Visit', 'Ghé thăm'),
+# ResDiary: paste the widget URL here (ResDiary > Promote > Widget configurator >
+# Embed Code) and rebuild. The Visit page's booking box then shows the widget.
+RESDIARY_URL = ''
+
+# The wine lead, the home menu paragraph, and the home and wine meta
+# descriptions spell the wine counts out in words ("Thirty wines", "26 wines by
+# the glass"). They're right for the list as it is. If the list changes, the
+# build stops here: update those lines (search this file for "Thirty" and
+# "26 wines"), then PROSE_WINE_COUNTS.
+PROSE_WINE_COUNTS = (30, 26)
+
+
+# --------------------------------------------------------------------------
+# bilingual helpers
+# --------------------------------------------------------------------------
+def t(en, vi):
+    """One line in both languages. site.css shows the one <html lang> asks for."""
+    if en == vi:
+        return en
+    return '<span data-l="en" lang="en">%s</span><span data-l="vi" lang="vi">%s</span>' % (en, vi)
+
+
+def label(en, vi):
+    """An aria-label in both languages; printed-menu.js swaps it with the page."""
+    return 'aria-label="%s" data-aria-en="%s" data-aria-vi="%s"' % (en, en, vi)
+
+
+def esc(s):
+    """Text from menu-data.json, made safe for HTML (S&M, Proper G&T)."""
+    return _html.escape(s, quote=False)
+
+
+def nbsp(markup):
+    """Tây Hồ never splits across two lines in the visible text."""
+    return markup.replace('Tây Hồ', 'Tây&nbsp;Hồ').replace('T&acirc;y H&#7891;', 'T&acirc;y&nbsp;H&#7891;')
+
+
+def slug(s):
+    return re.sub(r'[^a-z0-9]+', '-', s.lower()).strip('-')
+
+
+def sun(n):
+    return '<svg class="sun" aria-hidden="true" focusable="false"><use href="#sun-%d"/></svg>' % n
+
+
+def wine_counts():
+    wines = [w for s in MENU['wine']['sections'] for w in s['items']]
+    return len(wines), sum('glass' in w['marks'] for w in wines)
+
+
+WINES_TOTAL, WINES_GLASS = wine_counts()
+if (WINES_TOTAL, WINES_GLASS) != PROSE_WINE_COUNTS:
+    raise SystemExit(
+        'build/menu-data.json now has %d wines, %d by the glass. Update the wine lead, the home '
+        'menu paragraph and the home and wine meta descriptions in build/gen.py (search for '
+        '"Thirty" and "26 wines"), then set PROSE_WINE_COUNTS = (%d, %d).'
+        % (WINES_TOTAL, WINES_GLASS, WINES_TOTAL, WINES_GLASS))
+
+# lines that repeat across pages
+BOOK       = t('Book a table', 'Đặt bàn')
+HOURS_TAB  = t('Tue–Sun, 5pm–11pm', 'Thứ Ba – CN, 17:00 – 23:00')
+INSTA_LINK = '<a href="%s">%s</a>' % (INSTAGRAM, t('@solhanoi on Instagram', '@solhanoi trên Instagram'))
+MAPS_LINK_TEXT = t('Open in Google Maps', 'Mở trong Google Maps')
+WINE_TAB   = t('%d wines, %d by the glass' % (WINES_TOTAL, WINES_GLASS),
+               '%d loại vang, %d loại theo ly' % (WINES_TOTAL, WINES_GLASS))
+
+MENU_TABS = [  # (key, href, name, descriptor)
+    ('food', '/menu/',      t('Food', 'Món ăn'),   t('Pizza, pasta and small plates', 'Pizza, mì Ý và món khai vị')),
+    ('wine', '/menu/wine/', t('Wine', 'Vang'),     WINE_TAB),
+    ('bar',  '/menu/bar/',  t('Bar', 'Quầy bar'),  t('Cocktails, beer and sake', 'Cocktail, bia và sake')),
 ]
+NAV_PAGES = [('story', '/story/', t('Story', 'Câu chuyện')),
+             ('visit', '/visit/', t('Visit', 'Ghé thăm'))]
+
 
 # --------------------------------------------------------------------------
 # shell
 # --------------------------------------------------------------------------
-HEAD_TPL = """<!doctype html>
-<html lang="en" data-lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title_en}</title>
-<meta data-title-en="{title_en}" data-title-vi="{title_vi}" name="x-titles">
-<meta name="description" content="{desc_en}">
-<link rel="canonical" href="{site}{path}">
-<meta property="og:type" content="{ogtype}">
-<meta property="og:site_name" content="Sol">
-<meta property="og:title" content="{title_en}">
-<meta property="og:description" content="{desc_en}">
-<meta property="og:image" content="{og}">
-<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<meta property="og:url" content="{site}{path}">
-<meta property="og:locale" content="en_GB">
-<meta property="og:locale:alternate" content="vi_VN">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#A72024">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="alternate" hreflang="en" href="{site}{path}">
-<link rel="alternate" hreflang="vi" href="{site}{path}?lang=vi">
-<link rel="alternate" hreflang="x-default" href="{site}{path}">
-<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/be-vietnam-pro-latin-400-normal.woff2" crossorigin>
-<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/eb-garamond-latin-600-normal.woff2" crossorigin>
-<link rel="stylesheet" href="/assets/fonts.css">
-<link rel="stylesheet" href="/assets/sol.css">
-<script>
-/* Set the language before first paint so there is no flash of English. */
-(function(){{var l=null;try{{var q=new URLSearchParams(location.search).get('lang');
-l=q||localStorage.getItem('sol-lang')||((navigator.language||'').toLowerCase().indexOf('vi')===0?'vi':'en');}}catch(e){{l='en';}}
-l=(l==='vi')?'vi':'en';var d=document.documentElement;d.setAttribute('data-lang',l);d.setAttribute('lang',l);}})();
-</script>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id={ga}"></script>
+# Applies the language before first paint: a ?lang=vi link (remembered), a
+# #vi / #en link such as /privacy/#vi (this page only), else the saved choice.
+LANG_SCRIPT = ("try{var q=/[?&]lang=(en|vi)(?:&|$)/.exec(location.search),"
+               "h=/^#(en|vi)\\b/.exec(location.hash),"
+               "l=q?q[1]:h?h[1]:localStorage.getItem('sol-lang');"
+               "if(l==='vi'||l==='en')document.documentElement.lang=l;"
+               "if(q)localStorage.setItem('sol-lang',l)}catch(e){}")
+
+ANALYTICS = """<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=%(ga)s"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag(){{dataLayer.push(arguments);}}
+  function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', '{ga}');
+  gtag('config', '%(ga)s');
 </script>
 <!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
-{{if(f.fbq)return;n=f.fbq=function(){{n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)}};
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
 if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
 n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}}(window, document,'script',
+s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '{fbpix}');
+fbq('init', '%(pix)s');
 fbq('track', 'PageView');
 </script>
 <!-- End Meta Pixel Code -->
-<script defer src="/pixel.js"></script>
-<script defer src="/assets/sol.js"></script>
-{head_extra}
-</head>
-<body{body_attrs}>
-<a class="sr-only" href="#main">Skip to content</a>
-"""
+<script defer src="/pixel.js"></script>""" % dict(ga=GA_ID, pix=FB_PIX)
 
-def header(path):
-    links = []
-    for href, en, vi in NAV:
-        cur = ' aria-current="page"' if href == path else ''
-        links.append('    <a href="%s"%s>%s</a>' % (href, cur, t(en, vi)))
-    return """<header class="site"><div class="wrap">
-  <a class="brandmark" href="/" aria-label="Sol">%s</a>
-  <button class="navtoggle" aria-expanded="false" aria-controls="sitenav">%s</button>
-  <nav class="site" id="sitenav" aria-label="Main">
-%s
-    <a class="nav-book" href="/visit/#book">%s</a>
-    <div class="langswitch" role="group" aria-label="Language">
-      <button type="button" data-lang="en" aria-pressed="true">EN</button>
-      <button type="button" data-lang="vi" aria-pressed="false">VI</button>
-    </div>
-  </nav>
-</div></header>
-""" % (MARK_SOL, t('Menu', 'Menu'), '\n'.join(links), t('Book', 'Đặt bàn'))
 
-STICKY = {
-    'book':  '<div class="stickybar"><a class="btn wide" href="/visit/#book">%s</a></div>'
-             % t('Book a table', 'Đặt bàn'),
-    'apply': '<div class="stickybar"><a class="btn wide" href="#apply">%s</a></div>'
-             % t('Apply for this role', 'Ứng tuyển vị trí này'),
-    'jobs':  '<div class="stickybar"><a class="btn wide" href="mailto:jobs@sol.pizza">%s</a></div>'
-             % t('Email jobs@sol.pizza', 'Gửi email tới jobs@sol.pizza'),
-    'none':  '',
-}
+def head(path, title, desc, og, ogtype, extra, index):
+    (title_en, title_vi), (desc_en, desc_vi) = title, desc
+    url = SITE + path
+    lines = [
+        '<!DOCTYPE html>',
+        '<html lang="en" data-brand-fonts="%s">' % BRAND_FONTS,
+        '<head>',
+        '<meta charset="utf-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1">',
+        '<script>%s</script>' % LANG_SCRIPT,
+        '<title data-en="%s" data-vi="%s">%s</title>' % (title_en, title_vi, title_en),
+        '<meta name="description" content="%s" data-en="%s" data-vi="%s">' % (desc_en, desc_en, desc_vi),
+        '<link rel="preconnect" href="https://use.typekit.net" crossorigin>',
+        '<link rel="stylesheet" href="%s">' % TYPEKIT_KIT,
+        '<link rel="stylesheet" href="/assets/fonts.css">',     # inlined by optimise()
+        '<link rel="stylesheet" href="/assets/tokens.css">',
+        '<link rel="stylesheet" href="/assets/printed-menu.css">',
+        '<link rel="stylesheet" href="/assets/site.css">',
+        '<script src="/assets/printed-menu.js" defer></script>',
+        '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' % PRELOAD_FONT,
+    ]
+    if index:
+        lines += [
+            '<link rel="canonical" href="%s">' % url,
+            '<link rel="alternate" hreflang="en" href="%s">' % url,
+            '<link rel="alternate" hreflang="vi" href="%s?lang=vi">' % url,
+            '<link rel="alternate" hreflang="x-default" href="%s">' % url,
+        ]
+    lines += [
+        '<meta property="og:type" content="%s">' % ogtype,
+        '<meta property="og:site_name" content="Sol">',
+        '<meta property="og:title" content="%s">' % title_en,
+        '<meta property="og:description" content="%s">' % desc_en,
+    ]
+    if og:
+        lines += ['<meta property="og:image" content="%s">' % og,
+                  '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">']
+    lines += [
+        '<meta property="og:url" content="%s">' % url,
+        '<meta property="og:locale" content="en_GB">',
+        '<meta property="og:locale:alternate" content="vi_VN">',
+        '<meta name="twitter:card" content="summary_large_image">',
+        '<meta name="theme-color" content="#f9e9d3">',
+        '<link rel="icon" href="/favicon.svg" type="image/svg+xml">',
+    ]
+    if extra:
+        lines.append(extra)
+    lines += [ANALYTICS, '</head>']
+    return '\n'.join(lines) + '\n'
 
-def footer(sticky='book'):
-    navlinks = '\n'.join(
-        '      <li><a href="%s">%s</a></li>' % (h, t(en, vi)) for h, en, vi in NAV[1:])
-    return """<footer class="site"><div class="wrap">
-  <span class="fmark">%s</span>
-  <div class="footgrid">
-    <div>
-      <h3>%s</h3>
-      <p data-l="en" lang="en">%s</p>
-      <p data-l="vi" lang="vi">%s</p>
-      <p><a href="%s" rel="noopener">%s</a></p>
-    </div>
-    <div>
-      <h3>%s</h3>
-      <ul>
-        <li><a href="%s">%s</a></li>
-        <li><a href="mailto:%s">%s</a></li>
-        <li><a href="%s" rel="noopener">Instagram</a></li>
-      </ul>
-    </div>
-    <div>
-      <h3>%s</h3>
-      <ul>
-%s
-        <li><a href="/jobs/">%s</a></li>
-        <li><a href="/privacy/">%s</a></li>
-      </ul>
-    </div>
+
+CARET  = ('<svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" '
+          'aria-hidden="true" focusable="false"><path d="M3 6l5 5 5-5"/></svg>')
+BURGER = ('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" '
+          'stroke-linecap="square" aria-hidden="true" focusable="false"><path d="M3 6.5h18M3 12h18M3 17.5h18"/></svg>')
+CLOSE  = ('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" '
+          'stroke-linecap="square" aria-hidden="true" focusable="false"><path d="M5 5l14 14M19 5L5 19"/></svg>')
+HOME_LABEL = label('Sol, home', 'Sol, trang chủ')
+
+
+def logo(w, h):
+    return '<img src="/assets/sol-primary-red.svg" alt="Sol" width="%d" height="%d">' % (w, h)
+
+
+def lang_switch():
+    return ('<div class="lang" role="group" %s><button type="button" data-set-lang="en" aria-pressed="true">EN</button>'
+            '<span aria-hidden="true">·</span><button type="button" data-set-lang="vi" aria-pressed="false" lang="vi">VI</button></div>'
+            % label('Language', 'Ngôn ngữ'))
+
+
+def header(cur):
+    """cur: food / wine / bar / story / visit, or None."""
+    def tabs():
+        return ''.join('<li><a href="%s"%s>%s<span>%s</span></a></li>'
+                       % (href, ' aria-current="page"' if key == cur else '', name, sub)
+                       for key, href, name, sub in MENU_TABS)
+
+    def pages():
+        return ''.join('<li><a href="%s"%s>%s</a></li>'
+                       % (href, ' aria-current="page"' if key == cur else '', name)
+                       for key, href, name in NAV_PAGES)
+
+    menu_cur = ' aria-current="true"' if cur in ('food', 'wine', 'bar') else ''
+    return """<header class="site-header" data-site-header>
+  <div class="mbar">
+    {lang}
+    <a href="/" {home}>{logo_s}</a>
+    <button class="burger" type="button" {open_l} aria-expanded="false" aria-controls="navsheet" data-sheet-open>{burger}</button>
   </div>
-  <p class="legal">%s</p>
-</div></footer>
-%s
-</body></html>
-""" % (
-    MARK_LOCK,
-    t('Find us', 'Tìm chúng tôi'),
-    ADDRESS_EN, ADDRESS_VI,
-    MAPS_URL, t('Open in Google Maps', 'Mở trong Google Maps'),
-    t('Contact', 'Liên hệ'),
-    PHONE_TEL, PHONE, EMAIL, EMAIL, INSTAGRAM,
-    t('More', 'Thêm'),
-    navlinks,
-    t('Work at Sol', 'Tuyển dụng'),
-    t('Privacy', 'Bảo mật'),
-    t('© 2026 CÔNG TY TNHH AURELIAN · Tây Hồ, Hanoi',
-      '© 2026 CÔNG TY TNHH AURELIAN · Tây Hồ, Hà Nội'),
-    STICKY[sticky],
-)
+  <div class="masthead"><a href="/" {home}>{logo_l}</a></div>
+  <div class="wrap">
+    <nav class="navbar" {main_l}>
+      {lang}
+      <ul class="nav-links"><li><a href="/menu/" data-menu-link{menu_cur}>{menu}{caret}</a></li>{pages}</ul>
+      <a class="btn btn-red btn-sm" href="/visit/#book">{book}</a>
+    </nav>
+  </div>
+  <nav class="subnav" {tabs_l}><div class="wrap"><ul>{tabs}</ul></div></nav>
+</header>
+<div class="navsheet" id="navsheet" role="dialog" aria-modal="true" {sheet_l} tabindex="-1" hidden>
+  <div class="navsheet-top"><span></span><a href="/" {home}>{logo_s}</a>
+    <button class="navsheet-close" type="button" {close_l} data-sheet-close>{close}</button></div>
+  <p class="navsheet-label">{menu}</p>
+  <ul class="navsheet-menu">{tabs}</ul>
+  <hr class="navsheet-rule">
+  <ul class="navsheet-pages">{pages}</ul>
+  <div class="navsheet-foot">
+    <a class="btn btn-red" href="/visit/#book">{book}</a>
+    <div class="navsheet-meta"><span>{hours}</span>{lang}</div>
+  </div>
+</div>
+""".format(lang=lang_switch(), home=HOME_LABEL, logo_s=logo(74, 26), logo_l=logo(165, 58),
+           open_l=label('Open navigation', 'Mở menu điều hướng'), burger=BURGER,
+           main_l=label('Main', 'Điều hướng chính'), menu_cur=menu_cur, menu=t('Menu', 'Thực đơn'),
+           caret=CARET, pages=pages(), book=BOOK, tabs_l=label('Menu sections', 'Các mục thực đơn'),
+           tabs=tabs(), sheet_l=label('Navigation', 'Điều hướng'),
+           close_l=label('Close navigation', 'Đóng menu điều hướng'), close=CLOSE, hours=HOURS_TAB)
 
-def page(path, slug, title_en, title_vi, desc_en, desc_vi, body,
-         head_extra='', ogtype='website', body_attrs='', out=None, nav_path=None,
-         og=None, sticky='book'):
-    doc = HEAD_TPL.format(title_en=title_en, title_vi=title_vi,
-                          desc_en=desc_en, desc_vi=desc_vi,
-                          site=SITE, path=path, slug=slug, ogtype=ogtype,
-                          ga=GA_ID, fbpix=FB_PIX, head_extra=head_extra,
-                          body_attrs=body_attrs, og=og or '%s/og-%s.png' % (SITE, slug))
-    doc += header(nav_path or path)
-    doc += body
-    doc += footer(sticky)
+
+def footer():
+    more = [('/menu/', t('Food', 'Món ăn')), ('/menu/wine/', t('Wine', 'Vang')),
+            ('/menu/bar/', t('Bar', 'Quầy bar')), ('/story/', t('Story', 'Câu chuyện')),
+            ('/visit/', t('Visit', 'Ghé thăm')), ('/jobs/', t('Work with us', 'Tuyển dụng')),
+            ('/privacy/', t('Privacy', 'Bảo mật'))]
+    return """<footer class="site-footer">
+  <div class="wrap"><div class="footer-inner">
+    <a class="footer-logo" href="/" {home}>{logo}</a>
+    <div class="footer-cols"><section><h2>{find}</h2><p>{addr}</p><p><a href="{maps}">{maps_t}</a></p></section><section><h2>{open}</h2><p>{days}</p><p>{hours}</p><p>{closed}</p></section><section><h2>{talk}</h2><p><a href="{tel}">{phone}</a></p><p><a href="mailto:{email}">{email}</a></p><p>{insta}</p></section><nav {more_l}><h2>{more_h}</h2><ul>{more}</ul></nav></div>
+    <p class="legal">{legal}</p>
+  </div></div>
+</footer>
+""".format(home=HOME_LABEL, logo=logo(91, 32), find=t('Find us', 'Tìm chúng tôi'),
+           addr=t(ADDRESS_EN, ADDRESS_VI), maps=MAPS_URL, maps_t=MAPS_LINK_TEXT,
+           open=t('Open', 'Giờ mở cửa'), days=t('Tuesday to Sunday', 'Thứ Ba đến Chủ Nhật'),
+           hours=t('5pm–11pm', '17:00 – 23:00'), closed=t('Closed Mondays', 'Nghỉ thứ Hai'),
+           talk=t('Talk to us', 'Liên hệ'), tel=PHONE_TEL, phone=PHONE, email=EMAIL,
+           insta=INSTA_LINK, more_l=label('More', 'Thêm'), more_h=t('More', 'Thêm'),
+           more=''.join('<li><a href="%s">%s</a></li>' % m for m in more),
+           legal=t('© 2026 Công ty TNHH Aurelian · Tây Hồ, Hanoi',
+                   '© 2026 Công ty TNHH Aurelian · Tây Hồ, Hà Nội'))
+
+
+def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website',
+         extra='', body_attrs='', index=True, out=None, verbatim=False):
+    """Write one page. title and desc are (English, Vietnamese) pairs.
+    verbatim: leave main's text exactly as it is (the privacy notice)."""
+    doc = head(path, title, desc, og, ogtype, extra, index)
+    doc += '<body class="%s"%s>\n%s\n' % (body_class, body_attrs, SUN_SPRITE)
+    doc += nbsp('<a class="skip" href="#main">%s</a>\n' % t('Skip to content', 'Chuyển đến nội dung chính')
+                + header(cur))
+    doc += main if verbatim else nbsp(main)
+    doc += nbsp(footer())
+    doc += '</body>\n</html>\n'
     if out is None:
         out = os.path.join(DIST, path.strip('/'), 'index.html') if path != '/' \
               else os.path.join(DIST, 'index.html')
-    os.makedirs(os.path.dirname(out), exist_ok=True)
-    open(out, 'w', encoding='utf-8').write(doc)
+    write(out, doc)
     return out
 
 
-# ==========================================================================
-# STRUCTURED DATA
-# ==========================================================================
-SCHEMA = """<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Restaurant",
-  "@id": "https://sol.pizza/#restaurant",
-  "name": "Sol",
-  "alternateName": "Sol Hanoi",
-  "url": "https://sol.pizza/",
-  "description": "Italian-American cooking and a wood-fired oven in Tây Hồ, Hanoi.",
-  "servesCuisine": ["Italian-American", "Pizza"],
-  "priceRange": "$$",
-  "image": "https://sol.pizza/og-home.png",
-  "logo": "https://sol.pizza/favicon.svg",
-  "email": "hello@sol.pizza",
-  "telephone": "+84866161600",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "Số 7, Ngõ 88 Quảng An",
-    "addressLocality": "Tây Hồ",
-    "addressRegion": "Hà Nội",
-    "addressCountry": "VN"
-  },
-  "hasMenu": "https://sol.pizza/menu/",
-  "acceptsReservations": "https://sol.pizza/visit/#book",
-  "openingHoursSpecification": [
-    { "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
-      "opens": "17:00", "closes": "23:00" }
-  ],
-  "parentOrganization": { "@type": "Organization", "name": "CÔNG TY TNHH AURELIAN" }
-}
-</script>"""
+def og_image(name):
+    return '%s/og-%s.png' % (SITE, name)
 
 
 # ==========================================================================
-# HOME
+# STRUCTURED DATA (home and Visit)
+# ==========================================================================
+HOME_DESC = ('Wood-fired pizza, pasta made in-house and 26 wines by the glass. '
+             'Sol opens soon at No 7, Lane 88 Quang An, Tây Hồ, Hanoi.')
+
+SCHEMA = '<script type="application/ld+json">\n%s\n</script>' % json.dumps({
+    '@context': 'https://schema.org',
+    '@type': 'Restaurant',
+    '@id': 'https://sol.pizza/#restaurant',
+    'name': 'Sol',
+    'alternateName': 'Sol Hanoi',
+    'url': 'https://sol.pizza/',
+    'description': HOME_DESC,
+    'servesCuisine': ['Italian-American', 'Pizza'],
+    'priceRange': '$$',
+    'image': 'https://sol.pizza/og-home.png',
+    'logo': 'https://sol.pizza/favicon.svg',
+    'email': EMAIL,
+    'telephone': '+84866161600',
+    'address': {
+        '@type': 'PostalAddress',
+        'streetAddress': 'No 7, Lane 88 Quang An Street',
+        'addressLocality': 'Tây Hồ',
+        'addressRegion': 'Hanoi',
+        'addressCountry': 'VN',
+    },
+    'hasMenu': 'https://sol.pizza/menu/',
+    'acceptsReservations': 'https://sol.pizza/visit/#book',
+    'openingHoursSpecification': [{
+        '@type': 'OpeningHoursSpecification',
+        'dayOfWeek': ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+        'opens': '17:00', 'closes': '23:00',
+    }],
+    'sameAs': [INSTAGRAM],
+    'parentOrganization': {'@type': 'Organization', 'name': 'Công ty TNHH Aurelian'},
+}, ensure_ascii=False, indent=2)
+
+
+# ==========================================================================
+# HOME  /
 # ==========================================================================
 def build_home():
     facts = [
-        ('Opening', 'Khai trương', 'Soon', 'Sắp tới'),
-        ('Where', 'Địa điểm', 'Tây Hồ, Hanoi', 'Tây Hồ, Hà Nội'),
-        ('Kitchen', 'Bếp', 'Wood-fired, Italian-American', 'Lò củi, ẩm thực Ý–Mỹ'),
-        ('Hours', 'Giờ mở cửa', 'Tue – Sun, 17:00 – 23:00', 'Thứ Ba – CN, 17:00 – 23:00'),
+        (t('Opening', 'Khai trương'), t('Soon', 'Sắp tới')),
+        (t('Where', 'Địa điểm'), t('Lane 88 Quang An, Tây Hồ', 'Ngõ 88 Quảng An, Tây Hồ')),
+        (t('Kitchen', 'Bếp'), t('Wood-fired Italian-American', 'Lò củi, ẩm thực Ý–Mỹ')),
+        (t('Hours', 'Giờ mở cửa'), HOURS_TAB),
     ]
-    factshtml = '\n'.join(
-        '      <div><dt>%s</dt><dd>%s</dd></div>' % (t(a, b), t(c, d))
-        for a, b, c, d in facts)
-
-    teasers = [
-        ('The oven', 'Lò nướng',
-         'A Pavesi wood-fired oven, built in Italy and shipped to Tây Hồ. '
-         'Dough fermented slowly, then thirty seconds of real fire.',
-         'Lò củi Pavesi, chế tác tại Ý và đưa về Tây Hồ. Bột ủ chậm, '
-         'rồi ba mươi giây trong lửa thật.'),
-        ('The room', 'Không gian',
-         'Two floors, under 200 square metres, a bar you can eat at and a '
-         'terrace for when Hanoi behaves.',
-         'Hai tầng, dưới 200 mét vuông, quầy bar có thể ngồi ăn và một khoảng '
-         'hiên cho những ngày Hà Nội dịu trời.'),
-        ('The table', 'Bàn ăn',
-         'Italian-American means generous. Plates meant for the middle of the '
-         'table, and nobody counting.',
-         'Ẩm thực Ý–Mỹ nghĩa là hào phóng. Món đặt giữa bàn, và không ai phải '
-         'đắn đo.'),
+    trio = [
+        ('envoy-at-the-oven.svg', 83, 124, t('The oven', 'Lò nướng'),
+         t('A Pavesi wood-fired oven, built in Italy and shipped to Tây Hồ. Slow-fermented dough, '
+           'baked fast over real fire.',
+           'Lò củi Pavesi, chế tác tại Ý và đưa về Tây Hồ. Bột ủ chậm, nướng nhanh trên lửa thật.')),
+        ('grape.svg', 60, 100, t('The room', 'Không gian'),
+         t('Two floors, under 200 square metres. A bar you can eat at, and a terrace for when the '
+           'weather behaves.',       # CONFIRM: there is a terrace
+           'Hai tầng, dưới 200 mét vuông, quầy bar có thể ngồi ăn và một khoảng hiên cho những '
+           'ngày Hà Nội dịu trời.')),
+        ('tomatoes.svg', 136, 74, t('The table', 'Bàn ăn'),
+         t('Italian-American means generous: plates for the middle of the table, and nobody '
+           'counting slices.',
+           'Ẩm thực Ý–Mỹ nghĩa là hào phóng. Món đặt giữa bàn, và không ai phải đắn đo.')),
     ]
-    teaserhtml = '\n'.join(
-        """      <div class="card">
-        <h3>%s</h3>
-        <p data-l="en" lang="en">%s</p>
-        <p data-l="vi" lang="vi">%s</p>
-      </div>""" % (t(a, b), c, d) for a, b, c, d in teasers)
+    # Samples on the menu card (short descriptions, from the copy doc).
+    cards = [
+        (t('Food', 'Món ăn'), t('Pizza, pasta and small plates', 'Pizza, mì Ý và món khai vị'), [
+            ('Sol', t('Calabrian chilli, caciocavallo, basil', 'Ớt Calabria, caciocavallo, húng quế')),
+            ('White', t('Ricotta, caramelised onions, parsley', 'Ricotta, hành tây caramel, mùi tây')),
+            ('Amatriciana', t('Guanciale, tomatoes, pecorino', 'Guanciale, cà chua, pecorino')),
+         ], '/menu/', t('See all food', 'Xem tất cả món ăn')),
+        (t('Wine', 'Vang'), WINE_TAB, [
+            ('Morgon ’22', 'Gamay · Marcel Lapierre · Beaujolais'),
+            ('Chianti Classico ’20', t('Sangiovese · La Castellina · Tuscany',
+                                       'Sangiovese · La Castellina · Toscana')),
+            ('Cuvée de Réserve NV', 'Chardonnay · Pierre Péters · Champagne'),
+         ], '/menu/wine/', t('See all wine', 'Xem tất cả các loại vang')),
+        (t('Bar', 'Quầy bar'), t('Cocktails, beer and sake', 'Cocktail, bia và sake'), [
+            ('Sol margarita', 'Don Julio reposado, agave, dry curaçao'),
+            ('Negroni', t('Barrel-aged gin, Campari, Antica Formula', 'Gin ủ thùng gỗ, Campari, Antica Formula')),
+            ('Bia Craft lager', t('On draft', 'Bia tươi')),
+         ], '/menu/bar/', t('See all bar', 'Xem tất cả đồ uống')),
+    ]
 
-    body = """<main id="main">
-<section class="hero">
-  <div class="wrap">
-    <p class="eyebrow">{eyebrow}</p>
-    <h1>{h1}</h1>
-    <p class="subtitle">{sub}</p>
-    <p class="standfirst" data-l="en" lang="en">{sf_en}</p>
-    <p class="standfirst" data-l="vi" lang="vi">{sf_vi}</p>
-    <div class="btnrow">
-      <a class="btn" href="/visit/#book">{cta1}</a>
-      <a class="btn ghost" href="/menu/">{cta2}</a>
-    </div>
-    <dl class="facts">
-{facts}
-    </dl>
-  </div>
+    main = """<main id="main">
+<section class="hero wrap">
+  <p class="eyebrow">{eyebrow}</p>
+  <h1 class="hero-title">{h1}</h1>
+  <p class="hand hero-hand">{hand}</p>
+  <p class="hero-lead">{lead}</p>
+  <div class="actions"><a class="btn btn-red" href="/visit/#book">{book}</a><a class="btn btn-outline" href="/menu/">{see_menu}</a></div>
 </section>
-
-<section class="band" style="padding-top:56px">
-  <div class="wrap prose">
-    <p class="kicker">{k1}</p>
-    <h2>{h2a}</h2>
-    <p class="lede" data-l="en" lang="en">{p1_en}</p>
-    <p class="lede" data-l="vi" lang="vi">{p1_vi}</p>
-    <p data-l="en" lang="en">{p2_en}</p>
-    <p data-l="vi" lang="vi">{p2_vi}</p>
-    <p><a href="/story/">{link1}</a></p>
-  </div>
+<div class="wrap"><dl class="facts">{facts}</dl></div>
+<div class="sun-divider"><img src="/assets/sun-row.svg" alt="" width="263" height="34"></div>
+<section class="split wrap">
+  <div><p class="eyebrow">{k1}</p><h2 class="h-lg">{h2a}</h2></div>
+  <div class="split-body"><p>{p1}</p><p>{p2}</p><a class="link-sc" href="/story/">{story}</a></div>
 </section>
-
-<section class="band">
-  <div class="wrap">
-    <div class="grid g3">
-{teasers}
-    </div>
-  </div>
+<div class="wrap"><ul class="trio">{trio}</ul></div>
+<figure class="pullquote wrap">{sun_a}<blockquote><p>{quote}</p></blockquote>{sun_b}</figure>
+<section class="menu-preview wrap" aria-labelledby="menu-h">
+  <header class="section-intro"><p class="eyebrow">{k2}</p><h2 class="h-lg" id="menu-h">{h2b}</h2><p>{p3}</p></header>
+  <div class="menu-card">{cards}</div>
 </section>
-
-<section class="band">
-  <div class="wrap prose">
-    <blockquote class="belief">
-      <p data-l="en" lang="en">{bq_en}</p>
-      <p data-l="vi" lang="vi">{bq_vi}</p>
-    </blockquote>
-    <p class="kicker">{k2}</p>
-    <h2>{h2b}</h2>
-    <p data-l="en" lang="en">{p3_en}</p>
-    <p data-l="vi" lang="vi">{p3_vi}</p>
-    <p><a class="btn solid" href="/menu/">{cta3}</a></p>
-  </div>
-</section>
-
-<section class="band ruled">
-  <div class="wrap prose">
-    <p class="kicker">{k3}</p>
-    <h2>{h2c}</h2>
-    <ul class="contactlist">
-      <li><span class="k">{l_where}</span>
-          <span class="v"><span data-l="en" lang="en">{addr_en}</span><span data-l="vi" lang="vi">{addr_vi}</span></span></li>
-      <li><span class="k">{l_hours}</span>
-          <span class="v">{hours}</span></li>
-      <li><span class="k">{l_phone}</span><span class="v">{phone}</span></li>
-    </ul>
-    <p style="margin-top:22px">
-      <a class="btn solid" href="/visit/#book">{cta4}</a>
-      <a href="{maps}" rel="noopener" style="margin-left:16px">{maps_l}</a>
-    </p>
-  </div>
+<section class="visit-band wrap" aria-labelledby="visit-h">
+  <p class="eyebrow">{k3}</p><h2 class="h-lg" id="visit-h">{h2c}</h2>
+  <dl class="visit-grid">
+    <div><dt>{l_where}</dt><dd>{addr}</dd></div>
+    <div><dt>{l_hours}</dt><dd>{hours}</dd></div>
+    <div><dt>{l_talk}</dt><dd><a href="{tel}">{phone}</a><br><a href="mailto:{email}">{email}</a><br>{insta}</dd></div>
+  </dl>
+  <div class="actions"><a class="btn btn-red" href="/visit/#book">{book}</a><a class="btn btn-outline" href="{maps}">{maps_t}</a></div>
 </section>
 </main>
 """.format(
-        eyebrow=t('Opening soon · Tây Hồ, Hanoi',
-                  'Sắp khai trương · Tây Hồ, Hà Nội'),
-        h1=t('Sol comes back to Tây Hồ.', 'Sol trở lại Tây Hồ.'),
-        sub=t('Italian-American, cooked over wood.', 'Ẩm thực Ý–Mỹ, nấu trên lửa củi.'),
-        sf_en='Sol Pizza closed last year. What opens on the same '
-              'stretch of Tây Hồ is the same idea with more room to breathe — a '
-              'proper kitchen, a proper bar, and the oven we always wanted.',
-        sf_vi='Sol Pizza đã đóng cửa năm ngoái. Sắp tới, ngay trên con phố ấy '
-              'ở Tây Hồ, chúng tôi mở lại với nhiều không gian hơn — một căn bếp '
-              'đúng nghĩa, một quầy bar đúng nghĩa, và chiếc lò chúng tôi luôn mong muốn.',
-        cta1=t('Book a table', 'Đặt bàn'), cta2=t('See the menu', 'Xem thực đơn'),
-        facts=factshtml,
+        eyebrow=t('Opening soon · Tây Hồ, Hanoi', 'Sắp khai trương · Tây Hồ, Hà Nội'),
+        h1=t('Sol is back in Tây Hồ.', 'Sol trở lại Tây Hồ.'),
+        hand=t('with the oven we always wanted', 'cùng chiếc lò chúng tôi luôn mong muốn'),
+        lead=t('Sol Pizza closed last year. Sol opens on the same stretch of Tây Hồ with more room: '
+               'a bigger kitchen, a proper bar and a Pavesi wood-fired oven built in Italy.',
+               'Sol Pizza đã đóng cửa năm ngoái. Sol sẽ mở lại ngay trên con phố ấy ở Tây Hồ, với nhiều '
+               'không gian hơn: căn bếp rộng hơn, một quầy bar đúng nghĩa và chiếc lò củi Pavesi chế '
+               'tác tại Ý.'),
+        book=BOOK, see_menu=t('See the menu', 'Xem thực đơn'),
+        # The photo band goes here, between the buttons and the facts row, once
+        # there's photography: 1040 × 520 (2:1).
+        facts=''.join('<div><dt>%s</dt><dd>%s</dd></div>' % f for f in facts),
         k1=t('What Sol is', 'Sol là gì'),
-        h2a=t('A neighbourhood restaurant that takes the food seriously.',
-              'Một nhà hàng của khu phố, nghiêm túc với món ăn.'),
-        p1_en='Italian-American is a cuisine of immigrants: Italian technique, '
-              'American appetite, and whatever the local market actually has that '
-              'morning. In Hanoi that means Vietnamese herbs, Vietnamese seafood '
-              'and imported flour, cheese and tinned tomatoes we do not compromise on.',
-        p1_vi='Ẩm thực Ý–Mỹ là món ăn của người nhập cư: kỹ thuật Ý, khẩu vị Mỹ, và '
-              'bất cứ thứ gì chợ địa phương có vào sáng hôm đó. Ở Hà Nội, điều đó '
-              'nghĩa là rau thơm Việt, hải sản Việt, cùng bột mì, phô mai và cà chua '
-              'hộp nhập khẩu mà chúng tôi không thỏa hiệp.',
-        p2_en='We are still building. The oven is in, the drawings are done, and '
-              'the team is coming together. Everything on this site marked in yellow '
-              'is still being confirmed.',
-        p2_vi='Chúng tôi vẫn đang hoàn thiện. Lò đã về, bản vẽ đã xong, và đội ngũ '
-              'đang dần đầy đủ. Mọi thông tin được đánh dấu vàng trên trang này vẫn '
-              'đang được xác nhận.',
-        link1=t('Read the story →', 'Đọc câu chuyện →'),
-        teasers=teaserhtml,
-        bq_en='We would rather do <strong>twelve things properly</strong> than '
-              'forty things adequately.',
-        bq_vi='Chúng tôi thà làm <strong>mười hai món thật tử tế</strong> còn hơn '
-              'bốn mươi món tàm tạm.',
+        h2a=t('A neighbourhood restaurant built around pizza.',
+              'Một nhà hàng của khu phố, lấy pizza làm trung tâm.'),
+        p1=t('Italian-American food began with immigrants: Italian technique, American appetite and '
+             'whatever the market had that morning. Ours has Đà Lạt spinach and Phú Quốc pepper in '
+             'it, and imported flour, cheese and tomatoes we won’t compromise on.',
+             'Ẩm thực Ý–Mỹ bắt đầu từ những người nhập cư: kỹ thuật Ý, khẩu vị Mỹ và bất cứ thứ gì '
+             'chợ có vào sáng hôm đó. Món của chúng tôi có rau chân vịt Đà Lạt, tiêu Phú Quốc, cùng '
+             'bột mì, phô mai và cà chua nhập khẩu — những nguyên liệu chúng tôi không bao giờ thỏa '
+             'hiệp về chất lượng.'),
+        p2=t('We’re still building: the oven is in and the team is coming together. Underneath it '
+             'all is one rule — food quality is non-negotiable.',
+             'Chúng tôi vẫn đang hoàn thiện: lò đã về và đội ngũ đang dần đầy đủ. Nền tảng của tất cả '
+             'là một nguyên tắc — chất lượng món ăn là điều không thể thỏa hiệp.'),
+        story=t('Read our story', 'Đọc câu chuyện của chúng tôi'),
+        trio=''.join(
+            '<li><div class="trio-art"><img src="/assets/%s" alt="" width="%d" height="%d" '
+            'style="height:%dpx" loading="lazy"></div><h3>%s</h3><p>%s</p></li>'
+            % (img, w, h, h, name, text) for img, w, h, name, text in trio),
+        sun_a=sun(2), sun_b=sun(6),
+        quote=t('We’d rather cook a short menu well than a long one adequately.',
+                'Chúng tôi thà nấu ít món cho thật ngon, còn hơn nhiều món mà tàm tạm.'),
         k2=t('The menu', 'Thực đơn'),
         h2b=t('Short, and it changes.', 'Ngắn gọn, và luôn thay đổi.'),
-        p3_en='Antipasti to share, a handful of pizzas, pasta made in-house, '
-              'two or three larger plates off the fire, and pudding. '
-              'A bar list built around amaro, vermouth and Italian wine.',
-        p3_vi='Khai vị để chia sẻ, vài loại pizza, mì tươi làm tại chỗ, hai ba món '
-              'chính nướng lửa, và tráng miệng. '
-              'Quầy bar xoay quanh amaro, vermouth và rượu vang Ý.',
-        cta3=t('See the full menu', 'Xem toàn bộ thực đơn'),
+        p3=t('Small plates to share, pizza from the wood oven, pasta made in-house, a bar that knows '
+             'what it’s doing and 26 wines by the glass.',
+             'Món khai vị để chia sẻ, pizza từ lò củi, mì Ý làm tại nhà hàng, một quầy bar biết '
+             'mình đang làm gì và 26 loại vang theo ly.'),
+        cards=''.join(
+            '<div><h3>%s</h3><p class="menu-card-sub">%s</p><ul>%s</ul><a class="link-sc" href="%s">%s</a></div>'
+            % (h, sub, ''.join('<li><span class="n">%s</span><span class="x">%s</span></li>' % i
+                               for i in items), href, link)
+            for h, sub, items, href, link in cards),
         k3=t('Visit', 'Ghé thăm'),
-        h2c=t('Tây Hồ, Hanoi', 'Tây Hồ, Hà Nội'),
+        h2c=t('Find us in Tây Hồ', 'Tìm chúng tôi ở Tây Hồ'),
         l_where=t('Where', 'Địa chỉ'), l_hours=t('Hours', 'Giờ mở cửa'),
-        l_phone=t('Phone', 'Điện thoại'),
-        addr_en=ADDRESS_EN, addr_vi=ADDRESS_VI,
-        hours=t('Tuesday – Sunday, 17:00 – 23:00', 'Thứ Ba – Chủ Nhật, 17:00 – 23:00'),
-        phone=PHONE,
-        cta4=t('Book a table', 'Đặt bàn'), maps=MAPS_URL,
-        maps_l=t('Open in Google Maps →', 'Mở trong Google Maps →'),
+        l_talk=t('Talk to us', 'Liên hệ'),
+        addr=t(ADDRESS_EN, ADDRESS_VI),
+        hours=t('Tuesday to Sunday, 5pm–11pm. Closed Mondays.',
+                'Thứ Ba đến Chủ Nhật, 17:00 – 23:00. Nghỉ thứ Hai.'),
+        tel=PHONE_TEL, phone=PHONE, email=EMAIL, insta=INSTA_LINK,
+        maps=MAPS_URL, maps_t=MAPS_LINK_TEXT,
     )
-
-    return page('/', 'home',
-        'Sol — Italian-American in Tây Hồ, Hanoi',
-        'Sol — Ẩm thực Ý–Mỹ tại Tây Hồ, Hà Nội',
-        'Sol is an Italian-American restaurant opening soon in Tây Hồ, Hanoi. '
-        'Wood-fired pizza, pasta made in-house, and a bar built around amaro and Italian wine.',
-        'Sol là nhà hàng Ý–Mỹ sắp khai trương tại Tây Hồ, Hà Nội.',
-        body, head_extra=SCHEMA)
-
-
-# ==========================================================================
-# MENU
-# ==========================================================================
-# Transcribed from the Sol Pizza menu book (April 2025) — the kitchen Sol
-# Hanoi picks up from. Dish names are left as you order them; only the
-# descriptions are translated.
-#
-# Each dish: (name_en, name_vi, desc_en, desc_vi, price, tags)
-#   price  '' prints nothing. Put '270,000₫' in when the number is fixed and
-#          it appears on the right of the row — no other change needed.
-#   tags   'v' veg · 'hot' spicy · 'new' new
-MENU = [
- ('Small Plates', 'Khai vị',
-  'To start, while the oven catches up.',
-  'Để mở đầu, trong lúc chờ lò nóng.',
-  [
-   ('Marinated Olives', 'Ô liu ướp', '', '', '', ['v']),
-   ('Antipasto', 'Antipasto',
-    'Wood roasted vegetables, 24 month prosciutto, marinated olives, and a bite of cheese.',
-    'Rau củ nướng lò củi, prosciutto ủ 24 tháng, ô liu ướp và một miếng phô mai.',
-    '', []),
-   ('Hummus', 'Hummus',
-    'Served with house bread.', 'Ăn kèm bánh mì nhà làm.', '', ['v']),
-   ('Meatballs with Ricotta', 'Thịt viên với ricotta', '', '', '', []),
-   ("Bain's Spinach Salad", "Salad rau chân vịt Bain",
-    'Da Lat baby spinach, 12 year aged balsamic, 24 month parmigiano, extra virgin olive oil.',
-    'Rau chân vịt non Đà Lạt, giấm balsamic ủ 12 năm, parmigiano 24 tháng, dầu ô liu nguyên chất.',
-    '', ['v']),
-   ('Caesar Salad', 'Salad Caesar',
-    'Add a chicken cutlet if you like.', 'Có thể thêm ức gà chiên xù.', '', []),
-   ('Prosciutto', 'Prosciutto',
-    '24 month prosciutto and house bread.',
-    'Prosciutto ủ 24 tháng và bánh mì nhà làm.', '', []),
-  ]),
-
- ('Pizza', 'Pizza',
-  'Cooked in the Pavesi wood oven. We do not do half-and-half — sorry.',
-  'Nướng trong lò củi Pavesi. Chúng tôi không làm nửa nọ nửa kia — mong bạn thông cảm.',
-  [
-   ('Plain', 'Plain',
-    'Tomatoes, mozzarella, Sicilian oregano, olive oil, pecorino, basil.',
-    'Cà chua, mozzarella, oregano Sicily, dầu ô liu, pecorino, húng quế.', '', []),
-   ('Sol', 'Sol',
-    'Tomatoes, mozzarella, Calabrian chilli flakes, Sicilian oregano, caciocavallo, '
-    'olive oil, parmigiano, basil.',
-    'Cà chua, mozzarella, ớt Calabria, oregano Sicily, caciocavallo, dầu ô liu, '
-    'parmigiano, húng quế.', '', ['hot']),
-   ('White', 'White',
-    'Mozzarella, ricotta, caramelised onions, parmigiano, olive oil, parsley.',
-    'Mozzarella, ricotta, hành tây caramel, parmigiano, dầu ô liu, mùi tây.', '', ['v']),
-   ('Red', 'Red',
-    'Tomatoes, garlic, Sicilian oregano, olive oil, basil. No cheese, and none needed.',
-    'Cà chua, tỏi, oregano Sicily, dầu ô liu, húng quế. Không phô mai, và không cần phô mai.',
-    '', ['v']),
-   ('Pepperoni', 'Pepperoni',
-    'Tomatoes, mozzarella, pepperoni, parmigiano, basil.',
-    'Cà chua, mozzarella, pepperoni, parmigiano, húng quế.', '', []),
-   ('Nduja Know?', 'Nduja Know?',
-    "Tomatoes, nduja, sausage, roasted peppers, mozzarella, olive oil, pecorino, basil.",
-    'Cà chua, nduja, xúc xích, ớt chuông nướng, mozzarella, dầu ô liu, pecorino, húng quế.',
-    '', ['hot']),
-   ("Porchetta 'bout it!", "Porchetta 'bout it!",
-    'Porchetta, Sicilian oregano, taleggio, garlic, onion, parmigiano, lemon, parsley.',
-    'Porchetta, oregano Sicily, taleggio, tỏi, hành tây, parmigiano, chanh vàng, mùi tây.',
-    '', []),
-   ('Gricia', 'Gricia',
-    'Guanciale, taleggio, parmigiano, mozzarella, Phu Quoc black pepper, parsley.',
-    'Guanciale, taleggio, parmigiano, mozzarella, tiêu đen Phú Quốc, mùi tây.', '', []),
-   ('Speckenwolf', 'Speckenwolf',
-    'Mozzarella, parmigiano, onion, mushroom, speck, Phu Quoc black pepper, parsley.',
-    'Mozzarella, parmigiano, hành tây, nấm, speck, tiêu đen Phú Quốc, mùi tây.', '', []),
-   ('Falco', 'Falco',
-    'Tomatoes, Sicilian oregano, parmigiano, garlic, onions, sausage, basil, olive oil.',
-    'Cà chua, oregano Sicily, parmigiano, tỏi, hành tây, xúc xích, húng quế, dầu ô liu.',
-    '', []),
-  ]),
-
- ('Pasta', 'Mì Ý',
-  'Dinner only.', 'Chỉ phục vụ buổi tối.',
-  [
-   ('Norcina', 'Norcina',
-    'Rigatoni, house sausage, mushrooms, cream, white wine, parmigiano, parsley.',
-    'Rigatoni, xúc xích nhà làm, nấm, kem, vang trắng, parmigiano, mùi tây.', '', []),
-   ('Amatriciana', 'Amatriciana',
-    'Spaghettini, guanciale, tomatoes, white wine, chilli flakes, pecorino, basil.',
-    'Spaghettini, guanciale, cà chua, vang trắng, ớt khô, pecorino, húng quế.', '', ['hot']),
-   ('Chicken Parmesan', 'Chicken Parmesan',
-    'Spaghettini, fried chicken cutlet, tomatoes, vodka sauce, parmigiano, basil.',
-    'Spaghettini, ức gà chiên xù, cà chua, sốt vodka, parmigiano, húng quế.', '', []),
-   ('S&M', 'S&M',
-    'Spaghettini, meatballs, organic tomatoes, parmigiano, ricotta, basil.',
-    'Spaghettini, thịt viên, cà chua hữu cơ, parmigiano, ricotta, húng quế.', '', []),
-  ]),
-]
-
-# Pizza toppings — add to any pie. (name_en, name_vi)
-TOPPINGS = [
-    ('Garlic', 'Tỏi'), ('Onion', 'Hành tây'), ('Basil', 'Húng quế'),
-    ('Parmigiano', 'Parmigiano'), ('Pecorino', 'Pecorino'),
-    ('Calabrian chillies', 'Ớt Calabria'), ('Mushrooms', 'Nấm'),
-    ('Roasted peppers', 'Ớt chuông nướng'), ('Mozzarella', 'Mozzarella'),
-    ('Kalamata olives', 'Ô liu Kalamata'), ('Pickled chillies', 'Ớt ngâm'),
-    ('Pepperoni', 'Pepperoni'), ('Nduja', 'Nduja'), ('Speck', 'Speck'),
-    ('Anchovy', 'Cá cơm muối'), ('Sausage', 'Xúc xích'), ('Sobrassada', 'Sobrassada'),
-]
-
-# The bar — everything except wine, which has its own page.
-BAR = [
- ('Cocktails', 'Cocktail',
-  'A full bar, so ask for anything you like — these are the ones we pour most.',
-  'Quầy bar đầy đủ, bạn cứ gọi món mình thích — đây là những ly chúng tôi pha nhiều nhất.',
-  [
-   ('Sol Margarita', 'Sol Margarita',
-    'Don Julio reposado, agave, dry curaçao.', 'Don Julio reposado, agave, dry curaçao.',
-    '', []),
-   ('Proper G&T', 'Proper G&T',
-    'Beefeater 24, Fentimans yuzu tonic.', 'Beefeater 24, tonic yuzu Fentimans.', '', []),
-   ('Negroni', 'Negroni',
-    'Barrel aged gin, Campari, Antica Formula.',
-    'Gin ủ thùng gỗ, Campari, Antica Formula.', '', []),
-   ('Black Manhattan', 'Black Manhattan',
-    'Rittenhouse rye whiskey, Nonino, Averna, bitters.',
-    'Rittenhouse rye whiskey, Nonino, Averna, bitters.', '', []),
-   ('Last Word', 'Last Word',
-    'Beefeater, green Chartreuse, Luxardo, lime.',
-    'Beefeater, Chartreuse xanh, Luxardo, chanh.', '', []),
-   ('Pisco Sour', 'Pisco Sour',
-    'Pisco, lemon, lime, spring bitters.',
-    'Pisco, chanh vàng, chanh xanh, spring bitters.', '', []),
-   ('Sazerac', 'Sazerac',
-    'Rittenhouse rye whiskey, La Fée absinthe, chocolate bitters.',
-    'Rittenhouse rye whiskey, absinthe La Fée, chocolate bitters.', '', []),
-   ('Sbagliato', 'Sbagliato',
-    'Antica Formula, Campari, prosecco, orange.',
-    'Antica Formula, Campari, prosecco, cam.', '', []),
-   ('Daiquiri', 'Daiquiri',
-    "Clément barrel selection, Bob's daiquiri bitters.",
-    "Clément barrel selection, bitters daiquiri của Bob's.", '', []),
-  ]),
-
- ('Beer', 'Bia', '', '',
-  [
-   ('Bia Craft Lager', 'Bia Craft Lager', 'On draft.', 'Bia tươi.', '', []),
-   ('Seasonal', 'Bia theo mùa', 'On draft — ask what is on.',
-    'Bia tươi — hỏi nhân viên hôm nay có loại gì.', '', []),
-   ('Dream Alone Pale Ale', 'Dream Alone Pale Ale', '', '', '', []),
-   ("Kurtz's Insane IPA", "Kurtz's Insane IPA", '', '', '', []),
-   ('Loose Rivet Hazy', 'Loose Rivet Hazy', '', '', '', []),
-   ('Eloquent Phantom Stout', 'Eloquent Phantom Stout', '', '', '', []),
-  ]),
-
- ('Sake', 'Sake', '', '',
-  [
-   ('House sake', 'Sake của quán', 'On draft, 100ml.', 'Rót tươi, 100ml.', '', []),
-   ('Mimurosugi, Dio Abita', 'Mimurosugi, Dio Abita',
-    'Genshu junmai · Nara, Japan. By the glass or the bottle.',
-    'Genshu junmai · Nara, Nhật Bản. Phục vụ theo ly hoặc chai.', '', []),
-  ]),
-
- ('Soft drinks', 'Đồ uống không cồn', '', '',
-  [
-   ('Still water', 'Nước suối', '', '', '', []),
-   ('Sparkling water', 'Nước có ga', '', '', '', []),
-   ('Lemonade', 'Nước chanh', '', '', '', []),
-   ('Alishan iced tea', 'Trà đá Alishan', '', '', '', []),
-   ('Dr Pepper', 'Dr Pepper', '', '', '', []),
-   ('Ginger beer', 'Bia gừng', '', '', '', []),
-   ('Kombucha', 'Kombucha', '', '', '', []),
-  ]),
-]
-
-TAGNAMES = {
-    'v':     ('Veg', 'Chay'),
-    'hot':   ('Spicy', 'Cay'),
-    'new':   ('New', 'Mới'),
-    'nat':   ('Natural', 'Tự nhiên'),
-    'house': ('House', 'Vang quán'),
-    'glass': ('By the glass', 'Theo ly'),
-}
-
-
-def dish_rows(dishes):
-    """Render a list of (name_en, name_vi, desc_en, desc_vi, price, tags)."""
-    rows = []
-    for d_en, d_vi, desc_en, desc_vi, price, tags in dishes:
-        tag_html = ''
-        if tags:
-            tag_html = '<span class="tags">' + ''.join(
-                '<span class="tag %s">%s</span>' % (tg, t(*TAGNAMES[tg]))
-                for tg in tags) + '</span>'
-        desc = ''
-        if desc_en or desc_vi:
-            desc = ('<p class="d-desc" data-l="en" lang="en">%s</p>'
-                    '<p class="d-desc" data-l="vi" lang="vi">%s</p>' % (desc_en, desc_vi))
-        price_html = '<p class="d-price">%s</p>' % price if price else ''
-        rows.append(
-            """      <div class="dish">
-        <div class="d-main">
-          <p class="d-name">%s%s</p>
-          %s
-        </div>
-        %s
-      </div>""" % (t(d_en, d_vi), tag_html, desc, price_html))
-    return rows
-
-
-def menu_sections(groups):
-    secs = []
-    for name_en, name_vi, note_en, note_vi, dishes in groups:
-        note = ''
-        if note_en or note_vi:
-            note = ('<p class="secnote" data-l="en" lang="en">%s</p>'
-                    '<p class="secnote" data-l="vi" lang="vi">%s</p>' % (note_en, note_vi))
-        secs.append("""    <div class="menusec">
-      <h2>%s</h2>
-      %s
-%s
-    </div>""" % (t(name_en, name_vi), note, '\n'.join(dish_rows(dishes))))
-    return secs
-
-
-def build_menu():
-    secs = menu_sections(MENU)
-
-    chips = '\n'.join('        <li>%s</li>' % t(en, vi) for en, vi in TOPPINGS)
-    toppings = """    <div class="menusec">
-      <h2>{h}</h2>
-      <p class="secnote" data-l="en" lang="en">{n_en}</p>
-      <p class="secnote" data-l="vi" lang="vi">{n_vi}</p>
-      <ul class="chips">
-{chips}
-      </ul>
-    </div>""".format(h=t('Toppings', 'Topping thêm'),
-                     n_en='Add any of these to any pizza.',
-                     n_vi='Thêm bất kỳ thứ nào bên dưới vào bất kỳ chiếc pizza nào.',
-                     chips=chips)
-
-    wine_card = """    <div class="card">
-      <h3 style="margin-top:0">{h}</h3>
-      <p data-l="en" lang="en">{p_en}</p>
-      <p data-l="vi" lang="vi">{p_vi}</p>
-      <p style="margin-bottom:0"><a class="btn solid" href="/wine/">{cta}</a></p>
-    </div>""".format(
-        h=t('Wine', 'Vang'),
-        p_en='Around forty bottles, most of them open by the glass, with a handful of '
-             'natural and low-intervention growers among them.',
-        p_vi='Khoảng bốn mươi chai, phần lớn phục vụ theo ly, trong đó có một số nhà làm '
-             'vang tự nhiên và ít can thiệp.',
-        cta=t('See the wine list', 'Xem danh sách vang'))
-
-    bar = menu_sections(BAR)
-
-    body = """<main id="main">
-<section class="pagehead">
-  <div class="wrap">
-    <p class="eyebrow">{eyebrow}</p>
-    <h1>{h1}</h1>
-    <p class="standfirst" data-l="en" lang="en">{sf_en}</p>
-    <p class="standfirst" data-l="vi" lang="vi">{sf_vi}</p>
-  </div>
-</section>
-
-<section class="band" style="padding-top:44px">
-  <div class="wrap prose">
-    <div class="card green" style="margin-bottom:38px">
-      <h2 style="margin-top:0;font-size:24px">{warn_h}</h2>
-      <p data-l="en" lang="en" style="margin-bottom:0">{warn_en}</p>
-      <p data-l="vi" lang="vi" style="margin-bottom:0">{warn_vi}</p>
-    </div>
-{secs}
-{toppings}
-{wine_card}
-
-    <h2 style="margin-top:46px">{bar_h}</h2>
-    <p class="lede" data-l="en" lang="en">{bar_en}</p>
-    <p class="lede" data-l="vi" lang="vi">{bar_vi}</p>
-{bar}
-
-    <div class="card green">
-      <h3 style="margin-top:0">{hh_h}</h3>
-      <p data-l="en" lang="en">{hh_en}</p>
-      <p data-l="vi" lang="vi">{hh_vi}</p>
-      <p data-l="en" lang="en" style="margin-bottom:0">{wn_en}</p>
-      <p data-l="vi" lang="vi" style="margin-bottom:0">{wn_vi}</p>
-    </div>
-
-    <div class="card">
-      <h3 style="margin-top:0">{alg_h}</h3>
-      <p data-l="en" lang="en">{alg_en}</p>
-      <p data-l="vi" lang="vi">{alg_vi}</p>
-      <h3>{hr_h}</h3>
-      <ul data-l="en" lang="en" style="margin-bottom:0">{hr_en}</ul>
-      <ul data-l="vi" lang="vi" style="margin-bottom:0">{hr_vi}</ul>
-    </div>
-    <p style="margin-top:30px"><a class="btn solid" href="/visit/#book">{cta}</a></p>
-  </div>
-</section>
-</main>
-""".format(
-        eyebrow=t('Menu', 'Thực đơn'),
-        h1=t('What we are cooking', 'Chúng tôi nấu gì'),
-        sf_en='Wood-fired pizza, pasta made in-house, small plates to start, and a bar '
-              'that knows what it is doing.',
-        sf_vi='Pizza lò củi, mì Ý làm tại nhà hàng, món khai vị để mở đầu, và một quầy bar '
-              'biết mình đang làm gì.',
-        warn_h=t('A first draft', 'Bản nháp đầu tiên'),
-        warn_en='This is the menu we cooked at Sol Pizza, and it is where Sol Hanoi starts. '
-                'Dishes will move as the kitchen settles and the market changes, and prices '
-                'go up here once they are fixed.',
-        warn_vi='Đây là thực đơn chúng tôi từng nấu tại Sol Pizza, và là điểm khởi đầu của '
-                'Sol Hanoi. Các món sẽ còn thay đổi khi căn bếp ổn định và theo mùa của chợ; '
-                'giá sẽ được đăng khi đã chốt.',
-        secs='\n'.join(secs),
-        toppings=toppings,
-        wine_card=wine_card,
-        bar_h=t('The bar', 'Quầy bar'),
-        bar_en='Cocktails, draft beer from Bia Craft, sake, and everything else.',
-        bar_vi='Cocktail, bia tươi Bia Craft, sake và mọi thứ còn lại.',
-        bar='\n'.join(bar),
-        hh_h=t('Happy hour', 'Happy hour'),
-        hh_en='50% off house wine, sake and draft beer, ' + todo('5–7pm every day') + '.',
-        hh_vi='Giảm 50% vang quán, sake và bia tươi, ' + todo('17:00–19:00 mỗi ngày') + '.',
-        wn_en='Wine night ' + todo('every Thursday') + ' — 50% off every wine by the glass.',
-        wn_vi='Đêm vang ' + todo('thứ Năm hằng tuần') + ' — giảm 50% mọi loại vang theo ly.',
-        alg_h=t('Allergies', 'Dị ứng thực phẩm'),
-        alg_en='Please tell your server before you order. Our kitchen handles wheat, '
-               'dairy, egg, nuts, shellfish and fish, so we cannot promise a dish is '
-               'free of any of them.',
-        alg_vi='Vui lòng báo nhân viên trước khi gọi món. Bếp của chúng tôi sử dụng lúa mì, '
-               'sữa, trứng, các loại hạt, động vật có vỏ và cá, nên chúng tôi không thể '
-               'cam kết món ăn hoàn toàn không chứa các thành phần này.',
-        hr_h=t('House rules', 'Quy định của quán'),
-        hr_en='<li>All prices are subject to a 5% service charge and VAT.</li>'
-              '<li>No half-and-half pizzas — sorry.</li>'
-              '<li>Please turn off your camera flash in the dining room.</li>'
-              '<li>Misbehaved children will not be tolerated.</li>',
-        hr_vi='<li>Giá chưa bao gồm 5% phí dịch vụ và VAT.</li>'
-              '<li>Chúng tôi không làm pizza nửa nọ nửa kia — mong bạn thông cảm.</li>'
-              '<li>Vui lòng tắt đèn flash trong phòng ăn.</li>'
-              '<li>Không chấp nhận trẻ em quấy phá.</li>',
-        cta=t('Book a table', 'Đặt bàn'),
-    )
-
-    return page('/menu/', 'menu',
-        'Menu — Sol, Tây Hồ, Hanoi', 'Thực đơn — Sol, Tây Hồ, Hà Nội',
-        'Wood-fired pizza, pasta made in-house, small plates and a full bar. '
-        'Sol, Tây Hồ, Hanoi.',
-        'Pizza lò củi, mì Ý tươi, món khai vị và quầy bar đầy đủ. Sol, Tây Hồ, Hà Nội.',
-        body)
+    return page('/', 'page-home',
+                ('Sol — Italian-American restaurant in Tây Hồ, Hanoi',
+                 'Sol — Nhà hàng Ý–Mỹ tại Tây Hồ, Hà Nội'),
+                (HOME_DESC,
+                 'Pizza lò củi, mì Ý làm tại nhà hàng và 26 loại vang theo ly. Sol sắp khai trương tại '
+                 'số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội.'),
+                main, og=og_image('home'), extra=SCHEMA)
 
 
 # ==========================================================================
-# WINE  — /wine/
+# MENU  /menu/  /menu/wine/  /menu/bar/   (from build/menu-data.json)
 # ==========================================================================
-# Transcribed from the Sol Pizza wine list (May 2025).
-# Each wine: (name, grape, producer, region_en, region_vi, tags)
-#   tags  'glass' poured by the glass · 'house' house wine ·
-#         'nat'   natural / low intervention
-WINES = [
- ('Bubbles', 'Vang sủi', '', '',
-  [
-   ('Prosecco, Gemma Di Luna', 'Glera', '',
-    'Veneto, Italy', 'Veneto, Ý', ['glass', 'house', 'nat']),
-   ('Cuvée de Réserve NV', 'Chardonnay', 'Pierre Péters',
-    'Champagne, France', 'Champagne, Pháp', ['glass', 'house']),
-   ("Rollaball '22", 'Carignan, Mourvèdre', 'Matassa',
-    'Languedoc, France', 'Languedoc, Pháp', ['nat']),
-  ]),
+MENU_EYEBROW = t('Menu', 'Thực đơn')
+TAGS_VI = MENU['food']['tag_labels_vi']
+MARKS_VI = {lg['mark']: lg['mark_vi'] for lg in MENU['wine']['legend']}
 
- ('Whites', 'Vang trắng', '', '',
-  [
-   ("Kim Crawford '23", 'Sauvignon Blanc', '',
-    'Marlborough, New Zealand', 'Marlborough, New Zealand', ['glass', 'house']),
-   ("Edda '22", 'Chardonnay blend', 'Cantine San Marzano',
-    'Puglia, Italy', 'Puglia, Ý', ['glass', 'house']),
-   ("Cavallo Delle Fate '22", 'Grillo', 'Tenuta Regaleali',
-    'Sicily, Italy', 'Sicily, Ý', ['glass', 'house']),
-   ("Tenuta Montecchiesi '21", 'Vermentino, Chardonnay', '',
-    'Tuscany, Italy', 'Toscana, Ý', ['glass']),
-   ("Pomino Bianco Riserva '21", 'Chardonnay', 'Benefizio Frescobaldi',
-    'Tuscany, Italy', 'Toscana, Ý', ['glass']),
-   ("Chablis 1er Côte de Léchet '21", 'Chardonnay', 'La Chablisienne',
-    'Burgundy, France', 'Bourgogne, Pháp', ['glass']),
-   ("Malterdinger '20", 'Chardonnay', 'Bernhard Huber',
-    'Baden, Germany', 'Baden, Đức', ['glass']),
-   ("Sancerre Blanc '22", 'Sauvignon Blanc', 'Lucien Crochet',
-    'Loire, France', 'Loire, Pháp', ['glass']),
-   ("Blanc '20", 'Sauvignon Blanc, Sémillon', 'Le Colombier de Brown',
-    'Bordeaux, France', 'Bordeaux, Pháp', []),
-   ("Théo Cuvée '23", 'Riesling', 'Domaine Weinbach',
-    'Alsace, France', 'Alsace, Pháp', ['glass']),
-  ]),
 
- ('Reds', 'Vang đỏ', '', '',
-  [
-   ("30 Year Vines '18", 'Garnacha', 'Castillo de Monseran',
-    'Spain', 'Tây Ban Nha', ['glass', 'house']),
-   ("Rosso '22", 'Corvina, Rondinella, Merlot', "Torre d'Orti",
-    'Veneto, Italy', 'Veneto, Ý', ['glass', 'house']),
-   ("Chianti Classico Squarcialupi '20", 'Sangiovese', 'La Castellina',
-    'Tuscany, Italy', 'Toscana, Ý', ['glass', 'house']),
-   ("Primitivo di Manduria Vendemmia '20", 'Primitivo', 'Vanità',
-    'Puglia, Italy', 'Puglia, Ý', ['glass']),
-   ("Taraboste '18", 'Cabernet Sauvignon, Merlot', 'Château Vartely',
-    'Moldova', 'Moldova', ['glass']),
-   ("Individo '20", 'Rara Neagră, Malbec, Syrah', 'Château Vartely',
-    'Moldova', 'Moldova', ['glass']),
-   ("Rosso di Montalcino '21", 'Sangiovese', 'Capanna',
-    'Tuscany, Italy', 'Toscana, Ý', ['glass']),
-   ("Rioja Reserva '20", 'Tempranillo', 'Muga',
-    'Rioja, Spain', 'Rioja, Tây Ban Nha', ['glass']),
-   ("Arbois '22", 'Trousseau', 'Domaine Rolet',
-    'Jura, France', 'Jura, Pháp', ['glass', 'nat']),
-   ("Crozes-Hermitage '21", 'Syrah', 'Domaine Alain Graillot',
-    'Rhône Valley, France', 'Thung lũng Rhône, Pháp', ['glass']),
-   ("Tattouine Rouge '23", 'Grenache blend', 'Matassa',
-    'Languedoc, France', 'Languedoc, Pháp', ['glass', 'nat']),
-   ("Morgon '22", 'Gamay', 'Domaine Marcel Lapierre',
-    'Beaujolais, France', 'Beaujolais, Pháp', ['glass', 'nat']),
-   ("Savigny-lès-Beaune '19", 'Pinot Noir', 'Michel Noëllat',
-    'Burgundy, France', 'Bourgogne, Pháp', ['glass']),
-   ("Statera '21", 'Pinot Noir', 'Domaine du Bellevue',
-    'Loire Valley, France', 'Thung lũng Loire, Pháp', ['glass', 'nat']),
-   ("Malterdinger '14", 'Pinot Noir', 'Bernhard Huber',
-    'Baden, Germany', 'Baden, Đức', ['glass']),
-   ("Amarone della Valpolicella '19", 'Corvina, Rondinella', "Torre d'Orti",
-    'Veneto, Italy', 'Veneto, Ý', []),
-  ]),
+def page_title(eyebrow, h1, lead):
+    return ('<header class="page-title"><p class="eyebrow">%s</p><h1>%s</h1><p class="page-lead">%s</p></header>'
+            % (eyebrow, h1, lead))
 
- ('Orange', 'Vang cam', '', '',
-  [
-   ("OKR '23", 'Grüner Veltliner, Sauvignon Blanc', 'Milan Nestarec',
-    'Czech Republic · 1 litre', 'Cộng hòa Séc · 1 lít', ['nat']),
-  ]),
 
- ('Sake', 'Sake', '', '',
-  [
-   ('Mimurosugi, Dio Abita', 'Genshu junmai', '',
-    'Nara, Japan', 'Nara, Nhật Bản', ['glass']),
-  ]),
-]
+def note_box(label_html, text):
+    return '<aside class="note-box"><p class="label">%s</p><p>%s</p></aside>' % (label_html, text)
+
+
+def menu_section(sec, sun_n, body):
+    sid = 's-' + slug(sec['name'])
+    intro = sec.get('intro', '')
+    intro_html = '<p>%s</p>' % t(esc(intro), esc(sec.get('intro_vi') or intro)) if intro else ''
+    return ('<section class="menu-section" aria-labelledby="%s"><header class="section-head">%s'
+            '<h2 id="%s">%s</h2>%s</header>%s</section>'
+            % (sid, sun(sun_n), sid, t(esc(sec['name']), esc(sec.get('name_vi') or sec['name'])),
+               intro_html, body))
+
+
+def item(name, desc, desc_vi, after_name='', cls=''):
+    li = '<li%s><p class="item-name">%s%s</p>' % (cls, esc(name), after_name)
+    if desc:
+        li += '<p class="item-desc">%s</p>' % t(esc(desc), esc(desc_vi or desc))
+    return li + '</li>'
+
+
+def good_to_know():
+    g = MENU['good_to_know']
+    return ('<section class="good-to-know" %s><div><h2>%s</h2><p>%s</p></div><div><h2>%s</h2><ul>%s</ul></div></section>'
+            % (label('Good to know', 'Thông tin hữu ích'), t('Allergies', 'Dị ứng thực phẩm'),
+               t(esc(g['allergies']), esc(g['allergies_vi'])), t('Good to know', 'Thông tin hữu ích'),
+               ''.join('<li>%s</li>' % t(esc(en), esc(vi)) for en, vi in zip(g['rules'], g['rules_vi']))))
+
+
+def menu_page(path, key, body_class, title, desc, main, og):
+    return page(path, body_class + ' section-menu', title, desc, '<main id="main" class="wrap">\n' + main + '\n</main>\n',
+                cur=key, og=og_image(og))
+
+
+def build_food():
+    food = MENU['food']
+    parts = [
+        page_title(MENU_EYEBROW, t('What we’re cooking', 'Chúng tôi nấu gì'),
+                   t('Pizza from the wood oven, pasta made in-house and small plates to start.',
+                     'Pizza từ lò củi, mì Ý làm tại nhà hàng và món khai vị để mở đầu.')),
+        note_box(t('A first draft', 'Bản nháp đầu tiên'),
+                 t('These are the dishes we cooked at Sol Pizza, and they’re where Sol starts. Expect '
+                   'changes as the new kitchen settles in, and prices here once they’re set.',
+                   'Đây là những món chúng tôi từng nấu tại Sol Pizza, và là điểm khởi đầu của Sol. '
+                   'Các món sẽ còn thay đổi khi căn bếp mới đi vào nếp, và giá sẽ được đăng ở đây '
+                   'khi đã chốt.')),
+    ]
+    for i, sec in enumerate(food['sections']):
+        items = ''.join(
+            item(d['name'], d['description'], d.get('description_vi'),
+                 ''.join(' <span class="tag">%s</span>' % t(tag, TAGS_VI.get(tag, tag)) for tag in d['tags']))
+            for d in sec['items'])
+        parts.append(menu_section(sec, 1 + i, '<ul class="menu-grid">%s</ul>' % items))
+    top = food['toppings']
+    parts.append(menu_section(
+        {'name': 'Toppings', 'name_vi': 'Topping thêm', 'intro': top['intro'], 'intro_vi': top['intro_vi']},
+        1 + len(food['sections']),
+        '<p class="inline-list">%s</p>' % t(' · '.join(esc(x) for x in top['items']),
+                                            ' · '.join(esc(x) for x in top['items_vi']))))
+    parts.append(good_to_know())
+    return menu_page('/menu/', 'food', 'page-menu-food',
+                     ('Menu — Sol, Tây Hồ', 'Thực đơn — Sol, Tây Hồ'),
+                     ('Pizza from the Pavesi wood oven, pasta made in-house and small plates to start.',
+                      'Pizza từ lò củi Pavesi, mì Ý làm tại nhà hàng và món khai vị để mở đầu.'),
+                     '\n'.join(parts), 'menu')
+
+
+def wine_count_line(wines):
+    n, g = len(wines), sum('glass' in w['marks'] for w in wines)
+    en = '%d wine%s' % (n, '' if n == 1 else 's')
+    vi = '%d loại vang' % n
+    if g:
+        en += ', %d by the glass' % g
+        vi += ', %d loại theo ly' % g
+    return t(en, vi)
 
 
 def build_wine():
-    secs = []
-    for name_en, name_vi, note_en, note_vi, wines in WINES:
+    wine = MENU['wine']
+    legend = ''.join('<span><b>%s</b>%s</span>' % (t(lg['mark'], lg['mark_vi']), t(lg['meaning'], lg['meaning_vi']))
+                     for lg in wine['legend'])
+    parts = [
+        page_title(MENU_EYEBROW, t('The wine list', 'Danh sách vang'),
+                   t('Thirty wines, from Burgundy and Tuscany to Moldova and the Czech Republic. '
+                     'Twenty-six of them are open by the glass.',
+                     'Ba mươi loại vang, từ Bourgogne và Toscana đến Moldova và Cộng hòa Séc. '
+                     'Hai mươi sáu loại trong số đó có phục vụ theo ly.')),
+        '<p class="legend">%s</p>' % legend,
+        note_box(t('A first draft', 'Bản nháp đầu tiên'),
+                 t('This is the Sol Pizza list while the new one is being built. Vintages change and '
+                   'bottles run out, so ask what’s open tonight.',
+                   'Đây là danh sách của Sol Pizza trong lúc danh sách mới đang được xây dựng. Niên '
+                   'vụ thay đổi, chai có thể hết, nên hãy hỏi xem tối nay có những chai nào đang mở.')),
+    ]
+    for i, sec in enumerate(wine['sections']):
         rows = []
-        for wname, grape, producer, reg_en, reg_vi, tags in wines:
-            tag_html = ''
-            if tags:
-                tag_html = '<span class="tags">' + ''.join(
-                    '<span class="tag %s">%s</span>' % (tg, t(*TAGNAMES[tg]))
-                    for tg in tags) + '</span>'
-            bits = [grape] + ([producer] if producer else [])
-            desc_en = ' · '.join(bits + [reg_en])
-            desc_vi = ' · '.join(bits + [reg_vi])
-            rows.append(
-                """      <div class="dish">
-        <div class="d-main">
-          <p class="d-name">%s%s</p>
-          <p class="d-desc" data-l="en" lang="en">%s</p>
-          <p class="d-desc" data-l="vi" lang="vi">%s</p>
-        </div>
-      </div>""" % (wname, tag_html, desc_en, desc_vi))
-        note = ''
-        if note_en or note_vi:
-            note = ('<p class="secnote" data-l="en" lang="en">%s</p>'
-                    '<p class="secnote" data-l="vi" lang="vi">%s</p>' % (note_en, note_vi))
-        secs.append("""    <div class="menusec">
-      <h2>%s</h2>
-      %s
-%s
-    </div>""" % (t(name_en, name_vi), note, '\n'.join(rows)))
+        for w in sec['items']:
+            marks = ''
+            if w['marks']:
+                marks = ' <span class="marks">%s</span>' % t(' · '.join(w['marks']),
+                                                              ' · '.join(MARKS_VI[m] for m in w['marks']))
+            rows.append(item(w['name'], w['details'], w.get('details_vi'), marks, ' class="wine"'))
+        sid = 's-' + slug(sec['name'])        # the count line stands in for an intro
+        parts.append('<section class="menu-section" aria-labelledby="%s"><header class="section-head">%s'
+                     '<h2 id="%s">%s</h2><p>%s</p></header><ul class="menu-grid">%s</ul></section>'
+                     % (sid, sun(3 + i), sid, t(esc(sec['name']), esc(sec['name_vi'])),
+                        wine_count_line(sec['items']), ''.join(rows)))
+    parts += [
+        '<section class="offer" aria-labelledby="wine-night"><h2 id="wine-night">%s</h2><p class="hand">%s</p><p>%s</p></section>'
+        % (t('Wine night', 'Đêm vang'), t('every Thursday', 'thứ Năm hằng tuần'),
+           t('50% off every wine by the glass.', 'Giảm 50% mọi loại vang theo ly.')),
+        '<section class="closing"><h2>%s</h2><p>%s</p></section>'
+        % (t('Can’t see what you like?', 'Chưa thấy chai bạn thích?'),
+           t('Tell us what you drink and roughly what you’d like to spend, and we’ll find you '
+             'something. Prices are on the printed list in the room.',
+             'Hãy cho chúng tôi biết bạn thích uống gì và tầm giá mong muốn, chúng tôi sẽ tìm cho '
+             'bạn một chai phù hợp. Giá có trên danh sách in tại nhà hàng.')),
+        good_to_know(),
+    ]
+    return menu_page('/menu/wine/', 'wine', 'page-menu-wine',
+                     ('Wine list — Sol, Tây Hồ', 'Danh sách vang — Sol, Tây Hồ'),
+                     ('Thirty wines, twenty-six of them by the glass, from Burgundy and Tuscany to '
+                      'Moldova and the Czech Republic. Wine night every Thursday.',
+                      'Ba mươi loại vang, hai mươi sáu loại có theo ly, từ Bourgogne và Toscana đến '
+                      'Moldova và Cộng hòa Séc. Đêm vang vào thứ Năm hằng tuần.'),
+                     '\n'.join(parts), 'wine')
 
-    body = """<main id="main">
-<section class="pagehead">
-  <div class="wrap">
-    <p class="eyebrow">{eyebrow}</p>
-    <h1>{h1}</h1>
-    <p class="standfirst" data-l="en" lang="en">{sf_en}</p>
-    <p class="standfirst" data-l="vi" lang="vi">{sf_vi}</p>
-  </div>
-</section>
 
-<section class="band" style="padding-top:44px">
-  <div class="wrap prose">
-    <div class="card green" style="margin-bottom:38px">
-      <h2 style="margin-top:0;font-size:24px">{warn_h}</h2>
-      <p data-l="en" lang="en" style="margin-bottom:0">{warn_en}</p>
-      <p data-l="vi" lang="vi" style="margin-bottom:0">{warn_vi}</p>
-    </div>
-
-    <div class="legend">
-      <span><span class="tag glass">{k_glass}</span> {l_glass}</span>
-      <span><span class="tag house">{k_house}</span> {l_house}</span>
-      <span><span class="tag nat">{k_nat}</span> {l_nat}</span>
-    </div>
-
-{secs}
-
-    <div class="card">
-      <h3 style="margin-top:0">{ask_h}</h3>
-      <p data-l="en" lang="en" style="margin-bottom:0">{ask_en}</p>
-      <p data-l="vi" lang="vi" style="margin-bottom:0">{ask_vi}</p>
-    </div>
-    <p style="margin-top:30px">
-      <a class="btn solid" href="/visit/#book">{cta}</a>
-      <a class="btn ghost" href="/menu/" style="margin-left:10px">{cta2}</a>
-    </p>
-  </div>
-</section>
-</main>
-""".format(
-        eyebrow=t('Wine', 'Vang'),
-        h1=t('The wine list', 'Danh sách vang'),
-        sf_en='Around forty bottles from Italy, France, Spain, Germany and further out, '
-              'most of them open by the glass.',
-        sf_vi='Khoảng bốn mươi chai từ Ý, Pháp, Tây Ban Nha, Đức và xa hơn nữa, phần lớn '
-              'được phục vụ theo ly.',
-        warn_h=t('A first draft', 'Bản nháp đầu tiên'),
-        warn_en='This is the list as it stood at Sol Pizza. Vintages move, bottles run out, '
-                'and the Sol Hanoi list is still being built — ask what is open tonight.',
-        warn_vi='Đây là danh sách như tại Sol Pizza. Niên vụ thay đổi, chai hết hàng, và '
-                'danh sách của Sol Hanoi vẫn đang được xây dựng — hãy hỏi tối nay có gì.',
-        k_glass=t('By the glass', 'Theo ly'),
-        l_glass=t('Poured by the glass as well as the bottle.',
-                  'Phục vụ theo ly, ngoài cách bán theo chai.'),
-        k_house=t('House', 'Vang quán'),
-        l_house=t('Our house pour.', 'Vang nhà của quán.'),
-        k_nat=t('Natural', 'Tự nhiên'),
-        l_nat=t('Natural or low-intervention.', 'Vang tự nhiên hoặc ít can thiệp.'),
-        secs='\n'.join(secs),
-        ask_h=t('Not on the list?', 'Không có trong danh sách?'),
-        ask_en='Tell us what you drink and roughly what you want to spend, and we will '
-               'find you something. Prices are on the printed list in the room.',
-        ask_vi='Hãy cho chúng tôi biết bạn thích uống gì và tầm giá mong muốn, chúng tôi sẽ '
-               'tìm cho bạn một chai phù hợp. Giá có trên danh sách in tại nhà hàng.',
-        cta=t('Book a table', 'Đặt bàn'),
-        cta2=t('See the food menu', 'Xem thực đơn món ăn'),
-    )
-
-    return page('/wine/', 'wine',
-        'Wine list — Sol, Tây Hồ, Hanoi', 'Danh sách vang — Sol, Tây Hồ, Hà Nội',
-        'Around forty bottles from Italy, France, Spain and beyond, most of them open '
-        'by the glass, with natural and low-intervention growers among them. Sol, Tây Hồ, Hanoi.',
-        'Khoảng bốn mươi chai vang từ Ý, Pháp, Tây Ban Nha và xa hơn, phần lớn phục vụ theo ly. '
-        'Sol, Tây Hồ, Hà Nội.',
-        body)
+def build_bar():
+    bar = MENU['bar']
+    parts = [page_title(MENU_EYEBROW, t('The bar', 'Quầy bar'),
+                        t('Cocktails, Bia Craft on draft, sake and everything else. It’s a full bar, '
+                          'so ask for anything.',
+                          'Cocktail, bia tươi Bia Craft, sake và mọi thứ còn lại. Quầy bar đầy đủ, '
+                          'bạn cứ gọi món mình thích.'))]
+    for i, sec in enumerate(bar['sections']):
+        if all(not d['description'] for d in sec['items']) and sec['name'] == 'Soft drinks':
+            body = '<p class="inline-list">%s</p>' % ' · '.join(esc(d['name']) for d in sec['items'])
+        else:
+            body = '<ul class="menu-grid">%s</ul>' % ''.join(
+                item(d['name'], d['description'], d.get('description_vi')) for d in sec['items'])
+        parts.append(menu_section(sec, 5 + i, body))
+    parts += [
+        '<section class="offer" aria-labelledby="happy-hour"><h2 id="happy-hour">%s</h2><p class="hand">%s</p><p>%s</p></section>'
+        % ('Happy hour', t('5–7pm', '17:00 – 19:00'),
+           t('Tuesday to Sunday: 50% off house wine, sake and draft beer.',
+             'Thứ Ba đến Chủ Nhật: giảm 50% vang quán, sake và bia tươi.')),
+        good_to_know(),
+    ]
+    return menu_page('/menu/bar/', 'bar', 'page-menu-bar',
+                     ('Bar — Sol, Tây Hồ', 'Quầy bar — Sol, Tây Hồ'),
+                     ('Cocktails, Bia Craft on draft, sake and soft drinks. Happy hour 5–7pm, Tuesday '
+                      'to Sunday.',
+                      'Cocktail, bia tươi Bia Craft, sake và đồ uống không cồn. Happy hour 17:00 – '
+                      '19:00, từ thứ Ba đến Chủ Nhật.'),
+                     '\n'.join(parts), 'menu')
 
 
 # ==========================================================================
-# STORY
+# STORY  /story/
 # ==========================================================================
+def prose_section(sid, sun_n, heading, paras, style=''):
+    return ('<section class="prose-section wrap" aria-labelledby="%s"%s><header class="section-head">%s'
+            '<h2 id="%s">%s</h2></header><div class="prose">%s</div></section>'
+            % (sid, style, sun(sun_n), sid, heading, ''.join(paras)))
+
+
 def build_story():
-    body = """<main id="main">
-<section class="pagehead">
-  <div class="wrap">
-    <p class="eyebrow">{eyebrow}</p>
-    <h1>{h1}</h1>
-    <p class="standfirst" data-l="en" lang="en">{sf_en}</p>
-    <p class="standfirst" data-l="vi" lang="vi">{sf_vi}</p>
-  </div>
-</section>
-
-<section class="band" style="padding-top:48px">
-  <div class="wrap prose">
-    <h2>{h2a}</h2>
-    <p data-l="en" lang="en">{a1_en}</p>
-    <p data-l="vi" lang="vi">{a1_vi}</p>
-    <p data-l="en" lang="en">{a2_en}</p>
-    <p data-l="vi" lang="vi">{a2_vi}</p>
-
-    <h2 style="margin-top:44px">{h2b}</h2>
-    <p data-l="en" lang="en">{b1_en}</p>
-    <p data-l="vi" lang="vi">{b1_vi}</p>
-    <p data-l="en" lang="en">{b2_en}</p>
-    <p data-l="vi" lang="vi">{b2_vi}</p>
-
-    <blockquote class="belief" style="margin-top:40px">
-      <p data-l="en" lang="en">{bq_en}</p>
-      <p data-l="vi" lang="vi">{bq_vi}</p>
-    </blockquote>
-
-    <h2>{h2c}</h2>
-    <p data-l="en" lang="en">{c1_en}</p>
-    <p data-l="vi" lang="vi">{c1_vi}</p>
-  </div>
-</section>
-
-<section class="band tint">
-  <div class="wrap prose">
-    <h2>{h2d}</h2>
-    <p data-l="en" lang="en">{d1_en}</p>
-    <p data-l="vi" lang="vi">{d1_vi}</p>
-    <p><a class="btn solid" href="/jobs/">{cta}</a></p>
-  </div>
-</section>
-</main>
-""".format(
-        eyebrow=t('Our story', 'Câu chuyện của chúng tôi'),
-        h1=t('Closing one thing to build another.', 'Đóng lại một chương để mở ra chương khác.'),
-        sf_en='Sol Pizza ran in Tây Hồ until last year. Sol is what we learned from it, '
-              'with the space to do it properly.',
-        sf_vi='Sol Pizza hoạt động ở Tây Hồ cho đến năm ngoái. Sol là những gì chúng tôi '
-              'học được từ đó, với đủ không gian để làm cho tử tế.',
-        h2a=t('Sol Pizza', 'Sol Pizza'),
-        a1_en='We opened Sol Pizza in Tây Hồ and ran it until we could see, clearly, '
-              'what it wanted to become and that the room would not let it. A small '
-              'kitchen sets a hard ceiling. So does an oven that is nearly right.',
-        a1_vi='Chúng tôi mở Sol Pizza ở Tây Hồ và vận hành cho đến khi nhìn thấy rõ nó '
-              'muốn trở thành điều gì — và rằng không gian đó không cho phép. Một căn bếp '
-              'nhỏ đặt ra giới hạn cứng. Một chiếc lò gần đúng cũng vậy.',
-        a2_en='Closing was the harder decision and the right one. ' + todo('[Add a line here about what closing meant to you and the team.]'),
-        a2_vi='Đóng cửa là quyết định khó khăn hơn, và là quyết định đúng. ' + todo('[Thêm một câu về ý nghĩa của việc đóng cửa với bạn và đội ngũ.]'),
-        h2b=t('The new building', 'Toà nhà mới'),
-        b1_en='Sol takes the first two floors of a building in Tây Hồ — under 200 square '
-              'metres of room, which is small enough to run properly and big enough to '
-              'do the things the old place could not.',
-        b1_vi='Sol chiếm hai tầng đầu của một toà nhà ở Tây Hồ — dưới 200 mét vuông, đủ nhỏ '
-              'để vận hành chỉn chu và đủ lớn để làm những điều nơi cũ không thể.',
-        b2_en='The centre of it is a Pavesi wood-fired oven, built in Italy, shipped here '
-              'and installed this summer. Everything else in the kitchen is arranged '
-              'around it.',
-        b2_vi='Trung tâm của tất cả là chiếc lò củi Pavesi, chế tác tại Ý, đưa về đây và '
-              'lắp đặt trong mùa hè này. Mọi thứ còn lại trong bếp đều được sắp xếp quanh nó.',
-        bq_en='A restaurant is a <strong>room, a team and a menu</strong>. Get the room '
-              'right and the other two get easier.',
-        bq_vi='Một nhà hàng là <strong>một không gian, một đội ngũ và một thực đơn</strong>. '
-              'Làm đúng không gian, hai điều còn lại sẽ dễ hơn.',
-        h2c=t('The kitchen', 'Căn bếp'),
-        c1_en='Ngoc leads the kitchen. ' + todo('[A few lines about Ngoc — where she trained, what she cooks, why she is the right person.]'),
-        c1_vi='Ngọc phụ trách bếp. ' + todo('[Vài dòng về Ngọc — học nghề ở đâu, nấu món gì, vì sao là người phù hợp.]'),
-        h2d=t('Come and build it with us', 'Cùng chúng tôi dựng nên Sol'),
-        d1_en='We are hiring across the kitchen and the floor before we open. If you want '
-              'to be part of the first team in the new room, the roles are here.',
-        d1_vi='Chúng tôi đang tuyển cho cả bếp và khu phục vụ trước ngày khai trương. Nếu bạn '
-              'muốn là một phần của đội ngũ đầu tiên, các vị trí đang mở ở đây.',
-        cta=t('See open roles', 'Xem vị trí tuyển dụng'),
-    )
-
-    return page('/story/', 'story',
-        'Story — Sol, Tây Hồ, Hanoi', 'Câu chuyện — Sol, Tây Hồ, Hà Nội',
-        'Sol Pizza closed last year. Sol opens soon in Tây Hồ, Hanoi — '
-        'the same idea, a bigger room and a Pavesi wood-fired oven.',
-        'Sol Pizza đã đóng cửa năm ngoái. Sol sắp khai trương tại Tây Hồ, Hà Nội.',
-        body, ogtype='article')
+    main = '\n'.join([
+        '<main id="main">',
+        '<div class="wrap">%s</div>' % page_title(
+            t('Our story', 'Câu chuyện của chúng tôi'),
+            t('We closed Sol Pizza to build Sol.', 'Chúng tôi đóng cửa Sol Pizza để xây dựng Sol.'),
+            t('Sol Pizza ran in Tây Hồ until last year. Sol is everything it taught us, with the room '
+              'to do it properly.',
+              'Sol Pizza hoạt động ở Tây Hồ cho đến năm ngoái. Sol là những gì chúng tôi học được từ '
+              'đó, với đủ không gian để làm cho tử tế.')),
+        prose_section('s-sol-pizza', 1, 'Sol Pizza', [
+            '<p>%s</p>' % t(
+                'We ran Sol Pizza until we could see what it wanted to become — and that the room '
+                'wouldn’t let it. A small kitchen sets a hard ceiling. So does an oven that’s nearly right.',
+                'Chúng tôi vận hành Sol Pizza cho đến khi nhìn thấy rõ nó muốn trở thành điều gì — và '
+                'rằng không gian đó không cho phép. Một căn bếp nhỏ đặt ra giới hạn cứng. Một chiếc lò '
+                'gần đúng cũng vậy.'),
+            '<p>%s</p>' % t('Closing was the harder decision, and the right one.',
+                            'Đóng cửa là quyết định khó khăn hơn, và là quyết định đúng.'),
+            # HIDE until Arman supplies it: one line on what closing meant to him and the team.
+        ]),
+        prose_section('s-the-building', 2, t('The building', 'Tòa nhà'), [
+            '<p>%s</p>' % t(
+                'Sol takes the first two floors of a building on Quang An — under 200 square metres, '
+                'small enough to run properly and big enough for what the old place couldn’t do.',
+                'Sol chiếm hai tầng đầu của một tòa nhà trên phố Quảng An — dưới 200 mét vuông, đủ '
+                'nhỏ để vận hành chỉn chu và đủ lớn để làm những điều nơi cũ không thể.'),
+            '<p>%s</p>' % t(
+                'At its centre is a Pavesi wood-fired oven, built in Italy and shipped to Hanoi. The '
+                'rest of the kitchen is arranged around it.',
+                'Trung tâm của tất cả là chiếc lò củi Pavesi, chế tác tại Ý và đưa về Hà Nội. Mọi thứ '
+                'còn lại trong bếp đều được sắp xếp quanh nó.'),
+        ]),
+        '<figure class="pullquote wrap">%s<blockquote><p>%s</p></blockquote>%s</figure>' % (
+            sun(4),
+            t('A restaurant is a room, a team and a menu. Get the room right and the other two get easier.',
+              'Một nhà hàng là một không gian, một đội ngũ và một thực đơn. Làm đúng không gian, hai '
+              'điều còn lại sẽ dễ hơn.'),
+            sun(7)),
+        # CONFIRM: ships without Long; Arman to say whether to add "and Long runs the floor."
+        # HIDE until supplied: a few lines on Ngọc.
+        prose_section('s-team', 8, t('The team', 'Đội ngũ'), [
+            '<p style="text-align:center">%s</p>' % t('Ngọc runs the kitchen.', 'Ngọc phụ trách bếp.'),
+        ], style=' style="margin-top:0"'),
+        '<div class="wrap"><section class="offer" aria-labelledby="s-join"><h2 id="s-join">%s</h2><p>%s</p>'
+        '<a class="btn btn-red" href="/jobs/">%s</a></section></div>' % (
+            t('Build it with us', 'Cùng chúng tôi dựng nên Sol'),
+            t('We’re hiring for the kitchen and the floor before we open. If you want to be on the '
+              'first team in the new room, start here.',
+              'Chúng tôi đang tuyển cho cả bếp và khu phục vụ trước ngày khai trương. Nếu bạn muốn là '
+              'một phần của đội ngũ đầu tiên, các vị trí đang mở ở đây.'),
+            t('See open roles', 'Xem vị trí tuyển dụng')),
+        '</main>', ''])
+    return page('/story/', 'page-story',
+                ('Our story — Sol, Tây Hồ', 'Câu chuyện của chúng tôi — Sol, Tây Hồ'),
+                ('We closed Sol Pizza to build Sol: a bigger kitchen, a proper bar and a Pavesi '
+                 'wood-fired oven on Quang An.',
+                 'Chúng tôi đóng cửa Sol Pizza để xây dựng Sol: căn bếp rộng hơn, một quầy bar đúng '
+                 'nghĩa và lò củi Pavesi trên phố Quảng An.'),
+                main, cur='story', og=og_image('story'), ogtype='article')
 
 
 # ==========================================================================
-# VISIT + BOOKING
+# VISIT  /visit/
 # ==========================================================================
-HOURS = [
-    ('Monday', 'Thứ Hai', 'Closed', 'Đóng cửa'),
-    ('Tuesday – Sunday', 'Thứ Ba – Chủ Nhật', '17:00 – 23:00', '17:00 – 23:00'),
-]
-
 def build_visit():
-    hrows = '\n'.join(
-        '        <tr><th>%s</th><td>%s</td></tr>' % (
-            t(d_en, d_vi),
-            t(h_en, h_vi))
-        for d_en, d_vi, h_en, h_vi in HOURS)
-
-    body = """<main id="main">
-<section class="pagehead">
-  <div class="wrap">
-    <p class="eyebrow">{eyebrow}</p>
-    <h1>{h1}</h1>
-    <p class="standfirst" data-l="en" lang="en">{sf_en}</p>
-    <p class="standfirst" data-l="vi" lang="vi">{sf_vi}</p>
-  </div>
-</section>
-
-<section class="band" style="padding-top:44px" id="book">
-  <div class="wrap prose">
-    <p class="kicker">{k1}</p>
-    <h2>{h2a}</h2>
-
-    <!-- =====================================================================
-         RESDIARY BOOKING WIDGET
-
-         1. In ResDiary go to  Promote → Widget configurator  and build your
-            widget (colours, logo, party sizes).
-         2. Open the Embed Code tab and copy the widget URL out of the code it
-            gives you. It looks like:
-              https://booking.resdiary.com/widget/Standard/YourVenueName/12345
-            (Some accounts are on a different host — use whatever URL ResDiary
-            shows you, do not retype this example.)
-         3. Paste it between the quotes below and redeploy. That is the only
-            change needed — the page swaps the "booking opens soon" panel for
-            the live widget automatically.
-
-         Optional extras you can append to the URL:
-           ?partySize=2      default number of guests
-           ?date=2026-10-05  default date (YYYY-MM-DD, put it first)
-           &channelcode=WEB  tags bookings that came from this site
-         ===================================================================== -->
-    <script>
-      window.SOL_RESDIARY_URL = "";   /* ← paste your ResDiary widget URL here */
-    </script>
-
-    <div id="rd-mount"></div>
-
-    <noscript>
-      <div class="fallback">
-        <p style="margin:0">{nojs}</p>
-      </div>
-    </noscript>
-
-    <p style="font-size:15px;color:var(--ink-soft)" data-l="en" lang="en">{bnote_en}</p>
-    <p style="font-size:15px;color:var(--ink-soft)" data-l="vi" lang="vi">{bnote_vi}</p>
-  </div>
-</section>
-
-<section class="band tint">
-  <div class="wrap prose">
-    <div class="grid g2">
-      <div>
-        <h2>{h2b}</h2>
-        <table class="hours">
-          <caption class="sr-only">{cap}</caption>
-          <tbody>
-{hrows}
-          </tbody>
-        </table>
-        <p style="font-size:15px;color:var(--ink-soft);margin-top:16px" data-l="en" lang="en">{hnote_en}</p>
-        <p style="font-size:15px;color:var(--ink-soft);margin-top:16px" data-l="vi" lang="vi">{hnote_vi}</p>
-      </div>
-      <div>
-        <h2>{h2c}</h2>
-        <ul class="contactlist">
-          <li><span class="k">{l_addr}</span>
-              <span class="v"><span data-l="en" lang="en">{addr_en}</span><span data-l="vi" lang="vi">{addr_vi}</span></span></li>
-          <li><span class="k">{l_phone}</span><span class="v">{phone}</span></li>
-          <li><span class="k">{l_email}</span><span class="v"><a href="mailto:{email}">{email}</a></span></li>
-        </ul>
-        <p style="margin-top:20px"><a class="btn solid" href="{maps}" rel="noopener">{maps_l}</a></p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="band" style="padding-top:52px">
-  <div class="wrap prose">
-    <h2>{h2d}</h2>
-    <div class="grid g2">
-      <div class="card">
-        <h3 style="margin-top:0">{g1}</h3>
-        <p data-l="en" lang="en" style="margin-bottom:0">{g1_en}</p>
-        <p data-l="vi" lang="vi" style="margin-bottom:0">{g1_vi}</p>
-      </div>
-      <div class="card">
-        <h3 style="margin-top:0">{g2}</h3>
-        <p data-l="en" lang="en" style="margin-bottom:0">{g2_en}</p>
-        <p data-l="vi" lang="vi" style="margin-bottom:0">{g2_vi}</p>
-      </div>
-      <div class="card">
-        <h3 style="margin-top:0">{g3}</h3>
-        <p data-l="en" lang="en" style="margin-bottom:0">{g3_en}</p>
-        <p data-l="vi" lang="vi" style="margin-bottom:0">{g3_vi}</p>
-      </div>
-      <div class="card">
-        <h3 style="margin-top:0">{g4}</h3>
-        <p data-l="en" lang="en" style="margin-bottom:0">{g4_en}</p>
-        <p data-l="vi" lang="vi" style="margin-bottom:0">{g4_vi}</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<script>
-/* Mount the ResDiary widget if a URL has been configured; otherwise show a
-   panel telling people booking is not open yet, so the page never looks broken. */
-(function(){{
-  var mount = document.getElementById('rd-mount');
-  if(!mount) return;
-  var url = (window.SOL_RESDIARY_URL || '').trim();
-  if(url){{
-    var box = document.createElement('div');
-    box.className = 'widgetbox';
-    var f = document.createElement('iframe');
-    f.src = url;
-    f.title = 'Book a table at Sol';
-    f.setAttribute('allowtransparency','true');
-    f.loading = 'lazy';
-    f.style.cssText = 'width:100%;border:0;min-height:640px;display:block';
-    box.appendChild(f);
-    mount.appendChild(box);
-    if(window.gtag) gtag('event','booking_widget_shown');
-  }} else {{
-    mount.innerHTML = {fallback_js};
-  }}
-}})();
-</script>
+    if RESDIARY_URL:
+        booking_p = t('Book online below, or call or email us.',
+                      'Đặt bàn trực tuyến ngay bên dưới, hoặc gọi điện hay gửi email cho chúng tôi.')
+        widget = ('<iframe src="%s" title="Book a table at Sol" %s loading="lazy" '
+                  'style="display:block;width:100%%;min-height:640px;margin-top:26px;border:0"></iframe>\n  '
+                  % (RESDIARY_URL, label('Book a table at Sol', 'Đặt bàn tại Sol')))
+    else:
+        booking_p = t('Online booking opens closer to the day we open. Until then, call or email us '
+                      'and we’ll hold you a table for opening week.',
+                      'Chúng tôi sẽ mở đặt bàn trực tuyến khi gần đến ngày khai trương. Từ nay đến lúc '
+                      'đó, bạn cứ gọi điện hoặc gửi email, chúng tôi sẽ giữ bàn cho bạn trong tuần '
+                      'khai trương.')
+        widget = '<!-- ResDiary: set RESDIARY_URL in build/gen.py and its widget appears here. -->\n  '
+    main = """<main id="main">
+<div class="wrap">{title}</div>
+<div class="wrap"><section class="offer booking" id="book" aria-labelledby="book-h">
+  <p class="eyebrow">{k1}</p><h2 id="book-h">{book}</h2>
+  <p>{booking_p}</p>
+  {widget}<div class="actions"><a class="btn btn-red" href="mailto:{email}">{email_us}</a><a class="btn btn-outline" href="{tel}">{call_us}</a></div>
+  <p class="offer-note">{groups}</p>
+</section></div>
+<div class="wrap"><div class="visit-info">
+  <section aria-labelledby="v-hours"><h2 class="label" id="v-hours">{l_hours}</h2><dl class="hours"><div><dt>{mon}</dt><dd>{closed}</dd></div><div><dt>{tue_sun}</dt><dd>{hours}</dd></div></dl><p class="small">{from_open}</p></section>
+  <section aria-labelledby="v-addr"><h2 class="label" id="v-addr">{l_addr}</h2><p>{addr}</p><a class="link-sc" href="{maps}">{maps_t}</a></section>
+  <section aria-labelledby="v-contact"><h2 class="label" id="v-contact">{l_talk}</h2><p><a href="{tel}">{phone}</a><br><a href="mailto:{email}">{email}</a><br>{insta}</p></section>
+</div></div>
+<section class="prose-section wrap" aria-labelledby="s-gtk"><header class="section-head">{sun}<h2 id="s-gtk">{gtk}</h2></header><dl class="gtk-items"><div><dt>{children}</dt><dd>{children_d}</dd></div></dl></section>
 </main>
 """.format(
-        eyebrow=t('Visit', 'Ghé thăm'),
-        h1=t('Find us, and book a table', 'Tìm chúng tôi và đặt bàn'),
-        sf_en='Sol is on the first two floors of a building in Tây Hồ. Opening soon.',
-        sf_vi='Sol nằm ở hai tầng đầu của một toà nhà tại Tây Hồ. Sắp khai trương.',
-        k1=t('Reservations', 'Đặt bàn'),
-        h2a=t('Book a table', 'Đặt bàn'),
-        nojs=t('Booking needs JavaScript. Please call us on ' + PHONE + ' or email '
-               '<a href="mailto:' + EMAIL + '">' + EMAIL + '</a>.',
-               'Chức năng đặt bàn cần JavaScript. Vui lòng gọi ' + PHONE + ' hoặc gửi email tới '
-               '<a href="mailto:' + EMAIL + '">' + EMAIL + '</a>.'),
-        bnote_en='Tables of seven or more: please email us and we will look after you '
-                 'personally.',
-        bnote_vi='Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn.',
-        h2b=t('Hours', 'Giờ mở cửa'), cap=t('Opening hours', 'Giờ mở cửa'),
-        hrows=hrows,
-        hnote_en='From the day we open.',
-        hnote_vi='Từ ngày chúng tôi khai trương.',
-        h2c=t('Contact', 'Liên hệ'),
-        l_addr=t('Address', 'Địa chỉ'), l_phone=t('Phone', 'Điện thoại'),
-        l_email=t('Email', 'Email'),
-        addr_en=ADDRESS_EN, addr_vi=ADDRESS_VI, phone=PHONE, email=EMAIL,
-        maps=MAPS_URL, maps_l=t('Open in Google Maps', 'Mở trong Google Maps'),
-        h2d=t('Good to know', 'Thông tin hữu ích'),
-        g1=t('Getting here', 'Cách di chuyển'),
-        g1_en=todo('[Nearest landmark, and roughly how long from the Old Quarter by Grab.]'),
-        g1_vi=todo('[Điểm mốc gần nhất và thời gian di chuyển từ Phố cổ bằng Grab.]'),
-        g2=t('Parking', 'Gửi xe'),
-        g2_en=todo('[Where to leave a motorbike or car.]'),
-        g2_vi=todo('[Nơi gửi xe máy hoặc ô tô.]'),
-        g3=t('Children', 'Trẻ em'),
-        g3_en='Very welcome. High chairs available, and the kitchen will happily make '
-              'something plain.',
-        g3_vi='Rất hoan nghênh. Có ghế ăn cho bé, và bếp sẵn sàng làm món đơn giản.',
-        g4=t('Large groups', 'Nhóm đông'),
-        g4_en='We can seat ' + todo('[N]') + ' on the second floor. Email '
-              '<a href="mailto:' + EMAIL + '">' + EMAIL + '</a>.',
-        g4_vi='Chúng tôi có thể phục vụ ' + todo('[N]') + ' khách ở tầng hai. Email '
-              '<a href="mailto:' + EMAIL + '">' + EMAIL + '</a>.',
-        fallback_js=repr(
-            '<div class="fallback">'
-            '<h3><span data-l="en" lang="en">Booking opens soon</span>'
-            '<span data-l="vi" lang="vi">Sắp mở đặt bàn</span></h3>'
-            '<p data-l="en" lang="en">Online reservations open closer to the day we '
-            'open. Until then, email <a href="mailto:' + EMAIL + '">' + EMAIL + '</a> '
-            'and we will hold you a table on the first week.</p>'
-            '<p data-l="vi" lang="vi">Đặt bàn trực tuyến sẽ mở gần ngày khai trương. '
-            'Trong thời gian này, hãy gửi email tới '
-            '<a href="mailto:' + EMAIL + '">' + EMAIL + '</a> và chúng tôi sẽ giữ bàn '
-            'cho bạn trong tuần đầu tiên.</p>'
-            '<p style="margin-bottom:0"><a class="btn solid" href="mailto:' + EMAIL + '">'
-            '<span data-l="en" lang="en">Email us</span>'
-            '<span data-l="vi" lang="vi">Gửi email</span></a></p>'
-            '</div>').replace("'", '"', 0),
+        # HIDE until supplied: large groups (seat count), getting here, parking.
+        title=page_title(t('Visit', 'Ghé thăm'),
+                         t('Find us and book a table', 'Tìm chúng tôi và đặt bàn'),
+                         t('Sol is on the first two floors of No 7, Lane 88 Quang An. We’re opening soon.',
+                           'Sol nằm ở hai tầng đầu của tòa nhà số 7, ngõ 88 Quảng An. Chúng tôi sắp khai trương.')),
+        k1=t('Reservations', 'Đặt chỗ'), book=BOOK, booking_p=booking_p, widget=widget,
+        email=EMAIL, email_us=t('Email us', 'Gửi email'), tel=PHONE_TEL,
+        call_us=t('Call us', 'Gọi điện'),
+        groups=t('Seven or more? Email us and we’ll look after you personally.',
+                 'Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn.'),
+        l_hours=t('Opening hours', 'Giờ mở cửa'), mon=t('Monday', 'Thứ Hai'),
+        closed=t('Closed', 'Đóng cửa'), tue_sun=t('Tuesday to Sunday', 'Thứ Ba đến Chủ Nhật'),
+        hours=t('5pm–11pm', '17:00 – 23:00'),
+        from_open=t('From the day we open.', 'Từ ngày chúng tôi khai trương.'),
+        l_addr=t('Address', 'Địa chỉ'), addr=t(ADDRESS_EN, ADDRESS_VI),
+        maps=MAPS_URL, maps_t=MAPS_LINK_TEXT,
+        l_talk=t('Talk to us', 'Liên hệ'), phone=PHONE, insta=INSTA_LINK,
+        sun=sun(3), gtk=t('Good to know', 'Thông tin hữu ích'),
+        children=t('Children', 'Trẻ em'),
+        children_d=t('Very welcome. We have high chairs, and the kitchen will happily make something plain.',
+                     'Rất hoan nghênh. Có ghế ăn cho bé, và bếp sẵn sàng làm món đơn giản.'),
     )
-
-    return page('/visit/', 'visit',
-        'Visit & book — Sol, Tây Hồ, Hanoi', 'Ghé thăm & đặt bàn — Sol, Tây Hồ, Hà Nội',
-        'Address, opening hours and table reservations for Sol in Tây Hồ, Hanoi. '
-        'Opening soon.',
-        'Địa chỉ, giờ mở cửa và đặt bàn tại Sol, Tây Hồ, Hà Nội. Sắp khai trương.',
-        body, head_extra=SCHEMA)
-
+    return page('/visit/', 'page-visit',
+                ('Visit and book — Sol, Tây Hồ', 'Ghé thăm và đặt bàn — Sol, Tây Hồ'),
+                ('No 7, Lane 88 Quang An Street, Tây Hồ, Hanoi. Tuesday to Sunday, 5pm–11pm, from the '
+                 'day we open. Call or email to hold a table.',
+                 'Số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Thứ Ba đến Chủ Nhật, 17:00 – 23:00, kể từ '
+                 'ngày khai trương. Gọi điện hoặc gửi email để giữ bàn.'),
+                main, cur='visit', og=og_image('visit'), extra=SCHEMA)
 
 
 # ==========================================================================
-# CAREERS — /jobs/
-# The listing is built from ROLES below. The three role pages that were
-# already live are re-wrapped in the site shell with their content untouched
-# (build/../src/jobs/*.html is the source of truth for that copy).
-# To open a new role: add it to ROLES, drop its detail page in src/jobs/,
-# rebuild. To close one: status='filled', filled_en/filled_vi.
+# WORK WITH US  /jobs/
+# Open roles are cards (none has its own page yet). Filled roles are listed
+# under "Recently filled" and link to their pages, which are re-wrapped from
+# src/jobs/*.html with the copy untouched.
+# To open a role with a page: write it in src/jobs/ in the same shape, add it
+# to ROLES with status='open', and give it a card in build_jobs().
 # ==========================================================================
 ROLES = [
     dict(slug='restaurant-accountant', src='restaurant-accountant.html',
          name_en='Restaurant Accountant', name_vi='Kế toán nhà hàng',
-         sub_en='Sol & ASU House Bakery', sub_vi='Sol & ASU House Bakery',
-         blurb_en='Own the finance function across Sol and ASU House Bakery. '
-                  'You are the finance function, not one seat in a large team.',
-         blurb_vi='Phụ trách toàn bộ tài chính của Sol và ASU House Bakery. '
-                  'Bạn chính là bộ phận tài chính, không phải một ghế trong một đội lớn.',
-         pay='20,000,000 VND', extra_en='→ Finance Manager', extra_vi='→ Trưởng phòng Tài chính',
-         status='open'),
+         status='filled', filled_en='September 2026', filled_vi='Tháng 9 năm 2026'),
     dict(slug='sous-chef', src='sous-chef.html',
          name_en='Sous Chef', name_vi='Bếp phó',
-         sub_en='Pizza & Kitchen Operations', sub_vi='Pizza & vận hành bếp',
-         blurb_en='Own the dough programme and run the wood-fired oven alongside the '
-                  'Head Chef, leading 4–5 line cooks.',
-         blurb_vi='Phụ trách chương trình bột và vận hành lò củi cùng Bếp trưởng, '
-                  'dẫn dắt 4–5 đầu bếp.',
-         pay='18,000,000 VND', extra_en='2–4M service charge + 10% KPI bonus',
-         extra_vi='2–4 triệu phí phục vụ + 10% thưởng KPI',
-         status='filled', filled_en='September 2026', filled_vi='tháng 9 năm 2026'),
+         status='filled', filled_en='September 2026', filled_vi='Tháng 9 năm 2026'),
     dict(slug='restaurant-supervisor', src='restaurant-supervisor.html',
          name_en='Restaurant Supervisor', name_vi='Giám sát nhà hàng',
-         sub_en='Front of house', sub_vi='Khu phục vụ',
-         blurb_en='Full ownership of the dining room and bar — the floor, the team, '
-                  'the budget and the guest experience.',
-         blurb_vi='Toàn quyền phụ trách phòng ăn và quầy bar — sàn, đội ngũ, ngân sách '
-                  'và trải nghiệm khách.',
-         pay='16,000,000 VND', extra_en='2–4M service charge + 10% KPI bonus',
-         extra_vi='2–4 triệu phí phục vụ + 10% thưởng KPI',
-         status='filled', filled_en='September 2026', filled_vi='tháng 9 năm 2026'),
+         status='filled', filled_en='September 2026', filled_vi='Tháng 9 năm 2026'),
 ]
 
 BENEFITS = [
-    ('A share of the venue’s 5% service charge and tip pool, paid quarterly, for the floor and kitchen roles.',
+    ('A share of the 5% service charge and the tip pool, paid quarterly, for floor and kitchen roles.',
      'Một phần trong 5% phí phục vụ và quỹ tip của nhà hàng, trả hàng quý, cho các vị trí phục vụ và bếp.'),
-    ('A 13th-month bonus according to company KPIs, and an annual salary review based on performance.',
+    ('A 13th-month bonus based on company KPIs, and a salary review every year based on performance.',
      'Thưởng tháng 13 theo KPI công ty, và xét tăng lương hàng năm theo hiệu quả công việc.'),
-    ('Full statutory insurance — BHXH, BHYT, BHTN — from the day your labour contract starts.',
+    ('Full statutory insurance — BHXH, BHYT and BHTN — from the day your labour contract starts.',
      'Đầy đủ bảo hiểm theo luật — BHXH, BHYT, BHTN — từ ngày hợp đồng lao động bắt đầu.'),
-    ('12 days paid annual leave a year, plus one extra day for every 3 years of service, subject to company policy.',
+    ('12 days’ paid annual leave, plus one extra day for every 3 years with us, subject to company policy.',
      '12 ngày nghỉ phép có lương mỗi năm, cộng thêm một ngày cho mỗi 3 năm làm việc, theo chính sách công ty.'),
-    ('11 paid public holidays a year including Tết. Holiday work is paid at statutory premium rates.',
+    ('11 paid public holidays a year, including Tết. Holiday work is paid at the statutory premium.',
      '11 ngày nghỉ lễ có lương mỗi năm, bao gồm Tết. Làm việc ngày lễ được trả theo mức phụ trội luật định.'),
-    ('A funded WSET Level 3 or Certified Sommelier qualification after 12 months, for the floor team.',
+    ('WSET Level 3 or Certified Sommelier, funded by Sol, after 12 months on the floor team.',
      'Được tài trợ chứng chỉ WSET Level 3 hoặc Certified Sommelier sau 12 tháng, cho đội phục vụ.'),
-    ('A staff meal cooked by our kitchen before dinner service, and a discount across Sol and ASU House Bakery.',
+    ('A staff meal from our kitchen before dinner service, and a staff discount at Sol and ASU House Bakery.',
      'Bữa ăn nhân viên do bếp nấu trước ca tối, và ưu đãi giảm giá tại Sol và ASU House Bakery.'),
 ]
 
 
-def _rolecard(r):
-    if r['status'] == 'open':
-        return """      <a class="rolecard" href="/jobs/%(slug)s.html">
-        <div class="rc-head"><h3>%(name)s</h3><p class="rc-sub">%(sub)s</p></div>
-        <p class="rc-blurb" data-l="en" lang="en">%(blurb_en)s</p>
-        <p class="rc-blurb" data-l="vi" lang="vi">%(blurb_vi)s</p>
-        <p class="rc-pay">%(pay)s</p>
-        <p class="rc-extra">%(extra)s</p>
-        <span class="rc-go">%(go)s</span>
-      </a>""" % dict(slug=r['slug'], name=t(r['name_en'], r['name_vi']),
-                     sub=t(r['sub_en'], r['sub_vi']), blurb_en=r['blurb_en'],
-                     blurb_vi=r['blurb_vi'], pay=r['pay'],
-                     extra=t(r['extra_en'], r['extra_vi']),
-                     go=t('View role →', 'Xem vị trí →'))
+def role_path(r):
+    return '/jobs/' + r['slug']          # Cloudflare serves jobs/<slug>.html here
 
 
 def build_jobs():
-    open_roles = [r for r in ROLES if r['status'] == 'open']
-    filled = [r for r in ROLES if r['status'] == 'filled']
-
-    cards = '\n'.join(_rolecard(r) for r in open_roles)
-    cards += """
-      <div class="rolecard team">
-        <div class="rc-head"><h3>%s</h3><p class="rc-sub">%s</p></div>
-        <p class="rc-blurb" data-l="en" lang="en">%s</p>
-        <p class="rc-blurb" data-l="vi" lang="vi">%s</p>
-        <p class="rc-extra" data-l="en" lang="en">%s</p>
-        <p class="rc-extra" data-l="vi" lang="vi">%s</p>
-        <span class="rc-go"><a href="mailto:jobs@sol.pizza?subject=Opening%%20team%%20%%E2%%80%%94%%20">%s</a></span>
-      </div>""" % (
-        t('Opening team — floor and kitchen', 'Đội ngũ khai trương — phục vụ và bếp'),
-        t('Hiring now for our opening', 'Tuyển ngay cho ngày khai trương'),
-        'Servers, bartenders, baristas, line cooks and kitchen porters for the first team '
-        'in the new room. The Restaurant Supervisor and Head Chef are finalising each role; '
-        'send us a CV now and we will come back to you as they open.',
-        'Nhân viên phục vụ, pha chế, barista, đầu bếp và phụ bếp cho đội ngũ đầu tiên trong '
-        'không gian mới. Giám sát nhà hàng và Bếp trưởng đang hoàn thiện từng vị trí; hãy gửi CV '
-        'ngay và chúng tôi sẽ liên hệ lại khi các vị trí mở.',
-        todo('[Long / Ngọc: list each role here with pay and hours once decided]'),
-        todo('[Long / Ngọc: liệt kê từng vị trí kèm lương và giờ làm khi đã chốt]'),
-        t('Email jobs@sol.pizza →', 'Gửi email tới jobs@sol.pizza →'))
-
-    filledhtml = '\n'.join(
-        '      <li><a href="/jobs/%s.html">%s<span class="st">%s</span></a></li>' % (
-            r['slug'], t(r['name_en'], r['name_vi']),
-            t('Filled ' + r['filled_en'], 'Đã tuyển ' + r['filled_vi']))
-        for r in filled)
-
-    benefits = '\n'.join(
-        '      <li><span data-l="en" lang="en">%s</span><span data-l="vi" lang="vi">%s</span></li>' % b
-        for b in BENEFITS)
-
-    body = """<main id="main">
-<section class="pagehead">
-  <div class="wrap">
-    <p class="eyebrow">{eyebrow}</p>
-    <h1>{h1}</h1>
-    <p class="standfirst" data-l="en" lang="en">{sf_en}</p>
-    <p class="standfirst" data-l="vi" lang="vi">{sf_vi}</p>
-  </div>
+    roles = """  <div class="role-list"><article class="role"><p class="role-meta">{host_meta}</p><h3>{host}</h3><p>{host_p}</p><p class="role-pay">{host_pay}</p><a class="link-sc" href="mailto:jobs@sol.pizza?subject=Host">{host_apply}</a></article><article class="role"><p class="role-meta">{team_meta}</p><h3>{team}</h3><p>{team_p}</p><a class="link-sc" href="mailto:jobs@sol.pizza">{email_jobs}</a></article></div>""".format(
+        host_meta=t('Front of house · Full time', 'Khu phục vụ · Toàn thời gian'),
+        host=t('Host', 'Lễ tân (Host)'),
+        host_p=t('The first person our guests meet. You’ll welcome them at the door, answer the phone, '
+                 'take online orders and reply to messages.',
+                 'Người đầu tiên khách gặp khi đến Sol. Bạn sẽ đón khách ở cửa, nghe điện thoại, nhận '
+                 'đơn đặt món trực tuyến và trả lời tin nhắn.'),
+        # CONFIRM: publish with the pay range
+        host_pay=t('<span class="nowrap">9,000,000–10,000,000 VND</span> gross a month, plus around '
+                   '<span class="nowrap">2,000,000–4,000,000 VND</span> a month from service charge and '
+                   'tips, paid quarterly.',
+                   '<span class="nowrap">9.000.000–10.000.000 VND</span> mỗi tháng (lương gross), cộng '
+                   'thêm khoảng <span class="nowrap">2.000.000–4.000.000 VND</span> mỗi tháng từ phí '
+                   'phục vụ và tiền tip, trả hàng quý.'),
+        host_apply=t('Apply: email jobs@sol.pizza with “Host” in the subject',
+                     'Ứng tuyển: gửi email tới jobs@sol.pizza, tiêu đề ghi “Host”'),
+        team_meta=t('Floor and kitchen', 'Phục vụ và bếp'),
+        team=t('Opening team', 'Đội ngũ khai trương'),
+        # HIDE until Long and Ngọc confirm them: the roles with pay and hours.
+        team_p=t('Servers, bartenders, baristas, line cooks and kitchen porters for our first team. Our '
+                 'Restaurant Supervisor and Head Chef are finalising each role — send your CV now and '
+                 'we’ll come back to you as each one opens.',
+                 'Nhân viên phục vụ, pha chế, barista, đầu bếp và phụ bếp cho đội ngũ đầu tiên trong '
+                 'không gian mới. Giám sát nhà hàng và Bếp trưởng đang hoàn thiện từng vị trí; hãy gửi '
+                 'CV ngay và chúng tôi sẽ liên hệ lại khi các vị trí mở.'),
+        email_jobs=t('Email jobs@sol.pizza', 'Gửi email tới jobs@sol.pizza'),
+    )
+    filled = ''.join('<li><span><a href="%s">%s</a></span><span>%s</span></li>'
+                     % (role_path(r), t(r['name_en'], r['name_vi']), t(r['filled_en'], r['filled_vi']))
+                     for r in ROLES if r['status'] == 'filled')
+    # No open role has its own page, so How to apply doesn't send people to one.
+    main = """<main id="main">
+<div class="wrap">{title}</div>
+<section class="prose-section wrap" aria-labelledby="s-roles"><header class="section-head">{sun1}<h2 id="s-roles">{where}</h2></header>
+{roles}
+  <div class="filled"><h3 class="label">{recent}</h3><ul>{filled}</ul></div>
 </section>
-
-<section class="band" style="padding-top:48px">
-  <div class="wrap prose">
-    <p class="kicker">{k1}</p>
-    <h2>{h2a}</h2>
-    <div class="rolegrid">
-{cards}
-    </div>
-    <p class="kicker" style="margin-top:34px">{k2}</p>
-    <ul class="filledlist">
-{filled}
-    </ul>
-  </div>
-</section>
-
-<section class="band tint">
-  <div class="wrap prose">
-    <p class="kicker">{k3}</p>
-    <h2>{h2b}</h2>
-    <p class="lede" data-l="en" lang="en">{a1_en}</p>
-    <p class="lede" data-l="vi" lang="vi">{a1_vi}</p>
-    <p data-l="en" lang="en">{a2_en}</p>
-    <p data-l="vi" lang="vi">{a2_vi}</p>
-    <p data-l="en" lang="en">{a3_en}</p>
-    <p data-l="vi" lang="vi">{a3_vi}</p>
-  </div>
-</section>
-
-<section class="band">
-  <div class="wrap prose">
-    <h2>{h2c}</h2>
-    <ul class="benefits">
-{benefits}
-    </ul>
-  </div>
-</section>
-
-<section class="band olive" id="apply">
-  <div class="wrap prose">
-    <h2>{h2d}</h2>
-    <p data-l="en" lang="en">{ap_en}</p>
-    <p data-l="vi" lang="vi">{ap_vi}</p>
-    <p><a class="btn" href="mailto:jobs@sol.pizza">{cta}</a></p>
-    <p style="font-size:14px;margin-top:22px;color:rgba(249,233,211,.85)">
-      <a href="/privacy/">{priv_en}</a> · <a href="/privacy/#vi">{priv_vi}</a></p>
-  </div>
-</section>
+<section class="split about wrap"><div><p class="eyebrow">{k_about}</p><h2 class="h-lg">{h_about}</h2></div><div class="split-body"><p>{a1}</p><p>{a2}</p></div></section>
+<section class="prose-section wrap" aria-labelledby="s-benefits"><header class="section-head">{sun5}<h2 id="s-benefits">{h_ben}</h2></header><ul class="benefit-list">{benefits}</ul></section>
+<div class="wrap"><section class="offer" aria-labelledby="s-apply"><h2 id="s-apply">{h_apply}</h2><p>{apply}</p>
+  <a class="btn btn-red" href="mailto:jobs@sol.pizza">{email_jobs}</a><p class="privacy-links"><a href="/privacy/#en" lang="en" hreflang="en">Applicant privacy notice</a> · <a href="/privacy/#vi" lang="vi" hreflang="vi">Thông báo bảo mật ứng viên</a></p></section></div>
 </main>
 """.format(
-        eyebrow=t('We are hiring · Tây Hồ, Hanoi', 'Tuyển dụng · Tây Hồ, Hà Nội'),
-        h1=t('Come and build the new Sol', 'Cùng xây dựng Sol mới'),
-        sf_en='We open soon. The kitchen and the floor are being hired now, '
-              'and every application gets a reply.',
-        sf_vi='Chúng tôi sắp khai trương. Bếp và khu phục vụ đang tuyển ngay bây giờ, '
-              'và mọi hồ sơ đều nhận được phản hồi.',
-        k1=t('Open roles', 'Vị trí đang tuyển'),
-        h2a=t('Where we need you', 'Chúng tôi cần bạn ở đâu'),
-        cards=cards,
-        k2=t('Recently filled', 'Vừa tuyển xong'),
-        filled=filledhtml,
-        k3=t('About Sol', 'Về Sol'),
-        h2b=t('A new chapter, the same standards.', 'Một chương mới, cùng một tiêu chuẩn.'),
-        a1_en='Sol is starting a new chapter this year — a new home, a refreshed brand and a '
-              'growing team — while staying focused on what has always mattered most to us: '
-              'great food, made with high-quality ingredients.',
-        a1_vi='Năm nay Sol bắt đầu một chương mới — một ngôi nhà mới, thương hiệu được làm mới '
-              'và đội ngũ đang lớn dần — trong khi vẫn tập trung vào điều luôn quan trọng nhất với '
-              'chúng tôi: món ăn ngon, làm từ nguyên liệu chất lượng cao.',
-        a2_en='Based in Tây Hồ, Sol is a modern American-Italian restaurant with pizza at its '
-              'heart, paired with a carefully selected wine list and a warm, relaxed atmosphere.',
-        a2_vi='Đặt tại Tây Hồ, Sol là nhà hàng Mỹ–Ý hiện đại với pizza làm trung tâm, đi cùng '
-              'danh sách rượu vang được chọn lọc kỹ và không gian ấm áp, thư giãn.',
-        a3_en='As we prepare to open the new space, we are looking for people who care about '
-              'good food, genuine hospitality, and doing things well.',
-        a3_vi='Khi chuẩn bị mở không gian mới, chúng tôi tìm những người quan tâm đến món ăn ngon, '
-              'lòng hiếu khách chân thành, và làm mọi việc cho tử tế.',
-        h2c=t('What you get, whichever role you take', 'Quyền lợi, dù bạn ở vị trí nào'),
-        benefits=benefits,
-        h2d=t('How to apply', 'Cách ứng tuyển'),
-        ap_en='Send your CV to <a href="mailto:jobs@sol.pizza">jobs@sol.pizza</a> with the role '
-              'name in the subject line. Each role page lists exactly what to include. We review '
-              'applications within 5 working days and reply to every applicant — including the '
-              'ones we cannot take forward.',
-        ap_vi='Gửi CV tới <a href="mailto:jobs@sol.pizza">jobs@sol.pizza</a> với tên vị trí ở dòng '
-              'tiêu đề. Mỗi trang vị trí ghi rõ cần gửi những gì. Chúng tôi xem xét hồ sơ trong '
-              '5 ngày làm việc và trả lời mọi ứng viên — kể cả những người chúng tôi không thể '
-              'tiếp tục.',
-        cta=t('Email jobs@sol.pizza', 'Gửi email tới jobs@sol.pizza'),
-        priv_en='Applicant privacy notice', priv_vi='Thông báo bảo mật ứng viên',
+        title=page_title(t('We’re hiring · Tây Hồ, Hanoi', 'Tuyển dụng · Tây Hồ, Hà Nội'),
+                         t('Come and build the new Sol.', 'Cùng xây dựng Sol mới.'),
+                         t('We’re hiring now for our opening, in the kitchen and on the floor, and '
+                           'every application gets a reply.',
+                           'Chúng tôi sắp khai trương. Bếp và khu phục vụ đang tuyển ngay bây giờ, và '
+                           'mọi hồ sơ đều nhận được phản hồi.')),
+        sun1=sun(1), where=t('Where we need you', 'Chúng tôi cần bạn ở đâu'), roles=roles,
+        recent=t('Recently filled', 'Vừa tuyển xong'), filled=filled,
+        k_about=t('About Sol', 'Về Sol'),
+        h_about=t('A new home, the same standards.', 'Ngôi nhà mới, vẫn những tiêu chuẩn ấy.'),
+        a1=t('Sol is a modern Italian-American restaurant in Tây Hồ, with pizza at its heart, a '
+             'carefully chosen wine list and a warm, relaxed room.',
+             'Sol là nhà hàng Ý–Mỹ hiện đại ở Tây Hồ, với pizza làm trung tâm, danh sách vang được '
+             'chọn lọc kỹ và không gian ấm áp, thư giãn.'),
+        a2=t('This year we start again in a new building, with a refreshed brand and a bigger team — '
+             'and the belief we started with: food quality is non-negotiable. We’re looking for people '
+             'who care about good food, real hospitality and doing things properly.',
+             'Năm nay chúng tôi bắt đầu lại trong một tòa nhà mới, với thương hiệu được làm mới và '
+             'đội ngũ lớn hơn — cùng niềm tin từ ngày đầu: chất lượng món ăn là điều không thể thỏa '
+             'hiệp. Chúng tôi tìm những người quan tâm đến món ăn ngon, lòng hiếu khách chân thành '
+             'và làm mọi việc cho tử tế.'),
+        sun5=sun(5), h_ben=t('What you get, in any role', 'Quyền lợi, dù bạn ở vị trí nào'),
+        benefits=''.join('<li>%s%s</li>' % (sun(i + 1), t(en, vi)) for i, (en, vi) in enumerate(BENEFITS)),
+        h_apply=t('How to apply', 'Cách ứng tuyển'),
+        apply=t('Email your CV to jobs@sol.pizza with the role in the subject line. We read every '
+                'application within 5 working days and reply to everyone, including the people we '
+                'can’t take forward.',
+                'Gửi CV tới jobs@sol.pizza với tên vị trí ở dòng tiêu đề. Chúng tôi đọc mọi hồ sơ trong '
+                'vòng 5 ngày làm việc và trả lời tất cả ứng viên, kể cả những bạn chúng tôi chưa thể '
+                'mời vào vòng tiếp theo.'),
+        email_jobs=t('Email jobs@sol.pizza', 'Gửi email tới jobs@sol.pizza'),
     )
-
-    page('/jobs/', 'jobs',
-         'Careers at Sol — Tây Hồ, Hanoi', 'Tuyển dụng tại Sol — Tây Hồ, Hà Nội',
-         'Sol is hiring in Tây Hồ, Hanoi ahead of opening: Restaurant Accountant, '
-         'plus the opening floor and kitchen team.',
-         'Sol đang tuyển dụng tại Tây Hồ, Hà Nội trước ngày khai trương: Kế toán nhà hàng '
-         'và đội ngũ phục vụ, bếp.',
-         body, body_attrs=' data-page="index"', sticky='jobs')
-
+    page('/jobs/', 'page-jobs',
+         ('Work with us — Sol, Tây Hồ', 'Tuyển dụng — Sol, Tây Hồ'),
+         ('We’re hiring a Host and our opening team for the floor and the kitchen. Every application '
+          'gets a reply.',
+          'Chúng tôi đang tuyển Lễ tân (Host) và đội ngũ khai trương cho khu phục vụ và bếp. Mọi hồ '
+          'sơ đều được phản hồi.'),
+         main, og=og_image('jobs'), body_attrs=' data-page="index"')
     for r in ROLES:
-        _rewrap_role(r, open_roles)
+        build_role(r)
 
 
-def _rewrap_role(r, open_roles):
-    """Put an existing role page inside the site shell without touching its copy."""
-    h = open(os.path.join(SRC, 'jobs', r['src']), encoding='utf-8').read()
+def build_role(r):
+    """An existing role page in the site shell, its copy untouched."""
+    h = read(os.path.join(SRC, 'jobs', r['src']))
     hero = re.search(r'<div class="hero"><div class="wrap">(.*?)</div></div>\s*<main', h, re.S).group(1)
     inner = re.search(r'<main><div class="wrap">(.*?)</div></main>', h, re.S).group(1)
     title = re.search(r'<title>(.*?)</title>', h, re.S).group(1)
     desc = re.search(r'<meta name="description" content="([^"]*)"', h).group(1)
 
-    # Stale deadline fact and the "other openings" block go on every page.
-    hero = re.sub(r'<div><dt>Closes</dt><dd>[^<]*</dd></div>', '', hero)
-    inner = re.sub(r'<div class="others">.*?</div></div>', '', inner, flags=re.S)
+    def grab(pat):
+        m = re.search(pat, hero, re.S)
+        return m.group(1).strip() if m else ''
 
+    eyebrow = grab(r'<p class="eyebrow">(.*?)</p>')
+    subtitle = grab(r'<p class="subtitle">(.*?)</p>')
+    standfirst = grab(r'<p class="standfirst">(.*?)</p>')
+    facts = re.findall(r'<div><dt>(.*?)</dt><dd>(.*?)</dd></div>', grab(r'<dl class="facts">(.*?)</dl>'))
     filled = r['status'] == 'filled'
+    # Deadlines and start dates are stale once a role is filled.
+    drop = {'Closes'} | ({'Starts'} if filled else set())
+    facts = [(k, v) for k, v in facts if k not in drop]
+
+    inner = re.sub(r'<div class="others">.*?</div></div>', '', inner, flags=re.S)
     if filled:
-        # a start date is stale once the role is filled
-        hero = re.sub(r'<div><dt>Starts</dt><dd>[^<]*</dd></div>', '', hero)
-        hero = hero.replace('</dl>', '<div><dt>%s</dt><dd>%s</dd></div></dl>' % (
-            t('Status', 'Trạng thái'), t('Filled, ' + r['filled_en'], 'Đã tuyển, ' + r['filled_vi'])))
-        hero = re.sub(r'<div><a class="btn" href="#apply">.*?</a></div>', '', hero, flags=re.S)
         inner = re.sub(r'<section class="apply" id="apply">.*?</section>', '', inner, flags=re.S)
-        bar = ('<div class="filledbar"><div class="wrap">'
-               '<span data-l="en" lang="en">This role was filled in %s. The description stays '
-               'here for reference.</span>'
-               '<span data-l="vi" lang="vi">Vị trí này đã tuyển xong vào %s. Mô tả được giữ lại '
-               'để tham khảo.</span>'
-               '<a href="/jobs/">%s</a></div></div>\n') % (
-                   r['filled_en'], r['filled_vi'], t('See open roles →', 'Xem vị trí đang tuyển →'))
-        robots = '<meta name="robots" content="noindex,follow">'
-        page_attr = 'role-filled'
-        sticky = 'none'
+    inner = inner.replace('class="kicker"', 'class="eyebrow"').replace(' class="lede"', '')
+
+    banner = ''
+    if filled:
+        banner = '<aside class="note-box"><p>%s</p></aside>\n' % t(
+            'This role has been filled. Thank you to everyone who applied.',
+            'Vị trí này đã tuyển xong. Cảm ơn tất cả các bạn đã ứng tuyển.')
+    main = ('<main id="main" class="wrap">\n' + banner +
+            '<header class="page-title"><p class="eyebrow" lang="en">%s</p><h1>%s</h1>%s</header>\n'
+            % (eyebrow, t(r['name_en'], r['name_vi']),
+               '<p class="page-lead" lang="en">%s</p>' % subtitle if subtitle else '') +
+            '<dl class="gtk-items" lang="en">%s</dl>\n'
+            % ''.join('<div><dt>%s</dt><dd>%s</dd></div>' % f for f in facts) +
+            '<div class="prose" lang="en">\n'
+            '<p class="vi-note" data-l="vi" lang="vi">Bản mô tả công việc này chỉ có bằng tiếng Anh.</p>\n'
+            '<p>%s</p>\n%s\n</div>\n</main>\n' % (standfirst, inner.strip()))
+    if filled:
+        # The source page's title and description still advertise the role
+        # ("…is hiring… Applications close…"); say it's filled instead.
+        titles = ('%s — Sol, Tây Hồ' % r['name_en'], '%s — Sol, Tây Hồ' % r['name_vi'])
+        descs = ('The %s role at Sol, Tây Hồ, Hanoi. This role has been filled.' % r['name_en'],
+                 'Mô tả công việc %s tại Sol, Tây Hồ, Hà Nội. Vị trí này đã tuyển xong.'
+                 % r['name_vi'].lower())
     else:
-        hero = hero.replace('</dl>', '<div><dt>%s</dt><dd>%s</dd></div></dl>' % (
-            t('Applications', 'Ứng tuyển'), t('Open — reviewed as they arrive', 'Đang mở — xét duyệt liên tục')))
-        inner = inner.replace(
-            '<p><strong>Applications close 3 September 2026</strong></p>',
-            '<p><strong>' + t('Applications are open and reviewed as they arrive.',
-                              'Hồ sơ đang được nhận và xét duyệt liên tục.') + '</strong></p>')
-        bar = ''
-        robots = ''
-        page_attr = 'role'
-        sticky = 'apply'
-
-    vi_note = ('<p class="vi-note" data-l="vi" lang="vi">Bản mô tả công việc này hiện chỉ có '
-               'bằng tiếng Anh. Bạn có thể ứng tuyển bằng tiếng Việt hoặc tiếng Anh.</p>\n')
-
-    body = ('<main id="main" class="role">\n' + bar +
-            '<section class="hero role"><div class="wrap">' + hero + '</div></section>\n'
-            '<div class="wrap prose" style="padding-top:44px">\n' + vi_note + inner +
-            '\n</div>\n</main>\n')
-
-    page('/jobs/%s.html' % r['slug'], r['slug'], title, title, desc, desc, body,
-         head_extra=robots,
-         body_attrs=' data-page="%s" data-role="%s" data-slug="%s"' % (page_attr, r['name_en'], r['slug']),
-         out=os.path.join(DIST, 'jobs', r['slug'] + '.html'), nav_path='/jobs/',
-         og='%s/jobs/og-%s.png' % (SITE, r['slug']), sticky=sticky)
+        titles = (title, '%s — Sol, Tây Hồ' % r['name_vi'])
+        descs = (desc, 'Mô tả công việc %s tại Sol, Tây Hồ, Hà Nội.' % r['name_vi'].lower())
+    page(role_path(r), 'page-role', titles, descs,
+         main, og='%s/jobs/og-%s.png' % (SITE, r['slug']),
+         extra='<meta name="robots" content="noindex,follow">' if filled else '',
+         body_attrs=' data-page="%s" data-role="%s" data-slug="%s"'
+                    % ('role-filled' if filled else 'role', r['name_en'], r['slug']),
+         out=os.path.join(DIST, 'jobs', r['slug'] + '.html'))
 
 
 # ==========================================================================
-# SUPPORT FILES
+# PRIVACY  /privacy/   (src/privacy/index.html, text untouched)
 # ==========================================================================
+def build_privacy():
+    h = read(os.path.join(SRC, 'privacy', 'index.html'))
+    title = re.search(r'<title>(.*?)</title>', h, re.S).group(1)
+    desc = re.search(r'<meta name="description" content="([^"]*)"', h).group(1)
+    body = re.search(r'<main><div class="wrap">(.*)</div></main>', h, re.S).group(1)
+    en = body.split('<div class="langblock" id="en">', 1)[1].split('<div class="langblock">', 1)[0]
+    vi = body.split('<div class="langblock">', 1)[1]
+
+    def block(part, lang, block_id):
+        part = part.strip()
+        assert part.endswith('</div>'), 'privacy: unexpected markup'
+        part = part[:-len('</div>')].strip()
+        h1 = re.search(r'<h1[^>]*>.*?</h1>', part, re.S).group(0)
+        part = part.replace(h1, '', 1).strip()
+        return ('<div data-l="%s" lang="%s" id="%s"><header class="page-title">%s</header>\n'
+                '<div class="prose">\n%s\n</div></div>\n' % (lang, lang, block_id, h1, part))
+
+    main = ('<main id="main" class="wrap">\n' + block(en, 'en', 'en') + block(vi, 'vi', 'vi-notice') + '</main>\n')
+    return page('/privacy/', 'page-privacy',
+                (title, 'Thông báo bảo mật dành cho ứng viên — Sol'),
+                (desc, 'Cách Sol thu thập, sử dụng và lưu trữ dữ liệu cá nhân của ứng viên, theo Luật '
+                       'Bảo vệ dữ liệu cá nhân số 91/2025/QH15.'),
+                main, index=False, extra='<meta name="robots" content="noindex, follow">',
+                body_attrs=' data-page="privacy"', verbatim=True)
+
+
+# ==========================================================================
+# 404 and support files
+# ==========================================================================
+def build_404():
+    main = ('<main id="main" class="wrap">\n<header class="page-title"><h1>%s</h1></header>\n'
+            '<div class="actions"><a class="btn btn-red" href="/menu/">%s</a><a class="btn btn-outline" href="/visit/">%s</a></div>\n'
+            '</main>\n' % (t('We can’t find that page.', 'Chúng tôi không tìm thấy trang này.'),
+                           t('Menu', 'Thực đơn'), t('Visit', 'Ghé thăm')))
+    return page('/404.html', 'page-404', ('Page not found — Sol', 'Không tìm thấy trang — Sol'),
+                ('Page not found.', 'Không tìm thấy trang.'), main, og=og_image('home'), index=False,
+                extra='<meta name="robots" content="noindex">', body_attrs=' data-page="404"',
+                out=os.path.join(DIST, '404.html'))
+
+
+SITEMAP_PAGES = ['/', '/menu/', '/menu/wine/', '/menu/bar/', '/story/', '/visit/', '/jobs/']
+
+
 def build_support():
-    pages = ['/', '/menu/', '/wine/', '/story/', '/visit/', '/jobs/'] + \
-            ['/jobs/%s.html' % r['slug'] for r in ROLES if r['status'] == 'open']
+    pages = SITEMAP_PAGES + [role_path(r) for r in ROLES if r['status'] == 'open']
     urls = []
     for p in pages:
-        pri = '1.0' if p == '/' else ('0.9' if p in ('/menu/', '/wine/', '/visit/') else '0.6')
+        pri = '1.0' if p == '/' else ('0.9' if p.startswith(('/menu/', '/visit/')) else '0.6')
         urls.append(
             '  <url><loc>%s%s</loc><lastmod>%s</lastmod><priority>%s</priority>\n'
             '    <xhtml:link rel="alternate" hreflang="en" href="%s%s"/>\n'
             '    <xhtml:link rel="alternate" hreflang="vi" href="%s%s?lang=vi"/>\n'
             '  </url>' % (SITE, p, TODAY, pri, SITE, p, SITE, p))
-    sitemap = ('<?xml version="1.0" encoding="UTF-8"?>\n'
-               '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
-               '        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
-               + '\n'.join(urls) + '\n</urlset>\n')
-    open(os.path.join(DIST, 'sitemap.xml'), 'w').write(sitemap)
-
-    open(os.path.join(DIST, 'robots.txt'), 'w').write(
-        'User-agent: *\nAllow: /\nDisallow: /privacy/\n\nSitemap: %s/sitemap.xml\n' % SITE)
-
-    # The apex now has a real homepage, so the old /  ->  /jobs/ rule must go.
-    open(os.path.join(DIST, '_redirects'), 'w').write(
-        '# The apex now serves the real homepage — the old rule that pointed /\n'
-        '# at /jobs/index.html has been removed.\n'
-        '/careers      /jobs/        301\n'
-        '/careers/*    /jobs/:splat  301\n'
-        '/book         /visit/#book  301\n'
-        '/reservations /visit/#book  301\n'
-        '/menu.html    /menu/        301\n'
-        '/wines        /wine/        301\n'
-        '/wine-list    /wine/        301\n'
-        '/winelist     /wine/        301\n'
-        '/drinks       /wine/        301\n')
-
-    # 404
-    body404 = """<main id="main">
-<section class="pagehead">
-  <div class="wrap">
-    <p class="eyebrow">404</p>
-    <h1>{h1}</h1>
-    <p class="standfirst" data-l="en" lang="en">{p_en}</p>
-    <p class="standfirst" data-l="vi" lang="vi">{p_vi}</p>
-    <p style="margin-top:26px"><a class="btn" href="/">{cta}</a></p>
-  </div>
-</section>
-</main>
-""".format(
-        h1=t('That page is not on the menu.', 'Trang này không có trong thực đơn.'),
-        p_en='The link may be old, or we may have moved something. Try the menu, or go home.',
-        p_vi='Có thể liên kết đã cũ, hoặc chúng tôi đã chuyển trang. Hãy thử thực đơn, hoặc quay về trang chủ.',
-        cta=t('Back to the homepage', 'Về trang chủ'))
-    doc = HEAD_TPL.format(title_en='Page not found — Sol', title_vi='Không tìm thấy trang — Sol',
-                          desc_en='Page not found.', desc_vi='Không tìm thấy trang.',
-                          site=SITE, path='/404.html', slug='home', ogtype='website',
-                          ga=GA_ID, fbpix=FB_PIX, head_extra='<meta name="robots" content="noindex">',
-                          body_attrs=' data-page="404"', og=SITE + '/og-home.png')
-    doc += header('/404') + body404 + footer()
-    open(os.path.join(DIST, '404.html'), 'w', encoding='utf-8').write(doc)
+    write(os.path.join(DIST, 'sitemap.xml'),
+          '<?xml version="1.0" encoding="UTF-8"?>\n'
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
+          '        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' + '\n'.join(urls) + '\n</urlset>\n')
+    write(os.path.join(DIST, 'robots.txt'),
+          'User-agent: *\nAllow: /\nDisallow: /privacy/\n\nSitemap: %s/sitemap.xml\n' % SITE)
+    # Redirects live in src/_redirects; Cloudflare applies the copy in dist/.
+    shutil.copy2(os.path.join(SRC, '_redirects'), os.path.join(DIST, '_redirects'))
 
 
 def copy_existing():
-    """Carry the already-live sections across untouched."""
-    # /privacy/ is carried across untouched. /jobs/ is rebuilt by build_jobs()
-    # from the original role pages, so only their OG images come across here.
-    shutil.copytree(os.path.join(SRC, 'privacy'), os.path.join(DIST, 'privacy'), dirs_exist_ok=True)
+    """Static files that aren't generated: favicon, pixel.js, share cards, design, SVGs, fonts."""
+    for f in ('favicon.svg', 'pixel.js'):
+        shutil.copy2(os.path.join(SRC, f), os.path.join(DIST, f))
     os.makedirs(os.path.join(DIST, 'jobs'), exist_ok=True)
     for f in os.listdir(os.path.join(SRC, 'jobs')):
-        if f.endswith('.png'):
+        if f.startswith('og-') and f.endswith('.png'):
             shutil.copy2(os.path.join(SRC, 'jobs', f), os.path.join(DIST, 'jobs', f))
-    for f in ('favicon.svg', 'pixel.js'):
-        if os.path.exists(os.path.join(SRC, f)):
-            shutil.copy2(os.path.join(SRC, f), os.path.join(DIST, f))
-    os.makedirs(os.path.join(DIST, 'assets'), exist_ok=True)
-    shutil.copy2(os.path.join(HERE, 'sol.css'),   os.path.join(DIST, 'assets', 'sol.css'))
-    shutil.copy2(os.path.join(HERE, 'fonts.css'), os.path.join(DIST, 'assets', 'fonts.css'))
-    shutil.copy2(os.path.join(HERE, 'sol.js'),    os.path.join(DIST, 'assets', 'sol.js'))
-    shutil.copytree(os.path.join(HERE, 'fonts'), os.path.join(DIST, 'assets', 'fonts'),
-                    dirs_exist_ok=True)
-    # share cards, rendered by og.js into build/og/png
-    for f in os.listdir(os.path.join(HERE, 'og', 'png')):
+    for f in os.listdir(os.path.join(HERE, 'og', 'png')):          # share cards
         shutil.copy2(os.path.join(HERE, 'og', 'png', f), os.path.join(DIST, f))
+    assets = os.path.join(DIST, 'assets')
+    os.makedirs(assets, exist_ok=True)
+    for f in ('tokens.css', 'printed-menu.css', 'site.css', 'printed-menu.js'):
+        shutil.copy2(os.path.join(DESIGN, f), os.path.join(assets, f))
+    for f in os.listdir(ASSETS):
+        if f.endswith('.svg') and f != 'suns-sprite.svg':             # the sprite is inlined
+            shutil.copy2(os.path.join(ASSETS, f), os.path.join(assets, f))
+    shutil.copy2(os.path.join(HERE, 'fonts.css'), os.path.join(assets, 'fonts.css'))
+    shutil.copytree(os.path.join(HERE, 'fonts'), os.path.join(assets, 'fonts'), dirs_exist_ok=True)
 
 
 # ==========================================================================
 # OPTIMISE
-# CSS and JS are minified and given content-hashed filenames so Cloudflare can
-# cache them for a year; the HTML is left readable and is served with
-# must-revalidate, so a redeploy is picked up straight away. OG images are
-# palette-quantised (they are flat brand colours, so this is lossless to the
-# eye and roughly a third of the size).
+# CSS, JS and SVGs are minified where it helps and given content-hashed names
+# so Cloudflare caches them for a year; the free fonts' @font-face rules are
+# inlined into every page. HTML stays readable and is served with
+# must-revalidate, so a redeploy shows up straight away. OG images are
+# palette-quantised when Pillow is installed.
 # ==========================================================================
-import hashlib, subprocess, json as _json
+def _hash(b):
+    return hashlib.sha1(b).hexdigest()[:8]
 
-def _hash(b): return hashlib.sha1(b).hexdigest()[:8]
+
+def _node(args, data):
+    return subprocess.run(['node'] + args, input=data, capture_output=True, check=True).stdout
+
 
 def optimise():
     assets = os.path.join(DIST, 'assets')
     node = os.path.join(ROOT, 'node_modules')
+    csso = ['-e', 'const c=require(process.argv[1]);let s="";process.stdin.on("data",d=>s+=d)'
+                  '.on("end",()=>process.stdout.write(c.minify(s,{comments:false}).css))',
+            os.path.join(node, 'csso')]
+    terser = [os.path.join(node, 'terser', 'bin', 'terser'), '--compress', '--mangle', '--comments', 'false']
     rename = {}
 
-    # --- CSS via csso, then inlined into every page ----------------------------
-    # One fewer render-blocking round trip per page view. The readable source
-    # stays in build/sol.css and build/fonts.css; edit there and rebuild.
-    css_min = b''
-    for name in ('fonts', 'sol'):
-        src = os.path.join(assets, name + '.css')
-        css = open(src, encoding='utf-8').read()
-        css_min += subprocess.run(['node', '-e',
-            'const c=require(process.argv[1]);let s="";process.stdin.on("data",d=>s+=d)'
-            '.on("end",()=>process.stdout.write(c.minify(s,{comments:false}).css))',
-            os.path.join(node, 'csso')], input=css.encode(), capture_output=True, check=True).stdout
-        os.remove(src)
-    inline_css = '<style>' + css_min.decode('utf-8') + '</style>'
+    fonts_css = _node(csso, open(os.path.join(assets, 'fonts.css'), 'rb').read()).decode('utf-8')
+    os.remove(os.path.join(assets, 'fonts.css'))
 
-    # --- JS via terser -----------------------------------------------------
-    for path, key in ((os.path.join(assets, 'sol.js'), '/assets/sol.js'),
-                      (os.path.join(DIST, 'pixel.js'), None)):
-        js = open(path, encoding='utf-8').read()
-        out = subprocess.run(['node', os.path.join(node, 'terser', 'bin', 'terser'),
-                              '--compress', '--mangle', '--comments', 'false'],
-                             input=js.encode(), capture_output=True, check=True).stdout
-        if key:
-            h = _hash(out); new = 'sol.%s.js' % h
-            open(os.path.join(assets, new), 'wb').write(out); os.remove(path)
-            rename[key] = '/assets/' + new
-        else:
-            open(path, 'wb').write(out)
+    for f in sorted(os.listdir(assets)):
+        path = os.path.join(assets, f)
+        if not os.path.isfile(path):
+            continue
+        data = open(path, 'rb').read()
+        if f.endswith('.css'):
+            data = _node(csso, data)
+        elif f.endswith('.js'):
+            data = _node(terser, data)
+        base, ext = os.path.splitext(f)
+        new = '%s.%s%s' % (base, _hash(data), ext)
+        open(os.path.join(assets, new), 'wb').write(data)
+        os.remove(path)
+        rename['/assets/' + f] = '/assets/' + new
 
-    # --- rewrite references in every HTML file --------------------------------
+    pixel = os.path.join(DIST, 'pixel.js')
+    with open(pixel, 'rb') as f:
+        data = _node(terser, f.read())
+    with open(pixel, 'wb') as f:
+        f.write(data)
+
     for root, _, files in os.walk(DIST):
         for f in files:
-            if not f.endswith('.html'): continue
+            if not f.endswith('.html'):
+                continue
             fp = os.path.join(root, f)
-            h = open(fp, encoding='utf-8').read()
-            for a, b in rename.items(): h = h.replace(a, b)
-            h = h.replace('<link rel="stylesheet" href="/assets/fonts.css">\n'
-                          '<link rel="stylesheet" href="/assets/sol.css">', inline_css)
-            open(fp, 'w', encoding='utf-8').write(h)
+            h = read(fp)
+            h = h.replace('<link rel="stylesheet" href="/assets/fonts.css">', '<style>%s</style>' % fonts_css)
+            for a, b in rename.items():
+                h = h.replace('"%s"' % a, '"%s"' % b)
+            write(fp, h)
 
-    # --- OG images: quantise -----------------------------------------------------
     try:
         from PIL import Image
         for root, _, files in os.walk(DIST):
@@ -1726,17 +1182,18 @@ def optimise():
     except ImportError:
         pass
 
-    # --- _headers: caching, security, early hints ------------------------------
-    open(os.path.join(DIST, '_headers'), 'w').write("""# Cloudflare Pages headers.
+    write(os.path.join(DIST, '_headers'), """# Cloudflare static-asset headers.
 # HTML: always revalidate, so a redeploy shows up immediately.
-# /assets: content-hashed filenames, cached for a year.
+# /assets: content-hashed filenames (fonts: versioned by npm), cached for a year.
+# Link: early hints. The Adobe kit's CSS (use.typekit.net, no-cors) @imports
+# Adobe's counter from p.typekit.net; both block rendering, so warm both up.
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
   Cache-Control: public, max-age=0, must-revalidate
-  Link: </assets/fonts/be-vietnam-pro-latin-400-normal.woff2>; rel=preload; as=font; crossorigin, </assets/fonts/eb-garamond-latin-600-normal.woff2>; rel=preload; as=font; crossorigin
+  Link: <%s>; rel=preload; as=font; type=font/woff2; crossorigin, <https://use.typekit.net>; rel=preconnect; crossorigin, <https://use.typekit.net>; rel=preconnect, <https://p.typekit.net>; rel=preconnect
 
 /assets/*
   ! Cache-Control
@@ -1752,63 +1209,80 @@ def optimise():
   ! Cache-Control
   ! Link
   Cache-Control: public, max-age=86400
-""")
+""" % PRELOAD_FONT)
+
 
 # ==========================================================================
-# BOOTSTRAP — make a clean checkout buildable
-# Fonts come from the @fontsource npm packages (npm ci), share-card PNGs
-# from build/assets.b64.json (a text manifest, see build/pack_assets.py).
-# Nothing binary needs to live in git.
+# BOOTSTRAP: make a clean checkout buildable
+# Fonts come from the @fontsource npm packages (npm ci); share-card PNGs from
+# build/assets.b64.json (a text manifest, see build/pack_assets.py). Nothing
+# binary lives in git.
 # ==========================================================================
-import base64, json as _json0
-
-FONT_PLAN = {
-    'eb-garamond':    {'family': 'EB Garamond',    'weights': [400, 600],      'subsets': ['latin', 'latin-ext', 'vietnamese']},
-    'be-vietnam-pro': {'family': 'Be Vietnam Pro', 'weights': [400, 600, 700], 'subsets': ['latin', 'latin-ext', 'vietnamese']},
-}
-
 def ensure_fonts():
-    """Copy the needed woff2 files out of node_modules and write build/fonts.css."""
-    fd = os.path.join(HERE, 'fonts'); os.makedirs(fd, exist_ok=True)
+    """Copy the woff2 files the site uses out of node_modules and write build/fonts.css."""
+    fd = os.path.join(HERE, 'fonts')
     nm = os.path.join(ROOT, 'node_modules', '@fontsource')
     if not os.path.isdir(nm):
-        if os.path.exists(os.path.join(HERE, 'fonts.css')) and os.listdir(fd):
-            return  # already have a font set from an earlier run
-        raise SystemExit('fonts: run `npm ci` first (needs @fontsource/eb-garamond and @fontsource/be-vietnam-pro)')
+        if os.path.exists(os.path.join(HERE, 'fonts.css')) and os.path.isdir(fd) and os.listdir(fd):
+            return  # a font set from an earlier run
+        raise SystemExit('fonts: run `npm ci` first (needs the @fontsource packages in package.json)')
+    if os.path.isdir(fd):
+        rmtree(fd)        # nothing stale (an old family) may reach dist/
+    os.makedirs(fd)
     css = []
-    for pkg, cfg in FONT_PLAN.items():
-        uni = _json0.load(open(os.path.join(nm, pkg, 'unicode.json')))
-        for sub in cfg['subsets']:
-            for w in cfg['weights']:
-                fn = '%s-%s-%s-normal.woff2' % (pkg, sub, w)
+    for pkg, family, styles in FONT_PLAN:
+        uni = json.loads(read(os.path.join(nm, pkg, 'unicode.json')))
+        for weight, style in styles:
+            for sub in FONT_SUBSETS:
+                fn = '%s-%s-%d-%s.woff2' % (pkg, sub, weight, style)
                 shutil.copy2(os.path.join(nm, pkg, 'files', fn), os.path.join(fd, fn))
-                css.append("@font-face{font-family:'%s';font-style:normal;font-weight:%s;font-display:swap;\n"
-                           "  src:url('/assets/fonts/%s') format('woff2');\n  unicode-range:%s;}" % (cfg['family'], w, fn, uni[sub]))
-    open(os.path.join(HERE, 'fonts.css'), 'w').write(
-        "/* Self-hosted webfonts, generated by build/gen.py from the @fontsource packages.\n"
-        "   Split by unicode-range so a browser only downloads the Vietnamese block when\n"
-        "   it has Vietnamese text to draw. */\n" + '\n'.join(css) + '\n')
+                css.append("@font-face{font-family:'%s';font-style:%s;font-weight:%d;font-display:swap;\n"
+                           "  src:url('/assets/fonts/%s') format('woff2');\n  unicode-range:%s;}"
+                           % (family, style, weight, fn, uni[sub]))
+    write(os.path.join(HERE, 'fonts.css'),
+          '/* The free fonts, generated by build/gen.py from the @fontsource packages.\n'
+          '   Split by unicode-range: a browser downloads a subset only when the page uses it. */\n'
+          + '\n'.join(css) + '\n')
+
 
 def unpack_assets():
-    m = _json0.load(open(os.path.join(HERE, 'assets.b64.json')))
+    m = json.loads(read(os.path.join(HERE, 'assets.b64.json')))
     for rel, b64 in m.items():
         out = os.path.join(ROOT, rel)
         os.makedirs(os.path.dirname(out), exist_ok=True)
         if not os.path.exists(out):
-            open(out, 'wb').write(base64.b64decode(b64))
+            with open(out, 'wb') as f:
+                f.write(base64.b64decode(b64))
 
+
+def rmtree(path):
+    def writable(func, p, _):          # Windows: read-only files
+        os.chmod(p, stat.S_IWRITE)
+        func(p)
+    if sys.version_info >= (3, 12):
+        shutil.rmtree(path, onexc=writable)
+    else:
+        shutil.rmtree(path, onerror=writable)
 
 
 if __name__ == '__main__':
     ensure_fonts()
     unpack_assets()
-    if os.path.isdir(DIST):
-        shutil.rmtree(DIST)
-    os.makedirs(DIST)
+    # Empty dist/ rather than delete it: a running `wrangler dev` keeps the folder open.
+    os.makedirs(DIST, exist_ok=True)
+    for f in os.listdir(DIST):
+        p = os.path.join(DIST, f)
+        if os.path.isdir(p):
+            rmtree(p)
+        else:
+            os.chmod(p, stat.S_IWRITE)
+            os.remove(p)
     copy_existing()
-    for fn in (build_home, build_menu, build_wine, build_story, build_visit):
-        print('wrote', fn())
-    build_jobs(); print('wrote /jobs/')
+    for fn in (build_home, build_food, build_wine, build_bar, build_story, build_visit,
+               build_privacy, build_404):
+        print('wrote', os.path.relpath(fn(), ROOT))
+    build_jobs()
+    print('wrote jobs/ and the role pages')
     build_support()
     print('wrote support files')
     optimise()
