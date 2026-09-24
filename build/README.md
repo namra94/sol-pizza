@@ -9,9 +9,10 @@
 2. **Share cards and BN Arora.** Unpacks the PNGs and the BN Arora font in
    `assets.b64.json` if they're missing.
 3. **Pages.** Home, About, the three menu pages (from `menu-data.json`), Booking,
-   Jobs, the role pages and the privacy notice (re-wrapped from `src/`), 404.
-4. **Support files.** `sitemap.xml`, `robots.txt`, and `src/_redirects` copied
-   to `dist/_redirects`.
+   Jobs and the opening-team role pages (from `jobs-data.json` and `jobs/*.md`),
+   the filled role pages and the privacy notice (re-wrapped from `src/`), 404.
+4. **Support files.** `sitemap.xml` (including the six role pages), `robots.txt`,
+   and `src/_redirects` copied to `dist/_redirects`.
 5. **Optimise.** Minifies the CSS (csso) and JS (terser), gives everything in
    `dist/assets/` a content-hashed name, inlines the free fonts' `@font-face`
    rules into each page, quantises the share cards if Pillow is installed, and

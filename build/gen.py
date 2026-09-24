@@ -16,7 +16,8 @@ Vietnamese, so the two never drift apart; the menu lives in build/menu-data.json
                        untouched), _redirects, favicon.svg, pixel.js
 """
 import os, re, sys, json, stat, shutil, hashlib, subprocess, base64, html as _html
-from datetime import date
+from datetime import date, datetime
+from urllib.parse import quote
 
 HERE   = os.path.dirname(os.path.abspath(__file__))
 ROOT   = os.path.dirname(HERE)
@@ -200,8 +201,11 @@ fbq('track', 'PageView');
 <script defer src="/pixel.js"></script>""" % dict(ga=GA_ID, pix=FB_PIX)
 
 
-def head(path, title, desc, og, ogtype, extra, index):
+def head(path, title, desc, og, ogtype, extra, index, og_text=None, og_locale=('en_GB', 'vi_VN')):
+    """og_text: the share card's (title, description) when they differ from the English
+    title and description; og_locale: (the card's locale, the alternate)."""
     (title_en, title_vi), (desc_en, desc_vi) = title, desc
+    og_title, og_desc = og_text or (title_en, desc_en)
     url = SITE + path
     lines = [
         '<!DOCTYPE html>',
@@ -233,16 +237,16 @@ def head(path, title, desc, og, ogtype, extra, index):
     lines += [
         '<meta property="og:type" content="%s">' % ogtype,
         '<meta property="og:site_name" content="Sol">',
-        '<meta property="og:title" content="%s">' % title_en,
-        '<meta property="og:description" content="%s">' % desc_en,
+        '<meta property="og:title" content="%s">' % og_title,
+        '<meta property="og:description" content="%s">' % og_desc,
     ]
     if og:
         lines += ['<meta property="og:image" content="%s">' % og,
                   '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">']
     lines += [
         '<meta property="og:url" content="%s">' % url,
-        '<meta property="og:locale" content="en_GB">',
-        '<meta property="og:locale:alternate" content="vi_VN">',
+        '<meta property="og:locale" content="%s">' % og_locale[0],
+        '<meta property="og:locale:alternate" content="%s">' % og_locale[1],
         '<meta name="twitter:card" content="summary_large_image">',
         '<meta name="theme-color" content="#f9e9d3">',
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">',
@@ -348,10 +352,12 @@ def footer():
 
 
 def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website',
-         extra='', body_attrs='', index=True, out=None, verbatim=False):
+         extra='', body_attrs='', index=True, out=None, verbatim=False,
+         og_text=None, og_locale=('en_GB', 'vi_VN')):
     """Write one page. title and desc are (English, Vietnamese) pairs.
-    verbatim: leave main's text exactly as it is (the privacy notice)."""
-    doc = head(path, title, desc, og, ogtype, extra, index)
+    verbatim: leave main's text exactly as it is (the privacy notice).
+    og_text, og_locale: see head()."""
+    doc = head(path, title, desc, og, ogtype, extra, index, og_text, og_locale)
     doc += '<body class="%s"%s>\n%s\n' % (body_class, body_attrs, SUN_SPRITE)
     doc += nbsp('<a class="skip" href="#main">%s</a>\n' % t('Skip to content', 'Chuyển đến nội dung chính')
                 + header(cur))
@@ -827,11 +833,13 @@ def build_booking():
 
 # ==========================================================================
 # WORK WITH US  /jobs/
-# Open roles are cards (none has its own page yet). Filled roles are listed
-# under "Recently filled" and link to their pages, which are re-wrapped from
-# src/jobs/*.html with the copy untouched.
-# To open a role with a page: write it in src/jobs/ in the same shape, add it
-# to ROLES with status='open', and give it a card in build_jobs().
+# The opening team (build/jobs-data.json): a card each on /jobs/, grouped Front
+# of house / Kitchen, and a page each at /jobs/<slug>/ in both languages, its
+# job description word for word from build/jobs/<slug>.md. The round's closing
+# instant is in the data once; after it, the cards and pages say the round has
+# closed and hide their Apply buttons (ROUND_SCRIPT).
+# Filled roles are listed under "Recently filled" and link to their pages, which
+# are re-wrapped from src/jobs/*.html with the copy untouched (ROLES).
 # ==========================================================================
 ROLES = [
     dict(slug='restaurant-accountant', src='restaurant-accountant.html',
@@ -845,9 +853,13 @@ ROLES = [
          status='filled', filled_en='September 2026', filled_vi='Tháng 9 năm 2026'),
 ]
 
+# Promises nothing the opening-team job descriptions don't (checked 24 Sep 2026):
+# the service charge starts once we open, and WSET funding is in none of them.
 BENEFITS = [
-    ('A share of the 5% service charge and the tip pool, paid quarterly, for floor and kitchen roles.',
-     'Một phần trong 5% phí phục vụ và quỹ tip của nhà hàng, trả hàng quý, cho các vị trí phục vụ và bếp.'),
+    ('A share of the 5% service charge and the tip pool, paid quarterly, starting once we open, '
+     'for floor and kitchen roles.',
+     'Một phần trong 5% phí phục vụ và quỹ tip của nhà hàng, trả hàng quý, bắt đầu khi nhà hàng mở '
+     'cửa, cho các vị trí phục vụ và bếp.'),
     ('A 13th-month bonus based on company KPIs, and a salary review every year based on performance.',
      'Thưởng tháng 13 theo KPI công ty, và xét tăng lương hàng năm theo hiệu quả công việc.'),
     ('Full statutory insurance — BHXH, BHYT and BHTN — from the day your labour contract starts.',
@@ -856,8 +868,6 @@ BENEFITS = [
      '12 ngày nghỉ phép có lương mỗi năm, cộng thêm một ngày cho mỗi 3 năm làm việc, theo chính sách công ty.'),
     ('11 paid public holidays a year, including Tết. Holiday work is paid at the statutory premium.',
      '11 ngày nghỉ lễ có lương mỗi năm, bao gồm Tết. Làm việc ngày lễ được trả theo mức phụ trội luật định.'),
-    ('WSET Level 3 or Certified Sommelier, funded by Sol, after 12 months on the floor team.',
-     'Được tài trợ chứng chỉ WSET Level 3 hoặc Certified Sommelier sau 12 tháng, cho đội phục vụ.'),
     ('A staff meal from our kitchen before dinner service, and a staff discount at Sol and ASU House Bakery.',
      'Bữa ăn nhân viên do bếp nấu trước ca tối, và ưu đãi giảm giá tại Sol và ASU House Bakery.'),
 ]
@@ -867,38 +877,262 @@ def role_path(r):
     return '/jobs/' + r['slug']          # Cloudflare serves jobs/<slug>.html here
 
 
+# --------------------------------------------------------------------------
+# the opening team: build/jobs-data.json and build/jobs/<slug>.md
+# --------------------------------------------------------------------------
+JOBS = json.loads(read(os.path.join(HERE, 'jobs-data.json')))
+ROUND = JOBS['round']
+JOBS_EMAIL = 'jobs@sol.pizza'
+CLOSES = datetime.fromisoformat(ROUND['closes'])       # Hanoi time, with its offset
+STARTS = date.fromisoformat(ROUND['starts'])
+SERVICE = ROUND['service_charge']
+
+EN_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+VI_DAYS = ['thứ Hai', 'thứ Ba', 'thứ Tư', 'thứ Năm', 'thứ Sáu', 'thứ Bảy', 'Chủ nhật']
+EN_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
+             'September', 'October', 'November', 'December']
+
+
+def en_date(d, short=False):
+    """Sunday 4 October, or Sun 4 Oct."""
+    if short:
+        return '%s %d %s' % (EN_DAYS[d.weekday()][:3], d.day, EN_MONTHS[d.month - 1][:3])
+    return '%s %d %s' % (EN_DAYS[d.weekday()], d.day, EN_MONTHS[d.month - 1])
+
+
+def vi_date(d, year=False):
+    """Chủ nhật 04/10, or Chủ nhật 04/10/2026."""
+    return '%s %02d/%02d%s' % (VI_DAYS[d.weekday()], d.day, d.month, '/%d' % d.year if year else '')
+
+
+def vnd(n, sep):
+    return '{:,}'.format(n).replace(',', sep)
+
+
+def band_en(lo_hi, dash=' – '):
+    return dash.join(vnd(n, ',') for n in lo_hi)
+
+
+def band_vi(lo_hi):
+    return ' – '.join(vnd(n, '.') for n in lo_hi)
+
+
+def trieu(lo_hi):
+    """11–14 triệu, 6,5–7,5 triệu: millions, the Vietnamese way."""
+    return '–'.join(('%g' % (n / 1e6)).replace('.', ',') for n in lo_hi) + ' triệu'
+
+
+def encode_uri_component(s):
+    """JavaScript's encodeURIComponent, for the Apply links' no-JS href."""
+    return quote(s, safe="-_.!~*'()")
+
+
+def jd_inline(s, link):
+    s = esc(s)
+    s = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', s)
+    return re.sub(r'\[([^\]]+)\]\(([^)]+)\)', lambda m: link(m.group(1), m.group(2)), s)
+
+
+def parse_jd(block):
+    """One language of a job description, in the Markdown build/jobs/<slug>.md uses:
+    '# ' title, a line (eyebrow), a two-column table (the facts), a bold line (the
+    standfirst), then '## ' and '### ' headings, paragraphs and '- ' lists."""
+    lines = block.split('\n')
+    jd = dict(title=lines[0].strip(), facts=[], blocks=[])
+    para, items = [], []
+
+    def flush():
+        if para:
+            jd['blocks'].append(('p', ' '.join(para)))
+            para.clear()
+        if items:
+            jd['blocks'].append(('ul', list(items)))
+            items.clear()
+
+    for line in lines[1:]:
+        line = line.strip()
+        if not line:
+            flush()
+        elif line.startswith('|'):
+            flush()
+            cells = [c.strip() for c in line.strip('|').split('|')]
+            if any(cells) and not re.fullmatch(r'[-: |]*', line):
+                jd['facts'].append((cells[0].replace('**', ''), cells[1]))
+        elif line.startswith('### '):
+            flush()
+            jd['blocks'].append(('h3', line[4:]))
+        elif line.startswith('## '):
+            flush()
+            jd['blocks'].append(('h2', line[3:]))
+        elif line.startswith('- '):
+            if para:
+                flush()
+            items.append(line[2:])
+        else:
+            if items:
+                flush()
+            para.append(line)
+    flush()
+    kind, jd['eyebrow'] = jd['blocks'].pop(0)
+    kind2, standfirst = jd['blocks'].pop(0)
+    assert kind == kind2 == 'p' and jd['facts'] and re.fullmatch(r'\*\*[^*]+\*\*', standfirst), \
+        'build/jobs: "%s" should open with its eyebrow line, the facts table and a bold standfirst' % jd['title']
+    jd['standfirst'] = standfirst[2:-2]
+    return jd
+
+
+def jd_html(blocks, link):
+    out = []
+    for kind, val in blocks:
+        if kind == 'ul':
+            out.append('<ul>%s</ul>' % ''.join('<li>%s</li>' % jd_inline(i, link) for i in val))
+        else:
+            out.append('<%s>%s</%s>' % (kind, jd_inline(val, link), kind))
+    return '\n'.join(out)
+
+
+def read_jd(slug):
+    text = read(os.path.join(HERE, 'jobs', slug + '.md'))
+    parts = [p for p in re.split(r'(?m)^# ', text) if p.strip()]
+    assert len(parts) == 2, 'build/jobs/%s.md: expected an English and a Vietnamese block' % slug
+    return parse_jd(parts[0]), parse_jd(parts[1])
+
+
+def check_jd(r):
+    """The ads quote these numbers: stop if a job description has drifted from the data."""
+    en, vi = r['jd']
+    total = [b + s for b, s in zip(r['base'], SERVICE)]
+    text_en = read(os.path.join(HERE, 'jobs', r['slug'] + '.md')).split('\n# ', 1)[0]
+    text_vi = read(os.path.join(HERE, 'jobs', r['slug'] + '.md')).split('\n# ', 1)[1]
+    need = [(text_en, '%s VND' % band_en(x)) for x in (r['base'], SERVICE, total)] + \
+           [(text_vi, '%s VNĐ' % band_vi(x)) for x in (r['base'], SERVICE, total)]
+    missing = [s for text, s in need if s not in text]
+    openings = [dict(en['facts']).get('Openings'), dict(vi['facts']).get('Số lượng tuyển')]
+    want = [str(r['openings']) if r['openings'] else None] * 2
+    if missing or openings != want:
+        raise SystemExit('build/jobs/%s.md no longer matches build/jobs-data.json: %s. Make the two '
+                         'agree (the ads quote the same numbers).'
+                         % (r['slug'], '; '.join(['missing "%s"' % s for s in missing] +
+                                                 (['openings %s, data says %s' % (openings, r['openings'])]
+                                                  if openings != want else []))))
+    if en_date(CLOSES) + ' %d' % CLOSES.year not in text_en or vi_date(CLOSES, True) not in text_vi:
+        print('note: build/jobs/%s.md does not mention the closing date in build/jobs-data.json (%s)'
+              % (r['slug'], ROUND['closes']))
+
+
+OPEN_ROLES = [dict(r, jd=read_jd(r['slug'])) for r in JOBS['roles']]
+for _r in OPEN_ROLES:
+    _r['name_en'], _r['name_vi'] = _r['jd'][0]['title'], _r['jd'][1]['title']
+    check_jd(_r)
+
+
+def open_role_path(r):
+    return '/jobs/%s/' % r['slug']
+
+
+# Before first paint: once the round has closed, <html class="round-closed"> shows
+# the closed notes and hides the Apply buttons (site.css). Without JS the pages
+# still show the closing date.
+ROUND_SCRIPT = ("<script>try{if(Date.now()>Date.parse('%s'))"
+                "document.documentElement.classList.add('round-closed')}catch(e){}</script>" % ROUND['closes'])
+
+# After the page: the Apply links' subject and body, built with encodeURIComponent
+# in the page's language and rebuilt when EN / VI switches it; and on phones, the
+# Apply bar between the Apply button at the top and the one at the end.
+APPLY_SCRIPT = """<script>
+(function () {
+  var root = document.documentElement, links = document.querySelectorAll('a[data-apply]');
+  function build() {
+    var lang = root.lang === 'vi' ? 'vi' : 'en';
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i], body = a.getAttribute('data-body-' + lang).replace(/\\r?\\n/g, '\\r\\n');
+      a.href = 'mailto:%s?subject=' + encodeURIComponent(a.getAttribute('data-subject')) +
+               '&body=' + encodeURIComponent(body);
+    }
+  }
+  build();
+  if (window.MutationObserver) new MutationObserver(build).observe(root, {attributes: true, attributeFilter: ['lang']});
+  var bar = document.querySelector('.apply-bar'), top = document.querySelector('[data-apply-top]'),
+      end = document.querySelector('[data-apply-end]');
+  if (!bar || !top || !end || !('IntersectionObserver' in window)) return;
+  var above = false, reached = false;
+  new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.target === top) above = !e.isIntersecting && e.boundingClientRect.top < 0;
+      else reached = e.isIntersecting || e.boundingClientRect.top < 0;
+    });
+    bar.classList.toggle('is-shown', above && !reached);
+  }).observe(top);
+  new IntersectionObserver(function (entries) {
+    reached = entries[0].isIntersecting || entries[0].boundingClientRect.top < 0;
+    bar.classList.toggle('is-shown', above && !reached);
+  }).observe(end);
+})();
+</script>""" % JOBS_EMAIL
+
+
+def apply_attrs(r):
+    """href (English, for no JS) plus what APPLY_SCRIPT needs to build it in either language."""
+    subject = '%s — ' % r['name_en']              # English in both languages: the inbox is sorted by it
+
+    def body(q, labels, cv):
+        name, phone, answer = labels
+        return '\n'.join([name, phone, '', q, '', answer, '', '', cv])
+
+    en = body(r['question'], ('Name:', 'Phone / Zalo:', 'My answer:'), r.get('cv_line') or ROUND['cv_line'])
+    vi = body(r['question_vi'], ('Họ tên:', 'Số điện thoại / Zalo:', 'Câu trả lời của bạn:'),
+              r.get('cv_line_vi') or ROUND['cv_line_vi'])
+    href = 'mailto:%s?subject=%s&amp;body=%s' % (JOBS_EMAIL, encode_uri_component(subject),
+                                                 encode_uri_component(en.replace('\n', '\r\n')))
+
+    def attr(s):
+        return _html.escape(s, quote=True).replace('\n', '&#10;')
+
+    return 'href="%s" data-apply data-subject="%s" data-body-en="%s" data-body-vi="%s"' % (
+        href, attr(subject), attr(en), attr(vi))
+
+
+def apply_button(r, cls='btn btn-red', extra=''):
+    return '<a class="%s apply-btn" %s%s>%s</a>' % (cls, apply_attrs(r), extra, t('Apply', 'Ứng tuyển'))
+
+
+def closed_text():
+    return t('Applications for this round closed on %s. Thank you to everyone who applied.' % en_date(CLOSES),
+             'Đợt tuyển dụng này đã đóng vào %s. Cảm ơn tất cả các bạn đã ứng tuyển.' % vi_date(CLOSES, True))
+
+
+def role_card(r):
+    short_vi = re.sub(r'\s*\(%s\)$' % re.escape(r['name_en']), '', r['name_vi'])
+    meta = ('<p class="role-meta">%s</p>' % t('Openings: %d' % r['openings'], 'Số lượng: %d' % r['openings'])
+            if r['openings'] else '')
+    pay = t('Base salary <span class="nowrap">%s VND</span> gross a month<br>'
+            '+ service charge &amp; tips, est. <span class="nowrap">%s</span> a month'
+            % (band_en(r['base'], '–'), band_en(SERVICE, '–')),
+            'Lương cơ bản <span class="nowrap">%s VNĐ</span> gross/tháng<br>'
+            '+ phí phục vụ &amp; tip ước tính <span class="nowrap">%s VNĐ</span>/tháng'
+            % (band_vi(r['base']), band_vi(SERVICE)))
+    nowrap = '<span class="nowrap">%s</span>'
+    dates = t('%s · %s' % (nowrap % ('Applications close ' + en_date(CLOSES, True)),
+                           nowrap % ('Start ' + en_date(STARTS, True))),
+              '%s · %s' % (nowrap % ('Hạn nộp: ' + vi_date(CLOSES)), nowrap % ('Bắt đầu: ' + vi_date(STARTS))))
+    return ('<article class="role" id="role-%s">%s<h4>%s</h4><p class="role-vi" data-l="en" lang="vi">%s</p>'
+            '<p>%s</p><p class="role-pay">%s</p><p class="role-dates">%s</p><p class="round-note">%s</p>'
+            '<div class="role-links"><a class="link-sc" href="%s">%s</a>%s</div></article>'
+            % (r['slug'], meta, t(esc(r['name_en']), esc(r['name_vi'])), esc(short_vi),
+               t(esc(r['card']), esc(r['card_vi'])), pay, dates, closed_text(), open_role_path(r),
+               t('Read the role', 'Xem mô tả công việc'), apply_button(r, 'btn btn-red btn-sm')))
+
+
 def build_jobs():
-    roles = """  <div class="role-list"><article class="role"><p class="role-meta">{host_meta}</p><h3>{host}</h3><p>{host_p}</p><p class="role-pay">{host_pay}</p><a class="link-sc" href="mailto:jobs@sol.pizza?subject=Host">{host_apply}</a></article><article class="role"><p class="role-meta">{team_meta}</p><h3>{team}</h3><p>{team_p}</p><a class="link-sc" href="mailto:jobs@sol.pizza">{email_jobs}</a></article></div>""".format(
-        host_meta=t('Front of house · Full time', 'Khu phục vụ · Toàn thời gian'),
-        host=t('Host', 'Lễ tân (Host)'),
-        host_p=t('The first person our guests meet. You’ll welcome them at the door, answer the phone, '
-                 'take online orders and reply to messages.',
-                 'Người đầu tiên khách gặp khi đến Sol. Bạn sẽ đón khách ở cửa, nghe điện thoại, nhận '
-                 'đơn đặt món trực tuyến và trả lời tin nhắn.'),
-        # CONFIRM: publish with the pay range
-        host_pay=t('<span class="nowrap">9,000,000–10,000,000 VND</span> gross a month, plus around '
-                   '<span class="nowrap">2,000,000–4,000,000 VND</span> a month from service charge and '
-                   'tips, paid quarterly.',
-                   '<span class="nowrap">9.000.000–10.000.000 VND</span> mỗi tháng (lương gross), cộng '
-                   'thêm khoảng <span class="nowrap">2.000.000–4.000.000 VND</span> mỗi tháng từ phí '
-                   'phục vụ và tiền tip, trả hàng quý.'),
-        host_apply=t('Apply: email jobs@sol.pizza with “Host” in the subject',
-                     'Ứng tuyển: gửi email tới jobs@sol.pizza, tiêu đề ghi “Host”'),
-        team_meta=t('Floor and kitchen', 'Phục vụ và bếp'),
-        team=t('Opening team', 'Đội ngũ khai trương'),
-        # HIDE until Long and Ngọc confirm them: the roles with pay and hours.
-        team_p=t('Servers, bartenders, baristas, line cooks and kitchen porters for our first team. Our '
-                 'Restaurant Supervisor and Head Chef are finalising each role — send your CV now and '
-                 'we’ll come back to you as each one opens.',
-                 'Nhân viên phục vụ, pha chế, barista, đầu bếp và phụ bếp cho đội ngũ đầu tiên trong '
-                 'không gian mới. Giám sát nhà hàng và Bếp trưởng đang hoàn thiện từng vị trí; hãy gửi '
-                 'CV ngay và chúng tôi sẽ liên hệ lại khi các vị trí mở.'),
-        email_jobs=t('Email jobs@sol.pizza', 'Gửi email tới jobs@sol.pizza'),
-    )
+    groups = []
+    for sec in JOBS['sections']:
+        cards = [role_card(r) for r in OPEN_ROLES if r['section'] == sec['key']]
+        groups.append('  <div class="role-group"><h3 class="label">%s</h3><div class="role-list role-list-3">%s</div></div>'
+                      % (t(sec['name'], sec['name_vi']), ''.join(cards)))
+    roles = '\n'.join(groups)
     filled = ''.join('<li><span><a href="%s">%s</a></span><span>%s</span></li>'
                      % (role_path(r), t(r['name_en'], r['name_vi']), t(r['filled_en'], r['filled_vi']))
                      for r in ROLES if r['status'] == 'filled')
-    # No open role has its own page, so How to apply doesn't send people to one.
     main = """<main id="main">
 <div class="wrap">{title}</div>
 <section class="prose-section wrap" aria-labelledby="s-roles"><header class="section-head">{sun1}<h2 id="s-roles">{where}</h2></header>
@@ -909,6 +1143,7 @@ def build_jobs():
 <section class="prose-section wrap" aria-labelledby="s-benefits"><header class="section-head">{sun5}<h2 id="s-benefits">{h_ben}</h2></header><ul class="benefit-list">{benefits}</ul></section>
 <div class="wrap"><section class="offer" aria-labelledby="s-apply"><h2 id="s-apply">{h_apply}</h2><p>{apply}</p>
   <a class="btn btn-red" href="mailto:jobs@sol.pizza">{email_jobs}</a><p class="privacy-links"><a href="/privacy/#en" lang="en" hreflang="en">Applicant privacy notice</a> · <a href="/privacy/#vi" lang="vi" hreflang="vi">Thông báo bảo mật ứng viên</a></p></section></div>
+{script}
 </main>
 """.format(
         title=page_title(t('We’re hiring · Tây Hồ, Hanoi', 'Tuyển dụng · Tây Hồ, Hà Nội'),
@@ -942,6 +1177,7 @@ def build_jobs():
                 'vòng 5 ngày làm việc và trả lời tất cả ứng viên, kể cả những bạn chúng tôi chưa thể '
                 'mời vào vòng tiếp theo.'),
         email_jobs=t('Email jobs@sol.pizza', 'Gửi email tới jobs@sol.pizza'),
+        script=APPLY_SCRIPT,
     )
     page('/jobs/', 'page-jobs',
          ('Work with us — Sol, Tây Hồ', 'Tuyển dụng — Sol, Tây Hồ'),
@@ -949,9 +1185,102 @@ def build_jobs():
           'gets a reply.',
           'Chúng tôi đang tuyển Lễ tân (Host) và đội ngũ khai trương cho khu phục vụ và bếp. Mọi hồ '
           'sơ đều được phản hồi.'),
-         main, og=og_image('jobs'), body_attrs=' data-page="index"')
+         main, og=og_image('jobs'), extra=ROUND_SCRIPT, body_attrs=' data-page="index"')
+    for r in OPEN_ROLES:
+        build_open_role(r)
     for r in ROLES:
         build_role(r)
+
+
+def build_open_role(r):
+    """/jobs/<slug>/: the job description word for word, English and Vietnamese."""
+    total = [b + s for b, s in zip(r['base'], SERVICE)]
+    # Estimated service charge and the typical total, beside the base salary
+    added = {
+        'en': [('Service charge &amp; tips', 'est. %s VND per month, starting once we open' % band_en(SERVICE)),
+               ('Typical monthly total', '%s VND' % band_en(total))],
+        'vi': [('Phí phục vụ &amp; tip', 'ước tính %s VNĐ/tháng, bắt đầu khi nhà hàng mở cửa' % band_vi(SERVICE)),
+               ('Tổng thu nhập hằng tháng (ước tính)', '%s VNĐ' % band_vi(total))],
+    }
+
+    def mail_link(text, href):
+        # The job description's jobs@sol.pizza: the same prefilled email as the Apply buttons
+        if href == 'mailto:' + JOBS_EMAIL:
+            return '<a %s>%s</a>' % (apply_attrs(r), text)
+        return '<a href="%s">%s</a>' % (esc(href), text)
+
+    facts, prose = [], []
+    for lang, jd in zip(('en', 'vi'), r['jd']):
+        rows = [(esc(k), jd_inline(v, mail_link)) for k, v in jd['facts']]
+        base = [i for i, (k, _) in enumerate(jd['facts']) if k in ('Base salary', 'Lương cơ bản')]
+        assert len(base) == 1, 'build/jobs/%s.md: no base salary row in the facts' % r['slug']
+        rows[base[0] + 1:base[0] + 1] = added[lang]
+        facts.append('<dl class="gtk-items role-facts" data-l="%s" lang="%s">%s</dl>'
+                     % (lang, lang, ''.join('<div><dt>%s</dt><dd>%s</dd></div>' % kv for kv in rows)))
+        # The role in short stays open; the full description folds, as on the other
+        # role pages; How to apply and Our process (the last two sections) stay open.
+        h2 = [i for i, (kind, _) in enumerate(jd['blocks']) if kind == 'h2']
+        assert len(h2) >= 4, 'build/jobs/%s.md: expected The role in short … How to apply, Our process' % r['slug']
+        start, stop = h2[1], h2[-2]
+        prose.append(
+            '<div class="prose" data-l="%s" lang="%s">\n<p><strong>%s</strong></p>\n%s\n'
+            '<details class="full"><summary>%s</summary><div class="fullbody">\n%s\n</div></details>\n%s\n</div>'
+            % (lang, lang, jd_inline(jd['standfirst'], mail_link),
+               jd_html(jd['blocks'][:start], mail_link),
+               'Read the full job description' if lang == 'en' else 'Xem toàn bộ mô tả công việc',
+               jd_html(jd['blocks'][start:stop], mail_link), jd_html(jd['blocks'][stop:], mail_link)))
+    en, vi = r['jd']
+    main = ('<main id="main" class="wrap">\n'
+            '<aside class="note-box round-note"><p>%s</p></aside>\n'
+            '<header class="page-title"><p class="eyebrow">%s</p><h1>%s</h1>'
+            '<div class="actions" data-apply-top>%s</div></header>\n'
+            '%s\n%s\n'
+            '<div class="actions role-end" data-apply-end>%s<a class="btn btn-outline" href="/jobs/">%s</a></div>\n'
+            '<div class="apply-bar">%s</div>\n%s\n</main>\n'
+            % (closed_text(), t(esc(en['eyebrow']), esc(vi['eyebrow'])), t(esc(r['name_en']), esc(r['name_vi'])),
+               apply_button(r), '\n'.join(facts), '\n'.join(prose), apply_button(r),
+               t('See open roles', 'Xem vị trí tuyển dụng'), apply_button(r), APPLY_SCRIPT))
+
+    # Search and sharing. The share card is in Vietnamese: the ads bring Vietnamese speakers.
+    posting = {
+        '@context': 'https://schema.org',
+        '@type': 'JobPosting',
+        'title': r['name_en'],
+        'description': '\n'.join([
+            '<p>%s</p>' % esc(en['eyebrow']),
+            '<table>%s</table>' % ''.join('<tr><th>%s</th><td>%s</td></tr>' % (esc(k), jd_inline(v, lambda x, h: x))
+                                          for k, v in en['facts']),
+            '<p><strong>%s</strong></p>' % jd_inline(en['standfirst'], lambda x, h: x),
+            jd_html(en['blocks'], lambda x, h: x)]),
+        'datePosted': ROUND['posted'],
+        'validThrough': ROUND['closes'],
+        'employmentType': 'FULL_TIME',
+        'hiringOrganization': {'@type': 'Organization', 'name': 'Sol', 'legalName': 'Công ty TNHH Aurelian',
+                               'sameAs': SITE, 'logo': SITE + '/favicon.svg'},
+        'jobLocation': {'@type': 'Place', 'address': {
+            '@type': 'PostalAddress', 'streetAddress': 'Số 7, ngõ 88 Quảng An', 'addressLocality': 'Tây Hồ',
+            'addressRegion': 'Hà Nội', 'addressCountry': 'VN'}},
+        'baseSalary': {'@type': 'MonetaryAmount', 'currency': 'VND', 'value': {
+            '@type': 'QuantitativeValue', 'minValue': r['base'][0], 'maxValue': r['base'][1], 'unitText': 'MONTH'}},
+        'directApply': False,
+    }
+    if r['openings']:
+        posting['totalJobOpenings'] = r['openings']
+    ld = '<script type="application/ld+json">\n%s\n</script>' % json.dumps(
+        posting, ensure_ascii=False, indent=2).replace('</', '<\\/')
+    og_title = 'Tuyển %s — Sol, Tây Hồ' % r['name_en']
+    og_desc = 'Lương cơ bản %s + phí phục vụ ước tính %s/tháng. Hạn nộp %s.' % (
+        trieu(r['base']), trieu(SERVICE), vi_date(CLOSES, True).split(' ')[-1])
+    desc_en = ('%s at Sol, Tây Hồ, Hanoi. Base salary %s VND a month, plus service charge and tips, est. '
+               '%s VND a month. Applications close %s %d.'
+               % (r['name_en'], band_en(r['base'], '–'), band_en(SERVICE, '–'), en_date(CLOSES), CLOSES.year))
+    desc_vi = 'Tuyển %s tại Sol, Tây Hồ, Hà Nội. %s' % (r['name_vi'], og_desc)
+    page(open_role_path(r), 'page-role',
+         (esc('%s — Sol, Tây Hồ' % r['name_en']), esc('%s — Sol, Tây Hồ' % r['name_vi'])),
+         (esc(desc_en), esc(desc_vi)), main, og=og_image('jobs'),
+         og_text=(esc(og_title), esc(og_desc)), og_locale=('vi_VN', 'en_GB'),
+         extra=ROUND_SCRIPT + '\n' + ld,
+         body_attrs=' data-page="role" data-role="%s" data-slug="%s"' % (esc(r['name_en']), r['slug']))
 
 
 def build_role(r):
@@ -1059,7 +1388,8 @@ SITEMAP_PAGES = ['/', '/about/', '/menu/', '/menu/wine/', '/menu/bar/', '/bookin
 
 
 def build_support():
-    pages = SITEMAP_PAGES + [role_path(r) for r in ROLES if r['status'] == 'open']
+    pages = SITEMAP_PAGES + [role_path(r) for r in ROLES if r['status'] == 'open'] + \
+        [open_role_path(r) for r in OPEN_ROLES]
     urls = []
     for p in pages:
         pri = '1.0' if p == '/' else ('0.9' if p.startswith(('/about/', '/menu/', '/booking/')) else '0.6')

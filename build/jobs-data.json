@@ -1,0 +1,80 @@
+{
+  "note": "The opening-team round on /jobs/: the cards, and the six role pages at /jobs/<slug>/. Each role's job description is build/jobs/<slug>.md (English, then Vietnamese). The build stops if a description's pay figures or openings no longer match the numbers here, because the ads quote the same numbers.",
+  "note_vi": "Every *_vi field is the Vietnamese twin of the field above it.",
+  "round": {
+    "posted": "2026-09-29",
+    "closes": "2026-10-04T23:59:00+07:00",
+    "starts": "2026-10-12",
+    "service_charge": [2000000, 4000000],
+    "cv_line": "(Please attach your CV.)",
+    "cv_line_vi": "(Vui lòng đính kèm CV.)"
+  },
+  "sections": [
+    {"key": "foh", "name": "Front of house", "name_vi": "Bộ phận phục vụ"},
+    {"key": "kitchen", "name": "Kitchen", "name_vi": "Bếp"}
+  ],
+  "roles": [
+    {
+      "slug": "host",
+      "section": "foh",
+      "openings": null,
+      "base": [9000000, 10000000],
+      "card": "The first person our guests meet: the door, the phone, the bookings, takeaway orders and every message.",
+      "card_vi": "Người đầu tiên khách gặp ở Sol: đón khách, nghe điện thoại, nhận đặt bàn, đơn mang về và trả lời mọi tin nhắn.",
+      "question": "Two or three sentences on the busiest night you have worked the door: roughly how many covers, which booking system you used, and what you did when a party arrived without a booking.",
+      "question_vi": "Đoạn ngắn (2–3 câu) về buổi tối đông khách nhất bạn từng đứng đón khách: khoảng bao nhiêu khách, bạn dùng hệ thống đặt bàn nào, và bạn đã làm gì khi có nhóm khách đến mà không đặt bàn trước."
+    },
+    {
+      "slug": "server",
+      "section": "foh",
+      "openings": null,
+      "base": [7000000, 9000000],
+      "card": "Own your section from the first greeting to the goodbye: know the menu, take accurate orders and look after every table.",
+      "card_vi": "Phụ trách khu vực của bạn từ lời chào đầu tiên đến lúc tiễn khách: nắm vững thực đơn, nhận order chính xác và chăm sóc từng bàn.",
+      "question": "Two or three sentences, in English: the busiest section you have worked — roughly how many tables and guests — and how you make sure an allergy or a change to a dish never gets missed.",
+      "question_vi": "Đoạn ngắn (2–3 câu), viết bằng tiếng Anh: khu vực đông khách nhất bạn từng phụ trách — khoảng bao nhiêu bàn và bao nhiêu khách — và cách bạn đảm bảo không bao giờ bỏ sót một yêu cầu về dị ứng hay thay đổi món."
+    },
+    {
+      "slug": "bartender",
+      "section": "foh",
+      "openings": null,
+      "base": [9000000, 13000000],
+      "card": "Own the bar from setup to close: every drink to spec, the bar clean and stocked, every guest at the bar looked after.",
+      "card_vi": "Phụ trách quầy bar từ lúc chuẩn bị đến khi đóng cửa: từng ly đúng công thức, quầy sạch và đủ hàng, khách ở quầy được chăm sóc chu đáo.",
+      "question": "Your spec for a classic cocktail you make often — measures, method, glass and garnish — and one thing you do to keep it the same on a busy night.",
+      "question_vi": "Công thức một ly cocktail cổ điển bạn hay pha — định lượng, cách pha, loại ly và trang trí — và một việc bạn làm để ly đó luôn đồng nhất vào tối đông khách."
+    },
+    {
+      "slug": "pizzaiolo",
+      "section": "kitchen",
+      "openings": 2,
+      "base": [11000000, 14000000],
+      "card": "Run the Pavesi oven and the pizza station: every dough ball stretched by hand, every pizza baked to spec.",
+      "card_vi": "Phụ trách lò Pavesi và trạm pizza: từng viên bột kéo bằng tay, từng chiếc pizza nướng đúng tiêu chuẩn.",
+      "question": "Two or three sentences on the hottest oven you have worked: what fuelled it, the temperature you baked at, how long a pizza took, and how you turned it.",
+      "question_vi": "Đoạn ngắn (2–3 câu) về chiếc lò nóng nhất bạn từng đứng: lò dùng nhiên liệu gì, bạn nướng ở nhiệt độ bao nhiêu, một chiếc pizza chín trong bao lâu, và bạn xoay bánh thế nào."
+    },
+    {
+      "slug": "line-cook",
+      "section": "kitchen",
+      "openings": 2,
+      "base": [8000000, 10000000],
+      "card": "Run a station on our line: the prep, the mise en place and every plate, cooked to the recipe card.",
+      "card_vi": "Phụ trách một trạm trên line: sơ chế, mise en place và từng đĩa, nấu đúng thẻ công thức.",
+      "question": "Two or three sentences on the station you know best: which station, roughly how many covers on a busy night, and the first three things on your prep list.",
+      "question_vi": "Đoạn ngắn (2–3 câu) về trạm bạn giỏi nhất: trạm nào, một tối đông khách có khoảng bao nhiêu khách, và ba việc đầu tiên trong danh sách sơ chế của bạn."
+    },
+    {
+      "slug": "kitchen-porter",
+      "section": "kitchen",
+      "openings": 1,
+      "base": [6500000, 7500000],
+      "card": "Keep the kitchen running clean: the dish station, the pots, the cleaning schedule and the bins. We train you.",
+      "card_vi": "Giữ cho bếp luôn sạch và vận hành trơn tru: khu rửa bát, xoong nồi, lịch vệ sinh và rác thải. Chúng tôi đào tạo bạn.",
+      "question": "One or two sentences, in Vietnamese or English: the busiest night you have worked in a kitchen or on a dish station, and roughly how many guests — or, if you have not worked in a kitchen, the job you are proudest of doing well.",
+      "question_vi": "Một hoặc hai câu, bằng tiếng Việt hoặc tiếng Anh: tối đông khách nhất bạn từng làm trong bếp hoặc ở khu rửa bát, và khoảng bao nhiêu khách — hoặc, nếu bạn chưa từng làm trong bếp, công việc mà bạn tự hào nhất vì đã làm tốt.",
+      "cv_line": "(Attach your CV, or write a few lines about the jobs you have done.)",
+      "cv_line_vi": "(Đính kèm CV, hoặc viết vài dòng về những công việc bạn đã làm.)"
+    }
+  ]
+}

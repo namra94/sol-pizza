@@ -147,6 +147,55 @@ html:not([lang="vi"]) .prose .vi-note + p { margin-top: 0; }   /* the hidden not
 .filled a { border-bottom: 1px solid var(--line-brand); }
 .filled a:hover { color: var(--sol-red); }
 
+/* ------------------------------------------------------------------ opening team
+   /jobs/: a card per role, grouped Front of house / Kitchen, three to a row.
+   /jobs/<slug>/: the role pages, with an Apply button under the title, another
+   at the end, and on phones a slim Apply bar while neither is on screen.
+   After the round closes, <html class="round-closed"> (a head script) shows the
+   closed notes and hides every Apply button. */
+.role-group { margin-top: 48px; }
+.role-group > .label { text-align: center; }
+.role-group .role-list { margin-top: 20px; }
+.role > :first-child { margin-top: 0; }
+.role h4 { margin-top: 8px; font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.role p.role-vi { margin-top: 2px; color: var(--ink-muted); }
+.role .role-dates { font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+.role-links { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 20px; margin-top: 22px; }
+.role .role-links .link-sc { margin-top: 0; }
+@media (min-width: 901px) {
+  .role-list-3 { grid-template-columns: repeat(3, 1fr); }
+  .role-list-3 .role { display: flex; flex-direction: column; }
+  .role-list-3 .role-links { margin-top: auto; padding-top: 22px; }
+}
+@media (min-width: 901px) and (max-width: 1023px) {
+  .role-list-3 .role { padding: 28px 22px 26px; }
+}
+
+.round-note { display: none; }
+.round-closed .round-note { display: block; }
+.role p.round-note { color: var(--sol-red); }
+.round-closed .apply-btn, .round-closed .apply-bar { display: none !important; }
+
+.page-role .role-facts { margin-top: 44px; }
+.page-role .role-facts dd { text-wrap: balance; }
+.page-role .role-end { margin-top: 48px; }
+.apply-bar { display: none; }
+
 @media (max-width: 760.98px) {
   .prose h2 { margin-top: 40px; }
+  .apply-bar {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 15;
+    padding: 8px var(--gutter) calc(8px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--line-brand);
+    transform: translateY(110%);
+    transition: transform .2s ease;
+  }
+  .apply-bar.is-shown { transform: none; }
+  .apply-bar .btn { width: 100%; }
 }
