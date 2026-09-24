@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Pack the site's few binary files (share-card PNGs) into build/assets.b64.json,
-a text file that can travel through any text-only channel (the GitHub connector,
-a chat message). gen.py unpacks it at build time. Run this after re-rendering
-the share cards with og.js:   python3 build/pack_assets.py"""
+"""Pack the site's few binary files (the share-card PNGs and the BN Arora font)
+into build/assets.b64.json, a text file that can travel through any text-only
+channel (the GitHub connector, a chat message). gen.py unpacks it at build time.
+Run this after re-rendering the share cards with og.js, or after putting a new
+BN Arora file at build/brand/BNArora-Regular.woff2:   python3 build/pack_assets.py"""
 import base64, json, os, glob
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 files = sorted(glob.glob(os.path.join(HERE, 'og', 'png', '*.png'))) + \
-        sorted(glob.glob(os.path.join(ROOT, 'src', 'jobs', 'og-*.png')))
+        sorted(glob.glob(os.path.join(ROOT, 'src', 'jobs', 'og-*.png'))) + \
+        sorted(glob.glob(os.path.join(HERE, 'brand', '*.woff2')))       # BN Arora (licensed for web use)
 # Keys use / on every OS: the Linux build machine unpacks them.
 m = {os.path.relpath(f, ROOT).replace(os.sep, '/'): base64.b64encode(open(f, 'rb').read()).decode()
      for f in files}

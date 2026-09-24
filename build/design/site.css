@@ -1,7 +1,8 @@
 /* Sol — what the sol.pizza repo adds to the Printed menu design.
    Load after tokens.css and printed-menu.css. Only rules the design files don't
-   cover: the EN / VI switch, and the long-text pages (privacy notice, role pages)
-   that carry their own markup. Existing tokens only: no new colours. */
+   cover: the EN / VI switch, the About · Menu · Booking tabs, the About page, and
+   the long-text pages (privacy notice, role pages) that carry their own markup.
+   Tokens only (tokens.css): no new colours. */
 
 /* ------------------------------------------------------------------ EN / VI
    Every translated line is in the HTML twice, <span data-l="en" lang="en"> and
@@ -9,6 +10,93 @@
    script, and by printed-menu.js on a click) decides which one shows. */
 html:not([lang="vi"]) [data-l="vi"],
 html[lang="vi"] [data-l="en"] { display: none !important; }
+
+/* ------------------------------------------------------------------ brand faces
+   BN Arora (headings) and Plunct (.hand) come in one weight, upright only: the
+   browser must never fake a bold or an italic. */
+h1, h2, h3, h4, .h-lg, .subnav a, .navsheet-pages a, .pullquote blockquote p, .hand { font-synthesis: none; }
+
+/* A Vietnamese name inside an English heading, marked <span lang="vi">: BN Arora
+   has no Vietnamese letters, so the name is set in Philosopher, sized as --ds
+   sizes Vietnamese headings, rather than mixing the two faces letter by letter. */
+html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="vi"]:not([data-l]) {
+  font-family: "Philosopher", Georgia, serif;
+  font-size: .9em;
+}
+
+/* ------------------------------------------------------------------ tabs
+   About · Menu · Booking in the header and the mobile nav sheet. The current tab
+   (aria-current: "page", or "true" for Menu on Wine and Bar) is underlined. */
+.nav-links a[aria-current],
+.navsheet-pages a[aria-current] {
+  color: var(--sol-red);
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--line-brand);
+  text-underline-offset: 6px;
+}
+.navsheet-pages { margin-top: 36px; }
+.navsheet-pages a[aria-current] { text-underline-offset: 10px; }
+
+/* ------------------------------------------------------------------ about
+   The three boxes and the story, moved from home and /story/. */
+.page-about .page-lead + .page-lead { margin-top: 18px; }
+.trio { background: var(--surface-raised); }
+@media (max-width: 760.98px) {
+  .trio > li { padding-left: 16px; padding-right: 16px; }   /* a white panel needs its own padding */
+}
+.trio h2 { font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.story .section-intro { margin-top: 0; }
+.section-head h3 {
+  margin-top: 8px;
+  font-family: var(--display);
+  font-size: var(--fs-h3);
+  line-height: 1.15;
+  color: var(--sol-red);
+}
+.offer h3 { font-family: var(--display); font-size: var(--fs-h2); line-height: 1.05; color: var(--sol-red); }
+
+/* ------------------------------------------------------------------ characters
+   Fixed-colour SVGs, placed as supplied: never recoloured or stretched, and only
+   on the cream page (never on red or wood brown).
+   The food characters sit beside the title of the page they show (Food: the
+   tomatoes, Wine: the grape), 32–96px. An empty box as wide as the character on
+   the other side keeps the title centred. */
+.title-art { display: flex; align-items: center; justify-content: center; gap: 28px; }
+.title-art::before { content: ""; flex: none; width: var(--art-w); }
+.title-art h1 { min-width: 0; }
+.title-art img { flex: none; width: var(--art-w); height: auto; margin-block: 8px; }
+
+/* The Solar Envoy, once on /about/: small (96px tall), to one side of the text
+   about the building and its oven, with clear space around him wider than his
+   head. */
+.has-envoy { position: relative; }
+.has-envoy::after { content: ""; display: block; clear: both; }
+.has-envoy .envoy { position: absolute; top: 4px; right: calc(100% + 56px); width: 64px; height: 96px; }
+
+/* below 960px the margin is too narrow for him and his clear space */
+@media (max-width: 960px) {
+  .has-envoy .envoy { position: static; float: right; width: 48px; height: 72px; margin: 4px 0 28px 40px; }
+}
+/* phones: the character sits above the title, so the title keeps the full width and stays centred */
+@media (max-width: 760.98px) {
+  .title-art { flex-direction: column; gap: 0; }
+  .title-art::before { display: none; }
+  .title-art img { order: -1; width: calc(var(--art-w) * .7); margin-block: 6px 2px; }
+}
+
+/* ------------------------------------------------------------------ booking
+   The booking box (#book): phone and email as plain text to copy, not buttons. */
+.book-contact { margin-top: 26px; }
+.book-contact > div { display: flex; justify-content: center; align-items: baseline; gap: 12px; }
+.book-contact > div + div { margin-top: 6px; }
+.book-contact dt {     /* type: the labels rule in printed-menu.css */
+  min-width: 7.5em;
+  text-align: right;
+  color: var(--sol-red);
+}
+.book-contact dd { min-width: 9.5em; text-align: left; font-size: var(--fs-lead); }
+.book-contact + .offer-note { margin-top: 22px !important; }
 
 /* ------------------------------------------------------------------ long text */
 .prose h2 {

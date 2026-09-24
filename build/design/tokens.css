@@ -5,18 +5,23 @@
    two typefaces and seven sizes.
      --display  headings only
      --serif    everything else: text, menu items, and the small labels in capitals
-   The small caps faces (Gryphius MVB Small Caps, Alegreya SC) and the hand face
-   (Plunct) are no longer used.
+   The small caps faces (Gryphius MVB Small Caps, Alegreya SC) are not used.
+
+   BODY TEXT (24 Sep 2026): EB Garamond in both languages. Gryphius MVB read
+   badly on screen, and it has no Vietnamese letters anyway, so --serif is
+   EB Garamond everywhere, for running copy and the labels alike.
 
    FONTS: the brand faces are opt-in. <html data-brand-fonts="…"> lists the ones
    loaded on the page:
-     serif   → Gryphius MVB   (Sol's Adobe Fonts kit umo0non)
-     display → BN Arora       (self-hosted, only once its web licence is confirmed)
-   Live today: data-brand-fonts="serif".
+     display → BN Arora       (self-hosted, licensed for web use)
+   Live today: data-brand-fonts="display".
    Anything not listed renders in the free, Vietnamese-complete faces below
    (Philosopher, EB Garamond — on npm as @fontsource packages).
+   --hand, the one hand-written phrase per section (.hand), is Plunct, upright,
+   from Sol's Adobe Fonts kit (umo0non).
    Vietnamese pages (<html lang="vi">, matched with :lang(vi)) always use the free
-   faces: the brand fonts don't include the Vietnamese letters. */
+   faces: the brand fonts don't include the Vietnamese letters. There, headings
+   are Philosopher and .hand is EB Garamond italic. */
 
 :root {
   /* brand colours */
@@ -27,18 +32,24 @@
   --basil: #506d55;
   --white: #ffffff;
 
-  /* roles */
+  /* roles (names and values from Sol's design system) */
   --surface: var(--cream);
+  --surface-raised: #ffffff;  /* panels on the page: the three boxes on /about/ */
   --ink: var(--wood);
   --ink-muted: #6b4448;   /* 6.9:1 on cream */
   --ink-brand: var(--sol-red);
+  --ink-on-brand: #f2cc73;    /* type on a red fill (primary button): 4.75:1 */
+  --ink-on-sun: #a72024;      /* type on a yellow fill (primary button, hover): 4.75:1 */
   --line: #e3cdb0;        /* quiet hairline */
   --line-brand: var(--sol-red);
+  --focus: #a72024;       /* focus ring: 2px solid, 2px offset */
 
   /* type: free faces by default */
   --display: "Philosopher", Georgia, serif;
   --serif: "EB Garamond", Georgia, serif;
   --ds: 0.9;              /* display size factor: Philosopher runs wider than BN Arora */
+  --hand: var(--serif);   /* the hand-written phrase */
+  --hand-style: italic;
 
   /* type scale: the only sizes on the site (mobile values below) */
   --fs-label: 13px;       /* capitals: eyebrows, nav, buttons, tags */
@@ -59,9 +70,10 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) {
   --display: "BN Arora", "Philosopher", Georgia, serif;
   --ds: 1;
 }
-html[data-brand-fonts~="serif"]:not(:lang(vi)) {
+html:not(:lang(vi)) {
   /* family name as the Adobe Fonts kit (use.typekit.net/umo0non.css) defines it */
-  --serif: "gryphius-mvb", "EB Garamond", Georgia, serif;
+  --hand: "plunct", "EB Garamond", Georgia, serif;
+  --hand-style: normal;
 }
 
 @media (max-width: 760.98px) {

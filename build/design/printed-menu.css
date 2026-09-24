@@ -8,7 +8,11 @@
    Type, after the first review (23 Sep 2026): two typefaces and seven sizes.
    Headings are the display face; everything else is the text serif. Every
    small label shares one style (the "labels" rule below): the serif in
-   capitals, not small caps. Sizes come from the --fs-* tokens in tokens.css. */
+   capitals, not small caps. Sizes come from the --fs-* tokens in tokens.css.
+   Website feedback (24 Sep 2026): the focus ring is 2px in --focus with a 2px
+   offset; the buttons take the --ink-on-* tokens; .hand takes --hand (Plunct
+   on English pages); the three boxes have no illustrations (.trio-art is
+   gone); .book-contact dt joins the labels rule. */
 
 /* ------------------------------------------------------------------ base */
 *, *::before, *::after { box-sizing: border-box; }
@@ -31,7 +35,7 @@ p, li, dd { text-wrap: pretty; }
 blockquote p { text-wrap: balance; }
 ul, ol { padding: 0; list-style: none; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-:focus-visible { outline: 2px solid var(--sol-red); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
 .wrap { width: 100%; max-width: calc(var(--wrap) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
@@ -45,7 +49,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .eyebrow, .label, .link-sc, .btn, .lang, .nav-links,
 .subnav a span:not([data-l]), .navsheet-label, .navsheet-menu a span:not([data-l]), .navsheet-meta,
 .facts dt, .menu-card-sub, .visit-grid dt, .legend b, .marks, .tag, .gtk-items dt, .role-meta, .footer-cols h2,
-.prose h4, .prose summary, .prose thead th {
+.prose h4, .prose summary, .prose thead th, .book-contact dt {
   /* the text serif, not the heading face: Philosopher's capital I reads as an l
      in capitals ("VI" became "Vl") */
   font-family: var(--serif);
@@ -53,13 +57,13 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   line-height: 18px;
   letter-spacing: .1em;
   text-transform: uppercase;
-  font-variant-numeric: lining-nums;   /* EB Garamond (Vietnamese); the Gryphius kit has old-style figures only */
+  font-variant-numeric: lining-nums;   /* EB Garamond's default figures are old-style */
 }
 .eyebrow, .label { color: var(--sol-red); }
-/* the subtitle under a title: the site's only italic */
+/* the hand-written phrase: one per section (Plunct in English, EB Garamond italic in Vietnamese) */
 .hand {
-  font-family: var(--serif);
-  font-style: italic;
+  font-family: var(--hand);
+  font-style: var(--hand-style);
   font-weight: 400;
   font-size: var(--fs-h3);
   line-height: 1.25;
@@ -104,10 +108,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   white-space: nowrap;
   transition: background-color .12s linear, color .12s linear, border-color .12s linear;
 }
-.btn-red { background: var(--sol-red); border-color: var(--sol-red); color: var(--sun); }
-.btn-red:hover { background: var(--sun); color: var(--sol-red); }
+.btn-red { background: var(--sol-red); border-color: var(--sol-red); color: var(--ink-on-brand); }
+.btn-red:hover { background: var(--sun); color: var(--ink-on-sun); }
 .btn-outline { border-color: var(--line-brand); color: var(--sol-red); }
-.btn-outline:hover { background: var(--sol-red); color: var(--sun); }
+.btn-outline:hover { background: var(--sol-red); color: var(--ink-on-brand); }
 .btn-sm { min-height: 38px; padding: 8px 16px; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 34px; }
 
@@ -252,8 +256,6 @@ html.sheet-open { overflow: hidden; }
 }
 .trio > li { padding: 44px 34px 48px; text-align: center; border-left: 1px solid var(--line-brand); }
 .trio > li:first-child { border-left: 0; }
-.trio-art { height: 124px; display: flex; align-items: flex-end; justify-content: center; }
-.trio-art img { width: auto; max-height: 124px; }
 .trio h3 { margin-top: 26px; font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
 .trio p { margin-top: 12px; }
 
@@ -497,8 +499,6 @@ html.sheet-open { overflow: hidden; }
   .sun-divider img { height: 24px; }
   .trio { margin-top: 64px; }
   .trio > li { padding: 32px 8px 36px; }
-  .trio-art { height: 104px; }
-  .trio-art img { max-height: 104px; }
   .pullquote { gap: 14px; margin-top: 64px; margin-bottom: 64px; }
   .pullquote .sun { width: 20px; height: 20px; }
   .menu-card { margin: 36px 7px 0; }

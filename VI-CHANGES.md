@@ -7,6 +7,26 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Website feedback, 24 Sep 2026: tabs and the booking box
+
+Story and Visit are now the About and Booking tabs (`/about/`, `/booking/`). Their lines in the /story/ and /visit/ tables below moved with them unchanged, and so did the home page's “What Sol is”, three boxes and pull quote (now on `/about/`). The old page titles and the lines listed under “No longer on the site” are gone. New lines:
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| every page | tab: About | — (was “Story / Câu chuyện”) | Giới thiệu |
+| every page | tab: Booking | — (was “Visit / Ghé thăm”) | Đặt bàn |
+| /about/ | page title: About — Sol, Tây Hồ | Câu chuyện của chúng tôi — Sol, Tây Hồ (the /story/ title, for “Our story — Sol, Tây Hồ”) | Giới thiệu — Sol, Tây Hồ |
+| /booking/ | page title: Booking — Sol, Tây Hồ | Ghé thăm và đặt bàn — Sol, Tây Hồ (for “Visit and book — Sol, Tây Hồ”) | Đặt bàn — Sol, Tây Hồ |
+| /404 | button: Booking | Ghé thăm (for “Visit”) | Đặt bàn |
+| /booking/ | Phone (booking box; replaces the “Email us” and “Call us” buttons) | Gửi email, Gọi điện (the buttons) | Điện thoại |
+| /booking/ | Email (booking box) | — | Email |
+
+No longer on the site (the lines stay in the tables below for the record):
+
+- Home: “Read our story”, the menu preview (“Small plates to share…”, the three sample dishes, the Sangiovese line, “See all food / wine / bar”) and the “Find us in Tây Hồ” band with its hours line. The tabs now lead to those pages.
+- /visit/: the “Call us” / “Gọi điện” and “Email us” / “Gửi email” buttons in the booking box (replaced by the Phone and Email lines above).
+- The header “Story / Câu chuyện” and “Visit / Ghé thăm” links and the header “Book a table” button (replaced by the tabs).
+
 ## Every page
 
 | Page | English | Old VI | New VI |
