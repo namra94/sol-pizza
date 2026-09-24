@@ -42,7 +42,7 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
    The three boxes and the story, moved from home and /story/. */
 .page-about .page-lead + .page-lead { margin-top: 18px; }
 .trio { background: var(--white); }
-.trio h2 { margin-top: 26px; font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.trio h2 { font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
 .story .section-intro { margin-top: 0; }
 .section-head h3 {
   margin-top: 8px;
@@ -52,6 +52,33 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
   color: var(--sol-red);
 }
 .offer h3 { font-family: var(--display); font-size: var(--fs-h2); line-height: 1.05; color: var(--sol-red); }
+
+/* ------------------------------------------------------------------ characters
+   Fixed-colour SVGs, placed as supplied: never recoloured or stretched, and only
+   on the cream page (never on red or wood brown).
+   The food characters sit beside the title of the page they show (Food: the
+   tomatoes, Wine: the grape), 32–96px. An empty box as wide as the character on
+   the other side keeps the title centred. */
+.title-art { display: flex; align-items: center; justify-content: center; gap: 28px; }
+.title-art::before { content: ""; flex: none; width: var(--art-w); }
+.title-art h1 { min-width: 0; }
+.title-art img { flex: none; width: var(--art-w); height: auto; }
+
+/* The Solar Envoy, once on /about/: small (96px tall), to one side of the text
+   about the building and its oven, with clear space around him wider than his
+   head. */
+.has-envoy { position: relative; }
+.has-envoy::after { content: ""; display: block; clear: both; }
+.has-envoy .envoy { position: absolute; top: 4px; right: calc(100% + 56px); width: 64px; height: 96px; }
+
+@media (max-width: 900px) {
+  .has-envoy .envoy { position: static; float: right; width: 48px; height: 72px; margin: 4px 0 28px 40px; }
+}
+@media (max-width: 760.98px) {
+  .title-art { gap: 14px; }
+  .title-art::before { display: none; }
+  .title-art img { width: calc(var(--art-w) * .7); }
+}
 
 /* ------------------------------------------------------------------ booking
    The booking box (#book): phone and email as plain text to copy, not buttons. */

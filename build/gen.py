@@ -461,9 +461,21 @@ TAGS_VI = MENU['food']['tag_labels_vi']
 MARKS_VI = {lg['mark']: lg['mark_vi'] for lg in MENU['wine']['legend']}
 
 
-def page_title(eyebrow, h1, lead):
-    return ('<header class="page-title"><p class="eyebrow">%s</p><h1>%s</h1><p class="page-lead">%s</p></header>'
-            % (eyebrow, h1, lead))
+# The food characters, each beside the page title of what it shows: (file, width, height).
+# Fixed-colour SVGs, used as supplied (never recoloured, stretched or redrawn),
+# on the cream page only: never on red or wood brown. 32–96px.
+TOMATOES = ('tomatoes.svg', 96, 52)     # Food
+GRAPE    = ('grape.svg', 53, 88)        # Wine
+
+
+def page_title(eyebrow, h1, lead, art=None):
+    title = '<h1>%s</h1>' % h1
+    if art:
+        img, w, h = art
+        title = ('<div class="title-art" style="--art-w:%dpx"><h1>%s</h1><img src="/assets/%s" alt="" '
+                 'width="%d" height="%d"></div>' % (w, h1, img, w, h))
+    return ('<header class="page-title"><p class="eyebrow">%s</p>%s<p class="page-lead">%s</p></header>'
+            % (eyebrow, title, lead))
 
 
 def note_box(label_html, text):
@@ -505,7 +517,7 @@ def build_food():
     parts = [
         page_title(MENU_EYEBROW, t('What we’re cooking', 'Chúng tôi nấu gì'),
                    t('Pizza from the wood oven, pasta made in-house and small plates to start.',
-                     'Pizza từ lò củi, mì Ý làm tại nhà hàng và món khai vị để mở đầu.')),
+                     'Pizza từ lò củi, mì Ý làm tại nhà hàng và món khai vị để mở đầu.'), TOMATOES),
         note_box(t('A first draft', 'Bản nháp đầu tiên'),
                  t('These are the dishes we cooked at Sol Pizza, and they’re where Sol starts. Expect '
                    'changes as the new kitchen settles in, and prices here once they’re set.',
@@ -552,7 +564,7 @@ def build_wine():
                    t('Thirty wines, from Burgundy and Tuscany to Moldova and the Czech Republic. '
                      'Twenty-six of them are open by the glass.',
                      'Ba mươi loại vang, từ Bourgogne và Toscana đến Moldova và Cộng hòa Séc. '
-                     'Hai mươi sáu loại trong số đó có phục vụ theo ly.')),
+                     'Hai mươi sáu loại trong số đó có phục vụ theo ly.'), GRAPE),
         '<p class="legend">%s</p>' % legend,
         note_box(t('A first draft', 'Bản nháp đầu tiên'),
                  t('This is the Sol Pizza list while the new one is being built. Vintages change and '
@@ -629,24 +641,26 @@ def build_bar():
 # Copy that was on home and /story/, in this order: "What Sol is" (its heading
 # is the page title), the three boxes, the pull quote, then the story.
 # ==========================================================================
-def prose_section(sid, sun_n, heading, paras, style='', level=2):
+def prose_section(sid, sun_n, heading, paras, style='', level=2, cls=''):
     return ('<section class="prose-section wrap" aria-labelledby="%s"%s><header class="section-head">%s'
-            '<h%d id="%s">%s</h%d></header><div class="prose">%s</div></section>'
-            % (sid, style, sun(sun_n), level, sid, heading, level, ''.join(paras)))
+            '<h%d id="%s">%s</h%d></header><div class="prose%s">%s</div></section>'
+            % (sid, style, sun(sun_n), level, sid, heading, level, cls, ''.join(paras)))
 
 
 def build_about():
+    # Heading and text only: the Envoy (wood brown) and the food characters (Sol
+    # red) can't share a row, and neither may be recoloured.
     trio = [
-        ('envoy-at-the-oven.svg', 83, 124, t('The oven', 'Lò nướng'),
+        (t('The oven', 'Lò nướng'),
          t('A Pavesi wood-fired oven, built in Italy and shipped to Tây Hồ. Slow-fermented dough, '
            'baked fast over real fire.',
            'Lò củi Pavesi, chế tác tại Ý và đưa về Tây Hồ. Bột ủ chậm, nướng nhanh trên lửa thật.')),
-        ('grape.svg', 60, 100, t('The room', 'Không gian'),
+        (t('The room', 'Không gian'),
          t('Two floors, under 200 square metres. A bar you can eat at, and a terrace for when the '
            'weather behaves.',       # CONFIRM: there is a terrace
            'Hai tầng, dưới 200 mét vuông, quầy bar có thể ngồi ăn và một khoảng hiên cho những '
            'ngày Hà Nội dịu trời.')),
-        ('tomatoes.svg', 136, 74, t('The table', 'Bàn ăn'),
+        (t('The table', 'Bàn ăn'),
          t('Italian-American means generous: plates for the middle of the table, and nobody '
            'counting slices.',
            'Ẩm thực Ý–Mỹ nghĩa là hào phóng. Món đặt giữa bàn, và không ai phải đắn đo.')),
@@ -672,9 +686,7 @@ def build_about():
               'Một nhà hàng của khu phố, lấy pizza làm trung tâm.'),
             ''.join('<p class="page-lead">%s</p>' % p for p in intro)),
         '<div class="wrap"><ul class="trio">%s</ul></div>' % ''.join(
-            '<li><div class="trio-art"><img src="/assets/%s" alt="" width="%d" height="%d" '
-            'style="height:%dpx" loading="lazy"></div><h2>%s</h2><p>%s</p></li>'
-            % (img, w, h, h, name, text) for img, w, h, name, text in trio),
+            '<li><h2>%s</h2><p>%s</p></li>' % box for box in trio),
         '<figure class="pullquote wrap">%s<blockquote><p>%s</p></blockquote>%s</figure>' % (
             sun(2),
             t('We’d rather cook a short menu well than a long one adequately.',
@@ -700,7 +712,10 @@ def build_about():
                             'Đóng cửa là quyết định khó khăn hơn, và là quyết định đúng.'),
             # HIDE until Arman supplies it: one line on what closing meant to him and the team.
         ], level=3),
+        # The Solar Envoy, once on the page: small, to one side of the text about the
+        # building and its oven (site.css keeps his clear space).
         prose_section('s-the-building', 2, t('The building', 'Tòa nhà'), [
+            '<img class="envoy" src="/assets/envoy-at-the-oven.svg" alt="" width="64" height="96" loading="lazy">',
             '<p>%s</p>' % t(
                 'Sol takes the first two floors of a building on Quang An — under 200 square metres, '
                 'small enough to run properly and big enough for what the old place couldn’t do.',
@@ -711,7 +726,7 @@ def build_about():
                 'rest of the kitchen is arranged around it.',
                 'Trung tâm của tất cả là chiếc lò củi Pavesi, chế tác tại Ý và đưa về Hà Nội. Mọi thứ '
                 'còn lại trong bếp đều được sắp xếp quanh nó.'),
-        ], level=3),
+        ], level=3, cls=' has-envoy'),
         # CONFIRM: ships without Long; Arman to say whether to add "and Long runs the floor."
         # HIDE until supplied: a few lines on Ngọc.
         prose_section('s-team', 8, t('The team', 'Đội ngũ'), [
