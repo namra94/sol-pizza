@@ -6,7 +6,8 @@
    (Latin, Latin Extended, Vietnamese) out of `node_modules/@fontsource` into
    `build/fonts/` and writes `build/fonts.css`. Both are generated and
    git-ignored; run `npm ci` first on a fresh machine.
-2. **Share cards.** Unpacks the PNGs in `assets.b64.json` if they're missing.
+2. **Share cards and BN Arora.** Unpacks the PNGs and the BN Arora font in
+   `assets.b64.json` if they're missing.
 3. **Pages.** Home, About, the three menu pages (from `menu-data.json`), Booking,
    Jobs, the role pages and the privacy notice (re-wrapped from `src/`), 404.
 4. **Support files.** `sitemap.xml`, `robots.txt`, and `src/_redirects` copied
@@ -39,7 +40,10 @@ merged into this repo's markup.
   every page (`font-display: swap`, weight 400 only). Headings set
   `font-synthesis: none`, so the browser never fakes a bold or an italic. To
   replace the file, put the new one at `build/brand/BNArora-Regular.woff2` and
-  run `npm run pack-assets`. It has no Vietnamese letters: Vietnamese pages set
+  run `npm run pack-assets`; on other machines delete `build/brand/` before the
+  next build (an unpacked file is never overwritten). `/assets/` is cached for a
+  year and this filename has no content hash, so a changed font also needs a new
+  name: change `BN_ARORA_URL` in `gen.py` (e.g. `bn-arora-400-normal-v2.woff2`). It has no Vietnamese letters: Vietnamese pages set
   headings in Philosopher, and a Vietnamese name inside an English heading is
   marked `<span lang="vi">` so it gets Philosopher too (see `site.css`).
 - **Plunct** (the one hand-written phrase per section, `.hand`, English only)

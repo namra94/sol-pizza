@@ -1173,7 +1173,8 @@ def optimise():
 
     write(os.path.join(DIST, '_headers'), """# Cloudflare static-asset headers.
 # HTML: always revalidate, so a redeploy shows up immediately.
-# /assets: content-hashed filenames (fonts: versioned by npm), cached for a year.
+# /assets: content-hashed filenames (fonts: versioned by npm; BN Arora: see
+# build/README.md before replacing it), cached for a year.
 # Link: early hints: the two fonts above the fold, and the Adobe kit's hosts
 # (its CSS on use.typekit.net @imports Adobe's counter from p.typekit.net).
 /*
