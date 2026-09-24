@@ -65,7 +65,7 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
 .title-art { display: flex; align-items: center; justify-content: center; gap: 28px; }
 .title-art::before { content: ""; flex: none; width: var(--art-w); }
 .title-art h1 { min-width: 0; }
-.title-art img { flex: none; width: var(--art-w); height: auto; }
+.title-art img { flex: none; width: var(--art-w); height: auto; margin-block: 8px; }
 
 /* The Solar Envoy, once on /about/: small (96px tall), to one side of the text
    about the building and its oven, with clear space around him wider than his
@@ -74,13 +74,15 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
 .has-envoy::after { content: ""; display: block; clear: both; }
 .has-envoy .envoy { position: absolute; top: 4px; right: calc(100% + 56px); width: 64px; height: 96px; }
 
-@media (max-width: 900px) {
+/* below 960px the margin is too narrow for him and his clear space */
+@media (max-width: 960px) {
   .has-envoy .envoy { position: static; float: right; width: 48px; height: 72px; margin: 4px 0 28px 40px; }
 }
+/* phones: the character sits above the title, so the title keeps the full width and stays centred */
 @media (max-width: 760.98px) {
-  .title-art { gap: 14px; }
+  .title-art { flex-direction: column; gap: 0; }
   .title-art::before { display: none; }
-  .title-art img { width: calc(var(--art-w) * .7); }
+  .title-art img { order: -1; width: calc(var(--art-w) * .7); margin-block: 6px 2px; }
 }
 
 /* ------------------------------------------------------------------ booking
