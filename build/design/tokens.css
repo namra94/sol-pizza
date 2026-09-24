@@ -13,11 +13,15 @@
 
    FONTS: the brand faces are opt-in. <html data-brand-fonts="…"> lists the ones
    loaded on the page:
-     display → BN Arora       (self-hosted; not yet switched on)
+     display → BN Arora       (self-hosted, licensed for web use)
+   Live today: data-brand-fonts="display".
    Anything not listed renders in the free, Vietnamese-complete faces below
    (Philosopher, EB Garamond — on npm as @fontsource packages).
+   --hand, the one hand-written phrase per section (.hand), is Plunct, upright,
+   from Sol's Adobe Fonts kit (umo0non).
    Vietnamese pages (<html lang="vi">, matched with :lang(vi)) always use the free
-   faces: the brand fonts don't include the Vietnamese letters. */
+   faces: the brand fonts don't include the Vietnamese letters. There, headings
+   are Philosopher and .hand is EB Garamond italic. */
 
 :root {
   /* brand colours */
@@ -40,6 +44,8 @@
   --display: "Philosopher", Georgia, serif;
   --serif: "EB Garamond", Georgia, serif;
   --ds: 0.9;              /* display size factor: Philosopher runs wider than BN Arora */
+  --hand: var(--serif);   /* the hand-written phrase */
+  --hand-style: italic;
 
   /* type scale: the only sizes on the site (mobile values below) */
   --fs-label: 13px;       /* capitals: eyebrows, nav, buttons, tags */
@@ -59,6 +65,11 @@
 html[data-brand-fonts~="display"]:not(:lang(vi)) {
   --display: "BN Arora", "Philosopher", Georgia, serif;
   --ds: 1;
+}
+html:not(:lang(vi)) {
+  /* family name as the Adobe Fonts kit (use.typekit.net/umo0non.css) defines it */
+  --hand: "plunct", "EB Garamond", Georgia, serif;
+  --hand-style: normal;
 }
 
 @media (max-width: 760.98px) {

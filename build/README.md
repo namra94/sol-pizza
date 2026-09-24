@@ -26,19 +26,22 @@ put anything the design doesn't cover in `design/site.css`.
 `design/printed-menu.js` is the delivered header script with the language code
 merged into this repo's markup.
 
-## BN Arora, once its web licence is confirmed
+## Brand fonts
 
-Headings use Philosopher until then. To switch:
-
-1. Add `fonts/brand/BNArora-Regular.woff2` to `build/assets.b64.json` (extend
-   `pack_assets.py` to pick it up) so the repo stays text-only.
-2. In `gen.py`: copy it to `dist/assets/fonts/` in `copy_existing()`, add an
-   `@font-face` for `"BN Arora"` (`font-display: swap`) to the inlined font
-   CSS, preload it next to `PRELOAD_FONT`, and set
-   `BRAND_FONTS = 'display serif'`.
-3. Compare the result with the package's `reference/screenshots/brand/`.
-
-Until then the BN Arora file must not reach git or `dist/`.
+- **BN Arora** (English headings) is licensed for web use (confirmed 24 Sep
+  2026). The file travels in `assets.b64.json` as `build/brand/BNArora-Regular.woff2`
+  (unpacked at build time, git-ignored) and is served at
+  `/assets/fonts/bn-arora-400-normal.woff2`, with its `@font-face` inlined into
+  every page (`font-display: swap`, weight 400 only). Headings set
+  `font-synthesis: none`, so the browser never fakes a bold or an italic. To
+  replace the file, put the new one at `build/brand/BNArora-Regular.woff2` and
+  run `npm run pack-assets`. It has no Vietnamese letters: Vietnamese pages set
+  headings in Philosopher, and a Vietnamese name inside an English heading is
+  marked `<span lang="vi">` so it gets Philosopher too (see `site.css`).
+- **Plunct** (the one hand-written phrase per section, `.hand`, English only)
+  comes from the Adobe Fonts kit, loaded without blocking the first paint.
+  Vietnamese pages keep EB Garamond italic.
+- Preloaded on every page: BN Arora and EB Garamond (latin).
 
 ## Share cards
 

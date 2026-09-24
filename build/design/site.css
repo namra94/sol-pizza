@@ -11,6 +11,19 @@
 html:not([lang="vi"]) [data-l="vi"],
 html[lang="vi"] [data-l="en"] { display: none !important; }
 
+/* ------------------------------------------------------------------ brand faces
+   BN Arora (headings) and Plunct (.hand) come in one weight, upright only: the
+   browser must never fake a bold or an italic. */
+h1, h2, h3, h4, .h-lg, .subnav a, .navsheet-pages a, .pullquote blockquote p, .hand { font-synthesis: none; }
+
+/* A Vietnamese name inside an English heading, marked <span lang="vi">: BN Arora
+   has no Vietnamese letters, so the name is set in Philosopher, sized as --ds
+   sizes Vietnamese headings, rather than mixing the two faces letter by letter. */
+html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="vi"]:not([data-l]) {
+  font-family: "Philosopher", Georgia, serif;
+  font-size: .9em;
+}
+
 /* ------------------------------------------------------------------ tabs
    About · Menu · Booking in the header and the mobile nav sheet. The current tab
    (aria-current: "page", or "true" for Menu on Wine and Bar) is underlined. */

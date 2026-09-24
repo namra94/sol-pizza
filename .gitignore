@@ -3,6 +3,7 @@ dist/
 build/fonts/
 build/fonts.css
 build/og/png/
+build/brand/
 src/jobs/og-*.png
 # tooling
 node_modules/

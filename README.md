@@ -90,29 +90,33 @@ applied by a small script in `<head>` before the page paints, so there is no
 flash of the other language. A link ending `?lang=vi` opens a page in
 Vietnamese. The page title, meta description and every `aria-label` switch too.
 
-Vietnamese pages always use the free fonts: the brand fonts don't include the
-Vietnamese letters.
+Vietnamese pages always use the free fonts (Philosopher, EB Garamond): the
+brand fonts don't include the Vietnamese letters.
 
 ---
 
 ## Fonts
 
 Two typefaces and seven sizes, set in `build/design/tokens.css`: a display face
-for headings and a serif for everything else. Small labels are the serif in
-capitals.
+for headings and a serif for everything else, plus one hand-written phrase per
+section. Small labels are the serif in capitals.
 
 - **EB Garamond** (everything that isn't a heading, in both languages) is one
   of the free fonts below. It replaced Gryphius MVB on 24 Sep 2026, which read
   badly on screen and has no Vietnamese letters; nothing uses Gryphius now.
-- **Adobe Fonts**: Sol's web project, kit `umo0non`, is linked on every page.
-  It can't be self-hosted, so never download or commit its fonts. The kit also
-  holds Gryphius MVB and Gryphius MVB Small Caps, which the site doesn't use;
-  removing them from the web project makes the kit a little lighter. Keep the
-  Creative Cloud plan behind the web project active. In Adobe Fonts, set the
-  web project's font display to **swap**.
-- **BN Arora** (headings) is waiting on confirmation that its licence covers
-  the web. Until then headings use Philosopher. `build/README.md` says what to
-  change once it's confirmed.
+- **BN Arora** (headings, English pages) is self-hosted: it's licensed for web
+  use, and the file travels in `build/assets.b64.json`. It has no Vietnamese
+  letters, so Vietnamese headings use Philosopher. `build/README.md` has the
+  details.
+- **Plunct** (the one hand-written phrase per section, English pages; upright)
+  comes from Sol's Adobe Fonts web project, kit `umo0non`, linked on every page
+  without blocking the first paint. It can't be self-hosted, so never download
+  or commit its fonts. Vietnamese pages set the phrase in EB Garamond italic.
+  The kit also holds Gryphius MVB and Gryphius MVB Small Caps, which the site
+  doesn't use; removing them from the web project makes the kit a little
+  lighter. Keep the Creative Cloud plan behind the web project active. In Adobe
+  Fonts, set the web project's font display to **swap** (it is "auto" today,
+  which can hide the phrase for up to 3 seconds while Plunct loads).
 - **Free fonts**, always loaded and Vietnamese-complete: Philosopher and EB
   Garamond, from the `@fontsource` npm packages. The build
   copies only the Latin, Latin Extended and Vietnamese files into
@@ -129,14 +133,14 @@ build/design/           tokens.css, printed-menu.css (the design), site.css (rep
                         additions), printed-menu.js (menu tabs, mobile nav, EN / VI)
 build/assets/           logo, illustrations, sun pattern (SVG)
 build/og/               share cards: og-*.html sources, rendered by og.js
-build/assets.b64.json   the share-card PNGs, as text (see build/pack_assets.py)
+build/assets.b64.json   the share-card PNGs and BN Arora, as text (see build/pack_assets.py)
 src/jobs/ src/privacy/  role pages and the privacy notice, re-wrapped at build time
 src/_redirects          copied to dist/; Cloudflare applies it
 src/favicon.svg src/pixel.js
 ```
 
 The repo is text-only: fonts come from npm or Adobe Fonts, and the share-card
-PNGs travel inside `build/assets.b64.json`. After re-rendering the share cards
+PNGs and BN Arora travel inside `build/assets.b64.json`. After re-rendering the share cards
 (`node og.js`), run `npm run pack-assets`.
 
 ### Colours

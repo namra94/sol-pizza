@@ -56,10 +56,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   font-variant-numeric: lining-nums;   /* EB Garamond's default figures are old-style */
 }
 .eyebrow, .label { color: var(--sol-red); }
-/* the subtitle under a title: the site's only italic */
+/* the hand-written phrase: one per section (Plunct in English, EB Garamond italic in Vietnamese) */
 .hand {
-  font-family: var(--serif);
-  font-style: italic;
+  font-family: var(--hand);
+  font-style: var(--hand-style);
   font-weight: 400;
   font-size: var(--fs-h3);
   line-height: 1.25;

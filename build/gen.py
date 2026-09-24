@@ -51,20 +51,28 @@ SUN_SPRITE = read(os.path.join(ASSETS, 'suns-sprite.svg')).strip()
 #   serif for everything else (small labels are the serif in capitals).
 #   Body text: EB Garamond in both languages (decided 24 Sep 2026; Gryphius MVB
 #   read badly on screen). Nothing uses Gryphius MVB.
-#   Adobe Fonts: Sol's web project, kit umo0non, linked on every page. Adobe
-#   Fonts can't be self-hosted: never download, commit or deploy those files.
-#   BN Arora: see build/README.md ("BN Arora").
+#   Headings: BN Arora on English pages (licensed for web use, confirmed 24 Sep
+#   2026). Self-hosted: the file travels in build/assets.b64.json and is served
+#   at BN_ARORA_URL. It has no Vietnamese letters, so Vietnamese headings use
+#   Philosopher (tokens.css).
+#   Adobe Fonts: Sol's web project, kit umo0non, linked on every page for Plunct,
+#   the hand-written phrase (.hand) on English pages. Adobe Fonts can't be
+#   self-hosted: never download, commit or deploy those files. The kit's CSS is
+#   loaded without blocking the first paint.
 #   Free faces (always loaded; they carry every Vietnamese letter): npm @fontsource.
 # --------------------------------------------------------------------------
 TYPEKIT_KIT  = 'https://use.typekit.net/umo0non.css'
-BRAND_FONTS  = ''                  # brand faces switched on, see tokens.css
+BRAND_FONTS  = 'display'           # the brand faces switched on, see tokens.css
+BN_ARORA_SRC = os.path.join(HERE, 'brand', 'BNArora-Regular.woff2')   # unpacked from assets.b64.json
+BN_ARORA_URL = '/assets/fonts/bn-arora-400-normal.woff2'
 FONT_PLAN = [
     # (npm package under @fontsource, CSS family, [(weight, style)])
     ('philosopher', 'Philosopher', [(400, 'normal')]),
     ('eb-garamond',  'EB Garamond', [(400, 'normal'), (400, 'italic')]),
 ]
 FONT_SUBSETS = ['latin', 'latin-ext', 'vietnamese']
-PRELOAD_FONT = '/assets/fonts/philosopher-latin-400-normal.woff2'   # headings, above the fold
+# Above the fold on every page: BN Arora (headings) and EB Garamond (text).
+PRELOAD_FONTS = [BN_ARORA_URL, '/assets/fonts/eb-garamond-latin-400-normal.woff2']
 
 # --------------------------------------------------------------------------
 # site-wide facts: EDIT THESE, they appear on every page
@@ -205,14 +213,16 @@ def head(path, title, desc, og, ogtype, extra, index):
         '<title data-en="%s" data-vi="%s">%s</title>' % (title_en, title_vi, title_en),
         '<meta name="description" content="%s" data-en="%s" data-vi="%s">' % (desc_en, desc_en, desc_vi),
         '<link rel="preconnect" href="https://use.typekit.net" crossorigin>',
-        '<link rel="stylesheet" href="%s">' % TYPEKIT_KIT,
+        # The Adobe kit (Plunct) mustn't hold up the first paint: fetch it as a
+        # preload and apply it once it arrives.
+        '<link rel="preload" href="%s" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">' % TYPEKIT_KIT,
+        '<noscript><link rel="stylesheet" href="%s"></noscript>' % TYPEKIT_KIT,
         '<link rel="stylesheet" href="/assets/fonts.css">',     # inlined by optimise()
         '<link rel="stylesheet" href="/assets/tokens.css">',
         '<link rel="stylesheet" href="/assets/printed-menu.css">',
         '<link rel="stylesheet" href="/assets/site.css">',
         '<script src="/assets/printed-menu.js" defer></script>',
-        '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' % PRELOAD_FONT,
-    ]
+    ] + ['<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' % f for f in PRELOAD_FONTS]
     if index:
         lines += [
             '<link rel="canonical" href="%s">' % url,
@@ -422,7 +432,8 @@ def build_home():
 </main>
 """.format(
         eyebrow=t('Opening soon · Tây Hồ, Hanoi', 'Sắp khai trương · Tây Hồ, Hà Nội'),
-        h1=t('Sol is back in Tây Hồ.', 'Sol trở lại Tây Hồ.'),
+        # lang="vi": BN Arora has no Vietnamese letters, so site.css sets the name in Philosopher
+        h1=t('Sol is back in <span lang="vi">Tây Hồ</span>.', 'Sol trở lại Tây Hồ.'),
         hand=t('with the oven we always wanted', 'cùng chiếc lò chúng tôi luôn mong muốn'),
         lead=t('Sol Pizza closed last year. Sol opens on the same stretch of Tây Hồ with more room: '
                'a bigger kitchen, a proper bar and a Pavesi wood-fired oven built in Italy.',
@@ -1064,6 +1075,7 @@ def copy_existing():
             shutil.copy2(os.path.join(ASSETS, f), os.path.join(assets, f))
     shutil.copy2(os.path.join(HERE, 'fonts.css'), os.path.join(assets, 'fonts.css'))
     shutil.copytree(os.path.join(HERE, 'fonts'), os.path.join(assets, 'fonts'), dirs_exist_ok=True)
+    shutil.copy2(BN_ARORA_SRC, os.path.join(DIST, BN_ARORA_URL.lstrip('/')))
 
 
 # ==========================================================================
@@ -1140,15 +1152,15 @@ def optimise():
     write(os.path.join(DIST, '_headers'), """# Cloudflare static-asset headers.
 # HTML: always revalidate, so a redeploy shows up immediately.
 # /assets: content-hashed filenames (fonts: versioned by npm), cached for a year.
-# Link: early hints. The Adobe kit's CSS (use.typekit.net, no-cors) @imports
-# Adobe's counter from p.typekit.net; both block rendering, so warm both up.
+# Link: early hints: the two fonts above the fold, and the Adobe kit's hosts
+# (its CSS on use.typekit.net @imports Adobe's counter from p.typekit.net).
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
   Cache-Control: public, max-age=0, must-revalidate
-  Link: <%s>; rel=preload; as=font; type=font/woff2; crossorigin, <https://use.typekit.net>; rel=preconnect; crossorigin, <https://use.typekit.net>; rel=preconnect, <https://p.typekit.net>; rel=preconnect
+  Link: %s, <https://use.typekit.net>; rel=preconnect; crossorigin, <https://use.typekit.net>; rel=preconnect, <https://p.typekit.net>; rel=preconnect
 
 /assets/*
   ! Cache-Control
@@ -1164,14 +1176,14 @@ def optimise():
   ! Cache-Control
   ! Link
   Cache-Control: public, max-age=86400
-""" % PRELOAD_FONT)
+""" % ', '.join('<%s>; rel=preload; as=font; type=font/woff2; crossorigin' % f for f in PRELOAD_FONTS))
 
 
 # ==========================================================================
 # BOOTSTRAP: make a clean checkout buildable
-# Fonts come from the @fontsource npm packages (npm ci); share-card PNGs from
-# build/assets.b64.json (a text manifest, see build/pack_assets.py). Nothing
-# binary lives in git.
+# Fonts come from the @fontsource npm packages (npm ci); share-card PNGs and
+# BN Arora from build/assets.b64.json (a text manifest, see build/pack_assets.py).
+# Nothing binary lives in git.
 # ==========================================================================
 def ensure_fonts():
     """Copy the woff2 files the site uses out of node_modules and write build/fonts.css."""
@@ -1194,9 +1206,13 @@ def ensure_fonts():
                 css.append("@font-face{font-family:'%s';font-style:%s;font-weight:%d;font-display:swap;\n"
                            "  src:url('/assets/fonts/%s') format('woff2');\n  unicode-range:%s;}"
                            % (family, style, weight, fn, uni[sub]))
+    # BN Arora: one weight, upright only (the headings set font-synthesis: none).
+    css.append("@font-face{font-family:'BN Arora';font-style:normal;font-weight:400;font-display:swap;\n"
+               "  src:url('%s') format('woff2');}" % BN_ARORA_URL)
     write(os.path.join(HERE, 'fonts.css'),
-          '/* The free fonts, generated by build/gen.py from the @fontsource packages.\n'
-          '   Split by unicode-range: a browser downloads a subset only when the page uses it. */\n'
+          '/* The self-hosted fonts, generated by build/gen.py: the free fonts from the\n'
+          '   @fontsource packages, split by unicode-range (a browser downloads a subset\n'
+          '   only when the page uses it), and BN Arora. */\n'
           + '\n'.join(css) + '\n')
 
 
