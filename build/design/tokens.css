@@ -32,13 +32,17 @@
   --basil: #506d55;
   --white: #ffffff;
 
-  /* roles */
+  /* roles (names and values from Sol's design system) */
   --surface: var(--cream);
+  --surface-raised: #ffffff;  /* panels on the page: the three boxes on /about/ */
   --ink: var(--wood);
   --ink-muted: #6b4448;   /* 6.9:1 on cream */
   --ink-brand: var(--sol-red);
+  --ink-on-brand: #f2cc73;    /* type on a red fill (primary button): 4.75:1 */
+  --ink-on-sun: #a72024;      /* type on a yellow fill (primary button, hover): 4.75:1 */
   --line: #e3cdb0;        /* quiet hairline */
   --line-brand: var(--sol-red);
+  --focus: #a72024;       /* focus ring: 2px solid, 2px offset */
 
   /* type: free faces by default */
   --display: "Philosopher", Georgia, serif;

@@ -2,7 +2,7 @@
    Load after tokens.css and printed-menu.css. Only rules the design files don't
    cover: the EN / VI switch, the About · Menu · Booking tabs, the About page, and
    the long-text pages (privacy notice, role pages) that carry their own markup.
-   Existing tokens only: no new colours. */
+   Tokens only (tokens.css): no new colours. */
 
 /* ------------------------------------------------------------------ EN / VI
    Every translated line is in the HTML twice, <span data-l="en" lang="en"> and
@@ -41,7 +41,7 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
 /* ------------------------------------------------------------------ about
    The three boxes and the story, moved from home and /story/. */
 .page-about .page-lead + .page-lead { margin-top: 18px; }
-.trio { background: var(--white); }
+.trio { background: var(--surface-raised); }
 .trio h2 { font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
 .story .section-intro { margin-top: 0; }
 .section-head h3 {

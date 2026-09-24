@@ -21,7 +21,11 @@
 `design/tokens.css` and `design/printed-menu.css` are the Printed menu design
 as delivered, with one change so a bilingual label keeps its look: three
 descendant-span selectors skip `[data-l]` (the language spans) and
-`.filled li span + span` is now a child selector. Don't restyle them;
+`.filled li span + span` is now a child selector. The website feedback of
+24 Sep 2026 changed them too: EB Garamond for body text, BN Arora and Plunct
+switched on, the design-system tokens (`--surface-raised`, `--ink-on-brand`,
+`--ink-on-sun`, `--focus`) and a 2px focus ring with a 2px offset; the header
+comment in each file lists what changed. Don't restyle them otherwise;
 put anything the design doesn't cover in `design/site.css`.
 `design/printed-menu.js` is the delivered header script with the language code
 merged into this repo's markup.

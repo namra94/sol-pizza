@@ -8,7 +8,11 @@
    Type, after the first review (23 Sep 2026): two typefaces and seven sizes.
    Headings are the display face; everything else is the text serif. Every
    small label shares one style (the "labels" rule below): the serif in
-   capitals, not small caps. Sizes come from the --fs-* tokens in tokens.css. */
+   capitals, not small caps. Sizes come from the --fs-* tokens in tokens.css.
+   Website feedback (24 Sep 2026): the focus ring is 2px in --focus with a 2px
+   offset; the buttons take the --ink-on-* tokens; .hand takes --hand (Plunct
+   on English pages); the three boxes have no illustrations (.trio-art is
+   gone); .book-contact dt joins the labels rule. */
 
 /* ------------------------------------------------------------------ base */
 *, *::before, *::after { box-sizing: border-box; }
@@ -31,7 +35,7 @@ p, li, dd { text-wrap: pretty; }
 blockquote p { text-wrap: balance; }
 ul, ol { padding: 0; list-style: none; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-:focus-visible { outline: 2px solid var(--sol-red); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
 .wrap { width: 100%; max-width: calc(var(--wrap) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
@@ -104,10 +108,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   white-space: nowrap;
   transition: background-color .12s linear, color .12s linear, border-color .12s linear;
 }
-.btn-red { background: var(--sol-red); border-color: var(--sol-red); color: var(--sun); }
-.btn-red:hover { background: var(--sun); color: var(--sol-red); }
+.btn-red { background: var(--sol-red); border-color: var(--sol-red); color: var(--ink-on-brand); }
+.btn-red:hover { background: var(--sun); color: var(--ink-on-sun); }
 .btn-outline { border-color: var(--line-brand); color: var(--sol-red); }
-.btn-outline:hover { background: var(--sol-red); color: var(--sun); }
+.btn-outline:hover { background: var(--sol-red); color: var(--ink-on-brand); }
 .btn-sm { min-height: 38px; padding: 8px 16px; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 34px; }
 
