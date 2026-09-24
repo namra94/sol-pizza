@@ -79,20 +79,23 @@ house / Kitchen) and a page at `/jobs/<slug>/` in both languages:
 
 - `build/jobs-data.json`: the round (posted, closing instant, start date,
   service charge estimate) and each role's slug, section, openings, base salary,
-  card line and apply question, English and Vietnamese. The closing instant is
-  in here once; everything else that shows a date or a total is built from it.
+  card line and apply question, English and Vietnamese. The cards, the closing
+  script, the share cards, the meta descriptions and the `JobPosting` take their
+  dates and figures from here.
 - `build/jobs/<slug>.md`: the job description word for word, the English block
   then the Vietnamese one (`# ` title, the eyebrow line, the facts table, the
-  bold standfirst, then `##` / `###` headings, paragraphs and `- ` lists). The
-  build stops if a description's base salary, service charge, total or openings
-  no longer match the data, because the ads quote the same numbers.
+  bold standfirst, then `##` / `###` headings, paragraphs and `- ` lists). Its
+  text carries the same dates and figures, so edit it alongside the data. The
+  build stops if they disagree: the facts table's base salary, openings, closing
+  and start dates, and every salary band in the text (each must be the base, the
+  service charge estimate or the total), because the ads quote the same numbers.
 
 Apply buttons open an email to jobs@sol.pizza with the subject (`Pizzaiolo — `)
 and a body in the page's language; switching EN / VI switches the email too.
 After the closing instant a small script in the page head shows "Applications
 for this round closed…" on the cards and pages and hides every Apply button. To
-check it, set `closes` to yesterday, build, look, and set it back (the build
-notes that the descriptions still mention the old date; that's expected).
+check it, set `closes` to yesterday, build with `JOBS_ALLOW_DATE_DRIFT=1 npm run
+build` (the descriptions still say 4 October), look, and set it back.
 The share card for each role is in Vietnamese (the ads bring Vietnamese
 speakers) and each page carries a `JobPosting` for search.
 

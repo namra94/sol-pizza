@@ -194,8 +194,9 @@ html:not([lang="vi"]) .prose .vi-note + p { margin-top: 0; }   /* the hidden not
     background: var(--surface);
     border-top: 1px solid var(--line-brand);
     transform: translateY(110%);
-    transition: transform .2s ease;
+    visibility: hidden;         /* out of the tab order while it's off screen */
+    transition: transform .2s ease, visibility 0s linear .2s;
   }
-  .apply-bar.is-shown { transform: none; }
+  .apply-bar.is-shown { transform: none; visibility: visible; transition: transform .2s ease; }
   .apply-bar .btn { width: 100%; }
 }

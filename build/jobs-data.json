@@ -1,5 +1,5 @@
 {
-  "note": "The opening-team round on /jobs/: the cards, and the six role pages at /jobs/<slug>/. Each role's job description is build/jobs/<slug>.md (English, then Vietnamese). The build stops if a description's pay figures or openings no longer match the numbers here, because the ads quote the same numbers.",
+  "note": "The opening-team round on /jobs/: the cards, and the six role pages at /jobs/<slug>/. Each role's job description is build/jobs/<slug>.md (English, then Vietnamese). The descriptions repeat these dates and figures: edit them together. The build stops if a description's facts table (base salary, openings, closing and start dates) or any salary band in its text no longer matches the data here, because the ads quote the same numbers.",
   "note_vi": "Every *_vi field is the Vietnamese twin of the field above it.",
   "round": {
     "posted": "2026-09-29",

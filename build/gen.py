@@ -118,6 +118,11 @@ def esc(s):
     return _html.escape(s, quote=False)
 
 
+def esc_attr(s):
+    """Text for a double-quoted attribute (and the <title> that repeats it)."""
+    return _html.escape(s, quote=True)
+
+
 def nbsp(markup):
     """Tây Hồ and Sol Pizza never split across two lines in the visible text."""
     return (markup.replace('Tây Hồ', 'Tây&nbsp;Hồ').replace('T&acirc;y H&#7891;', 'T&acirc;y&nbsp;H&#7891;')
@@ -999,25 +1004,43 @@ def read_jd(slug):
 
 
 def check_jd(r):
-    """The ads quote these numbers: stop if a job description has drifted from the data."""
-    en, vi = r['jd']
+    """The ads quote these numbers and dates: stop if a job description has drifted from
+    build/jobs-data.json. Checked where they show: the facts table's base salary,
+    openings, closing and start dates, and every salary band anywhere in the text
+    (each must be the base, the service charge estimate or the total).
+    JOBS_ALLOW_DATE_DRIFT=1 lets the dates differ, to try the closed state."""
     total = [b + s for b, s in zip(r['base'], SERVICE)]
-    text_en = read(os.path.join(HERE, 'jobs', r['slug'] + '.md')).split('\n# ', 1)[0]
-    text_vi = read(os.path.join(HERE, 'jobs', r['slug'] + '.md')).split('\n# ', 1)[1]
-    need = [(text_en, '%s VND' % band_en(x)) for x in (r['base'], SERVICE, total)] + \
-           [(text_vi, '%s VNĐ' % band_vi(x)) for x in (r['base'], SERVICE, total)]
-    missing = [s for text, s in need if s not in text]
-    openings = [dict(en['facts']).get('Openings'), dict(vi['facts']).get('Số lượng tuyển')]
-    want = [str(r['openings']) if r['openings'] else None] * 2
-    if missing or openings != want:
-        raise SystemExit('build/jobs/%s.md no longer matches build/jobs-data.json: %s. Make the two '
-                         'agree (the ads quote the same numbers).'
-                         % (r['slug'], '; '.join(['missing "%s"' % s for s in missing] +
-                                                 (['openings %s, data says %s' % (openings, r['openings'])]
-                                                  if openings != want else []))))
-    if en_date(CLOSES) + ' %d' % CLOSES.year not in text_en or vi_date(CLOSES, True) not in text_vi:
-        print('note: build/jobs/%s.md does not mention the closing date in build/jobs-data.json (%s)'
-              % (r['slug'], ROUND['closes']))
+    texts = read(os.path.join(HERE, 'jobs', r['slug'] + '.md')).split('\n# ', 1)
+    openings = str(r['openings']) if r['openings'] else None
+    problems, dates = [], []
+    for lang, jd, text, band, cur, keys in (
+            ('English', r['jd'][0], texts[0], band_en, 'VND',
+             ('Base salary', 'Openings', 'Applications close', 'Start')),
+            ('Vietnamese', r['jd'][1], texts[1], band_vi, 'VNĐ',
+             ('Lương cơ bản', 'Số lượng tuyển', 'Hạn nộp hồ sơ', 'Ngày bắt đầu'))):
+        facts = dict(jd['facts'])
+        bands = ['%s %s' % (band(x), cur) for x in (r['base'], SERVICE, total)]
+        if not facts.get(keys[0], '').startswith(bands[0]):
+            problems.append('%s facts: base salary "%s", data says %s' % (lang, facts.get(keys[0]), bands[0]))
+        problems += ['%s: "%s" is not the base salary, service charge or total' % (lang, m)
+                     for m in re.findall(r'\d[\d.,]* – \d[\d.,]* VN[DĐ]', text) if m not in bands]
+        problems += ['%s: no "%s"' % (lang, b) for b in bands if b not in text]
+        if facts.get(keys[1]) != openings:
+            problems.append('%s facts: openings %s, data says %s' % (lang, facts.get(keys[1]), openings))
+        if lang == 'English':
+            close, start = '%s %d' % (en_date(CLOSES), CLOSES.year), '%s %d' % (en_date(STARTS), STARTS.year)
+        else:
+            close, start = vi_date(CLOSES, True), vi_date(STARTS, True)
+        if facts.get(keys[2], '').lower() != close.lower():
+            dates.append('%s facts: closes "%s", data says %s' % (lang, facts.get(keys[2]), close))
+        if not facts.get(keys[3], '').lower().startswith(start.lower()):
+            dates.append('%s facts: starts "%s", data says %s' % (lang, facts.get(keys[3]), start))
+    if dates and os.environ.get('JOBS_ALLOW_DATE_DRIFT') == '1':
+        print('note: build/jobs/%s.md: %s (allowed by JOBS_ALLOW_DATE_DRIFT)' % (r['slug'], '; '.join(dates)))
+        dates = []
+    if problems or dates:
+        raise SystemExit('build/jobs/%s.md no longer matches build/jobs-data.json: %s. Make the two agree '
+                         '(the ads quote the same numbers and dates).' % (r['slug'], '; '.join(problems + dates)))
 
 
 OPEN_ROLES = [dict(r, jd=read_jd(r['slug'])) for r in JOBS['roles']]
@@ -1037,16 +1060,20 @@ ROUND_SCRIPT = ("<script>try{if(Date.now()>Date.parse('%s'))"
                 "document.documentElement.classList.add('round-closed')}catch(e){}</script>" % ROUND['closes'])
 
 # After the page: the Apply links' subject and body, built with encodeURIComponent
-# in the page's language and rebuilt when EN / VI switches it; and on phones, the
-# Apply bar between the Apply button at the top and the one at the end.
+# in the page's language and rebuilt when EN / VI switches it (once the round has
+# closed, the job description's own jobs@sol.pizza link is a plain address); and on
+# phones, the Apply bar while the Apply button at the top is scrolled past and the
+# one at the end not yet reached. The observers' margins stretch the viewport far
+# down (top) and far up (end), so a jump to a #link or the footer can't skip a change.
 APPLY_SCRIPT = """<script>
 (function () {
   var root = document.documentElement, links = document.querySelectorAll('a[data-apply]');
   function build() {
-    var lang = root.lang === 'vi' ? 'vi' : 'en';
+    var lang = root.lang === 'vi' ? 'vi' : 'en', closed = root.classList.contains('round-closed');
     for (var i = 0; i < links.length; i++) {
       var a = links[i], body = a.getAttribute('data-body-' + lang).replace(/\\r?\\n/g, '\\r\\n');
-      a.href = 'mailto:%s?subject=' + encodeURIComponent(a.getAttribute('data-subject')) +
+      a.href = closed && !a.classList.contains('apply-btn') ? 'mailto:%(email)s' :
+               'mailto:%(email)s?subject=' + encodeURIComponent(a.getAttribute('data-subject')) +
                '&body=' + encodeURIComponent(body);
     }
   }
@@ -1056,19 +1083,13 @@ APPLY_SCRIPT = """<script>
       end = document.querySelector('[data-apply-end]');
   if (!bar || !top || !end || !('IntersectionObserver' in window)) return;
   var above = false, reached = false;
-  new IntersectionObserver(function (entries) {
-    entries.forEach(function (e) {
-      if (e.target === top) above = !e.isIntersecting && e.boundingClientRect.top < 0;
-      else reached = e.isIntersecting || e.boundingClientRect.top < 0;
-    });
-    bar.classList.toggle('is-shown', above && !reached);
-  }).observe(top);
-  new IntersectionObserver(function (entries) {
-    reached = entries[0].isIntersecting || entries[0].boundingClientRect.top < 0;
-    bar.classList.toggle('is-shown', above && !reached);
-  }).observe(end);
+  function show() { bar.classList.toggle('is-shown', above && !reached); }
+  new IntersectionObserver(function (e) { above = !e[e.length - 1].isIntersecting; show(); },
+                           {rootMargin: '0px 0px 100000px 0px'}).observe(top);
+  new IntersectionObserver(function (e) { reached = e[e.length - 1].isIntersecting; show(); },
+                           {rootMargin: '100000px 0px 0px 0px'}).observe(end);
 })();
-</script>""" % JOBS_EMAIL
+</script>""" % dict(email=JOBS_EMAIL)
 
 
 def apply_attrs(r):
@@ -1092,8 +1113,14 @@ def apply_attrs(r):
         href, attr(subject), attr(en), attr(vi))
 
 
-def apply_button(r, cls='btn btn-red', extra=''):
-    return '<a class="%s apply-btn" %s%s>%s</a>' % (cls, apply_attrs(r), extra, t('Apply', 'Ứng tuyển'))
+def named(en, vi, r):
+    """A link label with the role's name for screen readers: six cards share the same labels."""
+    hidden = '<span class="visually-hidden">: %s</span>'
+    return t(en + hidden % esc(r['name_en']), vi + hidden % esc(r['name_vi']))
+
+
+def apply_button(r, cls='btn btn-red', label=None):
+    return '<a class="%s apply-btn" %s>%s</a>' % (cls, apply_attrs(r), label or t('Apply', 'Ứng tuyển'))
 
 
 def closed_text():
@@ -1120,7 +1147,8 @@ def role_card(r):
             '<div class="role-links"><a class="link-sc" href="%s">%s</a>%s</div></article>'
             % (r['slug'], meta, t(esc(r['name_en']), esc(r['name_vi'])), esc(short_vi),
                t(esc(r['card']), esc(r['card_vi'])), pay, dates, closed_text(), open_role_path(r),
-               t('Read the role', 'Xem mô tả công việc'), apply_button(r, 'btn btn-red btn-sm')))
+               named('Read the role', 'Xem mô tả công việc', r),
+               apply_button(r, 'btn btn-red btn-sm', named('Apply', 'Ứng tuyển', r))))
 
 
 def build_jobs():
@@ -1276,11 +1304,11 @@ def build_open_role(r):
                % (r['name_en'], band_en(r['base'], '–'), band_en(SERVICE, '–'), en_date(CLOSES), CLOSES.year))
     desc_vi = 'Tuyển %s tại Sol, Tây Hồ, Hà Nội. %s' % (r['name_vi'], og_desc)
     page(open_role_path(r), 'page-role',
-         (esc('%s — Sol, Tây Hồ' % r['name_en']), esc('%s — Sol, Tây Hồ' % r['name_vi'])),
-         (esc(desc_en), esc(desc_vi)), main, og=og_image('jobs'),
-         og_text=(esc(og_title), esc(og_desc)), og_locale=('vi_VN', 'en_GB'),
+         (esc_attr('%s — Sol, Tây Hồ' % r['name_en']), esc_attr('%s — Sol, Tây Hồ' % r['name_vi'])),
+         (esc_attr(desc_en), esc_attr(desc_vi)), main, og=og_image('jobs'),
+         og_text=(esc_attr(og_title), esc_attr(og_desc)), og_locale=('vi_VN', 'en_GB'),
          extra=ROUND_SCRIPT + '\n' + ld,
-         body_attrs=' data-page="role" data-role="%s" data-slug="%s"' % (esc(r['name_en']), r['slug']))
+         body_attrs=' data-page="role" data-role="%s" data-slug="%s"' % (esc_attr(r['name_en']), r['slug']))
 
 
 def build_role(r):
