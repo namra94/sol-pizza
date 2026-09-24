@@ -748,7 +748,7 @@ def build_booking():
 <div class="wrap"><section class="offer booking" id="book" aria-labelledby="book-h">
   <p class="eyebrow">{k1}</p><h2 id="book-h">{book}</h2>
   <p>{booking_p}</p>
-  {widget}<div class="actions"><a class="btn btn-red" href="mailto:{email}">{email_us}</a><a class="btn btn-outline" href="{tel}">{call_us}</a></div>
+  {widget}<dl class="book-contact"><div><dt>{l_phone}</dt><dd>{phone}</dd></div><div><dt>Email</dt><dd>{email}</dd></div></dl>
   <p class="offer-note">{groups}</p>
 </section></div>
 <div class="wrap"><div class="visit-info">
@@ -765,8 +765,9 @@ def build_booking():
                          t('Sol is on the first two floors of No 7, Lane 88 Quang An. We’re opening soon.',
                            'Sol nằm ở hai tầng đầu của tòa nhà số 7, ngõ 88 Quảng An. Chúng tôi sắp khai trương.')),
         k1=t('Reservations', 'Đặt chỗ'), book=BOOK, booking_p=booking_p, widget=widget,
-        email=EMAIL, email_us=t('Email us', 'Gửi email'), tel=PHONE_TEL,
-        call_us=t('Call us', 'Gọi điện'),
+        # Until online booking is live: the number and address as text to copy,
+        # not buttons that open another app (Linh, 24 Sep).
+        l_phone=t('Phone', 'Điện thoại'), email=EMAIL, tel=PHONE_TEL,
         groups=t('Seven or more? Email us and we’ll look after you personally.',
                  'Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn.'),
         l_hours=t('Opening hours', 'Giờ mở cửa'), mon=t('Monday', 'Thứ Hai'),
@@ -787,7 +788,9 @@ def build_booking():
                  'day we open. Call or email to hold a table.',
                  'Số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Thứ Ba đến Chủ Nhật, 17:00 – 23:00, kể từ '
                  'ngày khai trương. Gọi điện hoặc gửi email để giữ bàn.'),
-                main, cur='booking', og=og_image('visit'), extra=SCHEMA)
+                main, cur='booking', og=og_image('visit'),
+                # iOS would turn the booking box's phone number back into a link
+                extra='<meta name="format-detection" content="telephone=no">\n' + SCHEMA)
 
 
 # ==========================================================================

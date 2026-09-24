@@ -45,7 +45,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .eyebrow, .label, .link-sc, .btn, .lang, .nav-links,
 .subnav a span:not([data-l]), .navsheet-label, .navsheet-menu a span:not([data-l]), .navsheet-meta,
 .facts dt, .menu-card-sub, .visit-grid dt, .legend b, .marks, .tag, .gtk-items dt, .role-meta, .footer-cols h2,
-.prose h4, .prose summary, .prose thead th {
+.prose h4, .prose summary, .prose thead th, .book-contact dt {
   /* the text serif, not the heading face: Philosopher's capital I reads as an l
      in capitals ("VI" became "Vl") */
   font-family: var(--serif);

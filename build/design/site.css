@@ -40,6 +40,19 @@ html[lang="vi"] [data-l="en"] { display: none !important; }
 }
 .offer h3 { font-family: var(--display); font-size: var(--fs-h2); line-height: 1.05; color: var(--sol-red); }
 
+/* ------------------------------------------------------------------ booking
+   The booking box (#book): phone and email as plain text to copy, not buttons. */
+.book-contact { margin-top: 26px; }
+.book-contact > div { display: flex; justify-content: center; align-items: baseline; gap: 12px; }
+.book-contact > div + div { margin-top: 6px; }
+.book-contact dt {     /* type: the labels rule in printed-menu.css */
+  min-width: 7.5em;
+  text-align: right;
+  color: var(--sol-red);
+}
+.book-contact dd { min-width: 9.5em; text-align: left; font-size: var(--fs-lead); }
+.book-contact + .offer-note { margin-top: 22px !important; }
+
 /* ------------------------------------------------------------------ long text */
 .prose h2 {
   margin-top: 48px;
