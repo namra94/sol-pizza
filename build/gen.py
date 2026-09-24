@@ -49,16 +49,15 @@ SUN_SPRITE = read(os.path.join(ASSETS, 'suns-sprite.svg')).strip()
 # fonts
 #   Two typefaces (build/design/tokens.css): a display face for headings, a
 #   serif for everything else (small labels are the serif in capitals).
-#   Gryphius MVB: Sol's Adobe Fonts web project, loaded from the kit below on
-#   every page. Adobe Fonts can't be self-hosted: never download, commit or
-#   deploy those files. (The kit also holds Gryphius MVB Small Caps and Plunct;
-#   the site no longer uses them.)
-#   BN Arora: the web licence is NOT confirmed, so headings use Philosopher.
-#   Once it is, build/README.md ("BN Arora") says what to change.
+#   Body text: EB Garamond in both languages (decided 24 Sep 2026; Gryphius MVB
+#   read badly on screen). Nothing uses Gryphius MVB.
+#   Adobe Fonts: Sol's web project, kit umo0non, linked on every page. Adobe
+#   Fonts can't be self-hosted: never download, commit or deploy those files.
+#   BN Arora: see build/README.md ("BN Arora").
 #   Free faces (always loaded; they carry every Vietnamese letter): npm @fontsource.
 # --------------------------------------------------------------------------
 TYPEKIT_KIT  = 'https://use.typekit.net/umo0non.css'
-BRAND_FONTS  = 'serif'             # 'display serif' once BN Arora is licensed
+BRAND_FONTS  = ''                  # brand faces switched on, see tokens.css
 FONT_PLAN = [
     # (npm package under @fontsource, CSS family, [(weight, style)])
     ('philosopher', 'Philosopher', [(400, 'normal')]),

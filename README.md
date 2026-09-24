@@ -101,14 +101,15 @@ Two typefaces and seven sizes, set in `build/design/tokens.css`: a display face
 for headings and a serif for everything else. Small labels are the serif in
 capitals.
 
-- **Gryphius MVB** (everything that isn't a heading) comes from Sol's Adobe
-  Fonts web project, kit `umo0non`, linked on every page. It can't be
-  self-hosted, so never download or commit it. The kit also holds Gryphius MVB
-  Small Caps and Plunct, which the site no longer uses; removing them from the
-  web project makes the kit a little lighter. Keep the Creative
-  Cloud plan behind the web project active; if it lapses the site falls back to
-  the free fonts. In Adobe Fonts, set the web project's font display to
-  **swap**.
+- **EB Garamond** (everything that isn't a heading, in both languages) is one
+  of the free fonts below. It replaced Gryphius MVB on 24 Sep 2026, which read
+  badly on screen and has no Vietnamese letters; nothing uses Gryphius now.
+- **Adobe Fonts**: Sol's web project, kit `umo0non`, is linked on every page.
+  It can't be self-hosted, so never download or commit its fonts. The kit also
+  holds Gryphius MVB and Gryphius MVB Small Caps, which the site doesn't use;
+  removing them from the web project makes the kit a little lighter. Keep the
+  Creative Cloud plan behind the web project active. In Adobe Fonts, set the
+  web project's font display to **swap**.
 - **BN Arora** (headings) is waiting on confirmation that its licence covers
   the web. Until then headings use Philosopher. `build/README.md` says what to
   change once it's confirmed.

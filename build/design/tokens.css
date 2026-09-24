@@ -5,14 +5,15 @@
    two typefaces and seven sizes.
      --display  headings only
      --serif    everything else: text, menu items, and the small labels in capitals
-   The small caps faces (Gryphius MVB Small Caps, Alegreya SC) and the hand face
-   (Plunct) are no longer used.
+   The small caps faces (Gryphius MVB Small Caps, Alegreya SC) are not used.
+
+   BODY TEXT (24 Sep 2026): EB Garamond in both languages. Gryphius MVB read
+   badly on screen, and it has no Vietnamese letters anyway, so --serif is
+   EB Garamond everywhere, for running copy and the labels alike.
 
    FONTS: the brand faces are opt-in. <html data-brand-fonts="…"> lists the ones
    loaded on the page:
-     serif   → Gryphius MVB   (Sol's Adobe Fonts kit umo0non)
-     display → BN Arora       (self-hosted, only once its web licence is confirmed)
-   Live today: data-brand-fonts="serif".
+     display → BN Arora       (self-hosted; not yet switched on)
    Anything not listed renders in the free, Vietnamese-complete faces below
    (Philosopher, EB Garamond — on npm as @fontsource packages).
    Vietnamese pages (<html lang="vi">, matched with :lang(vi)) always use the free
@@ -58,10 +59,6 @@
 html[data-brand-fonts~="display"]:not(:lang(vi)) {
   --display: "BN Arora", "Philosopher", Georgia, serif;
   --ds: 1;
-}
-html[data-brand-fonts~="serif"]:not(:lang(vi)) {
-  /* family name as the Adobe Fonts kit (use.typekit.net/umo0non.css) defines it */
-  --serif: "gryphius-mvb", "EB Garamond", Georgia, serif;
 }
 
 @media (max-width: 760.98px) {
