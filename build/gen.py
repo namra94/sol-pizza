@@ -639,7 +639,8 @@ def build_bar():
 # ==========================================================================
 # ABOUT  /about/   the restaurant introduction (/story/ redirects here)
 # Copy that was on home and /story/, in this order: "What Sol is" (its heading
-# is the page title), the three boxes, the pull quote, then the story.
+# is the page title), the three boxes, the home pull quote, then the Story page
+# as it was, under one heading.
 # ==========================================================================
 def prose_section(sid, sun_n, heading, paras, style='', level=2, cls=''):
     return ('<section class="prose-section wrap" aria-labelledby="%s"%s><header class="section-head">%s'
@@ -727,11 +728,17 @@ def build_about():
                 'Trung tâm của tất cả là chiếc lò củi Pavesi, chế tác tại Ý và đưa về Hà Nội. Mọi thứ '
                 'còn lại trong bếp đều được sắp xếp quanh nó.'),
         ], level=3, cls=' has-envoy'),
+        '<figure class="pullquote wrap">%s<blockquote><p>%s</p></blockquote>%s</figure>' % (
+            sun(4),
+            t('A restaurant is a room, a team and a menu. Get the room right and the other two get easier.',
+              'Một nhà hàng là một không gian, một đội ngũ và một thực đơn. Làm đúng không gian, hai '
+              'điều còn lại sẽ dễ hơn.'),
+            sun(7)),
         # CONFIRM: ships without Long; Arman to say whether to add "and Long runs the floor."
         # HIDE until supplied: a few lines on Ngọc.
         prose_section('s-team', 8, t('The team', 'Đội ngũ'), [
             '<p style="text-align:center">%s</p>' % t('Ngọc runs the kitchen.', 'Ngọc phụ trách bếp.'),
-        ], level=3),
+        ], style=' style="margin-top:0"', level=3),
         '<div class="wrap"><section class="offer" aria-labelledby="s-join"><h3 id="s-join">%s</h3><p>%s</p>'
         '<a class="btn btn-red" href="/jobs/">%s</a></section></div>' % (
             t('Build it with us', 'Cùng chúng tôi dựng nên Sol'),

@@ -42,6 +42,9 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
    The three boxes and the story, moved from home and /story/. */
 .page-about .page-lead + .page-lead { margin-top: 18px; }
 .trio { background: var(--surface-raised); }
+@media (max-width: 760.98px) {
+  .trio > li { padding-left: 16px; padding-right: 16px; }   /* a white panel needs its own padding */
+}
 .trio h2 { font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
 .story .section-intro { margin-top: 0; }
 .section-head h3 {

@@ -6,6 +6,8 @@
 /story  /about/   301
 /visit/ /booking/ 301
 /visit  /booking/ 301
+/story/index.html /about/   301
+/visit/index.html /booking/ 301
 
 # Wine moved under Menu (Printed menu build)
 /wine /menu/wine/ 301
@@ -14,7 +16,9 @@
 # Older addresses, kept so no shared link breaks
 /careers      /jobs/          301
 /book         /booking/#book  301
+/book/        /booking/#book  301
 /reservations /booking/#book  301
+/reservations/ /booking/#book 301
 /menu.html    /menu/          301
 /wines        /menu/wine/     301
 /wine-list    /menu/wine/     301
