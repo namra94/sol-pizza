@@ -861,10 +861,10 @@ ROLES = [
 # Promises nothing the opening-team job descriptions don't (checked 24 Sep 2026):
 # the service charge starts once we open, and WSET funding is in none of them.
 BENEFITS = [
-    ('A share of the 5% service charge and the tip pool, paid quarterly, starting once we open, '
-     'for floor and kitchen roles.',
-     'Một phần trong 5% phí phục vụ và quỹ tip của nhà hàng, trả hàng quý, bắt đầu khi nhà hàng mở '
-     'cửa, cho các vị trí phục vụ và bếp.'),
+    ('A share of the 5% service charge and the tip pool for floor and kitchen roles, paid quarterly, '
+     'starting once we open.',
+     'Một phần trong 5% phí phục vụ và quỹ tip cho các vị trí phục vụ và bếp, trả hàng quý, bắt đầu '
+     'khi nhà hàng mở cửa.'),
     ('A 13th-month bonus based on company KPIs, and a salary review every year based on performance.',
      'Thưởng tháng 13 theo KPI công ty, và xét tăng lương hàng năm theo hiệu quả công việc.'),
     ('Full statutory insurance — BHXH, BHYT and BHTN — from the day your labour contract starts.',
@@ -1225,9 +1225,9 @@ def build_open_role(r):
     total = [b + s for b, s in zip(r['base'], SERVICE)]
     # Estimated service charge and the typical total, beside the base salary
     added = {
-        'en': [('Service charge &amp; tips', 'est. %s VND per month, starting once we open' % band_en(SERVICE)),
+        'en': [('Service charge &amp; tips', 'Est. %s VND per month, starting once we open' % band_en(SERVICE)),
                ('Typical monthly total', '%s VND' % band_en(total))],
-        'vi': [('Phí phục vụ &amp; tip', 'ước tính %s VNĐ/tháng, bắt đầu khi nhà hàng mở cửa' % band_vi(SERVICE)),
+        'vi': [('Phí phục vụ &amp; tip', 'Ước tính %s VNĐ/tháng, bắt đầu khi nhà hàng mở cửa' % band_vi(SERVICE)),
                ('Tổng thu nhập hằng tháng (ước tính)', '%s VNĐ' % band_vi(total))],
     }
 

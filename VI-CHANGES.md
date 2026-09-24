@@ -15,10 +15,11 @@ Not listed line by line, because they are the approved text from the hiring brie
 
 | Page | English | Old VI | New VI |
 | --- | --- | --- | --- |
-| /jobs/ | benefit: A share of the 5% service charge and the tip pool, paid quarterly, starting once we open, for floor and kitchen roles. [was “…paid quarterly, for floor and kitchen roles.”] | Một phần trong 5% phí phục vụ và quỹ tip của nhà hàng, trả hàng quý, cho các vị trí phục vụ và bếp. | Một phần trong 5% phí phục vụ và quỹ tip của nhà hàng, trả hàng quý, bắt đầu khi nhà hàng mở cửa, cho các vị trí phục vụ và bếp. |
+| /jobs/ | benefit: A share of the 5% service charge and the tip pool for floor and kitchen roles, paid quarterly, starting once we open. [was “A share of the 5% service charge and the tip pool, paid quarterly, for floor and kitchen roles.”] | Một phần trong 5% phí phục vụ và quỹ tip của nhà hàng, trả hàng quý, cho các vị trí phục vụ và bếp. | Một phần trong 5% phí phục vụ và quỹ tip cho các vị trí phục vụ và bếp, trả hàng quý, bắt đầu khi nhà hàng mở cửa. |
 | /jobs/ | card: Base salary 9,000,000–10,000,000 VND gross a month | — | Lương cơ bản 9.000.000 – 10.000.000 VNĐ gross/tháng |
 | /jobs/ | card: the Vietnamese title under the English one (English view only), e.g. Lễ tân nhà hàng | — | the role’s Vietnamese title without “(Host)” and the like |
-| role pages | fact: Service charge & tips · est. 2,000,000 – 4,000,000 VND per month, starting once we open | — | Phí phục vụ & tip · ước tính 2.000.000 – 4.000.000 VNĐ/tháng, bắt đầu khi nhà hàng mở cửa |
+| /jobs/ | card links, for screen readers only: Read the role: Host · Apply: Host | — | Xem mô tả công việc: Lễ tân nhà hàng (Host) · Ứng tuyển: Lễ tân nhà hàng (Host) (the role’s Vietnamese title after the colon) |
+| role pages | fact: Service charge & tips · Est. 2,000,000 – 4,000,000 VND per month, starting once we open | — | Phí phục vụ & tip · Ước tính 2.000.000 – 4.000.000 VNĐ/tháng, bắt đầu khi nhà hàng mở cửa |
 | role pages | fact: Typical monthly total · 11,000,000 – 14,000,000 VND | — | Tổng thu nhập hằng tháng (ước tính) · 11.000.000 – 14.000.000 VNĐ |
 | role pages | Read the full job description (the fold) | — | Xem toàn bộ mô tả công việc |
 | role pages | See open roles (button at the end) | — | Xem vị trí tuyển dụng (as on /about/) |
@@ -28,7 +29,7 @@ Not listed line by line, because they are the approved text from the hiring brie
 
 No longer on the site:
 
-- /jobs/: the Host card (“Khu phục vụ · Toàn thời gian”, “Lễ tân (Host)”, its description, its pay line and “Ứng tuyển: gửi email tới jobs@sol.pizza, tiêu đề ghi “Host””), now the Host card and page above.
+- /jobs/: the Host card (“Khu phục vụ · Toàn thời gian”, “Lễ tân (Host)”, its description, its pay line and “Ứng tuyển: gửi email tới jobs@sol.pizza, tiêu đề ghi “Host””), now the Host card and page above. The page’s meta description, unchanged, still says “Chúng tôi đang tuyển Lễ tân (Host) và đội ngũ khai trương…”.
 - /jobs/: the “Opening team” card (“Phục vụ và bếp”, “Đội ngũ khai trương” and its description, which listed baristas).
 - /jobs/: the benefit “Được tài trợ chứng chỉ WSET Level 3 hoặc Certified Sommelier sau 12 tháng, cho đội phục vụ.” None of the six job descriptions offers it.
 
