@@ -7,6 +7,19 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Website feedback, 24 Sep 2026: tabs
+
+Story and Visit are now the About and Booking tabs (`/about/`, `/booking/`); their lines below are unchanged and moved with them, as did the home page's “What Sol is”, three boxes and pull quote (now on `/about/`). New lines only:
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| every page | tab: About | — (was “Story / Câu chuyện”) | Giới thiệu |
+| every page | tab: Menu | Thực đơn | Thực đơn |
+| every page | tab: Booking | — (was “Visit / Ghé thăm”) | Đặt bàn |
+| /about/ | page title: About — Sol, Tây Hồ | — | Giới thiệu — Sol, Tây Hồ |
+| /booking/ | page title: Booking — Sol, Tây Hồ | Ghé thăm và đặt bàn — Sol, Tây Hồ (for “Visit and book — Sol, Tây Hồ”) | Đặt bàn — Sol, Tây Hồ |
+| /404 | button: Booking | Ghé thăm (for “Visit”) | Đặt bàn |
+
 ## Every page
 
 | Page | English | Old VI | New VI |

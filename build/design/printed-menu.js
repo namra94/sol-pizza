@@ -92,7 +92,7 @@
       else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
     });
 
-    // Following a link (including /visit/#book on the same page) closes the sheet.
+    // Following a link (including one to the page it's on) closes the sheet.
     sheet.querySelectorAll('a[href]').forEach(function (a) {
       a.addEventListener('click', function () { closeSheet(false); });
     });
