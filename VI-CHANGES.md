@@ -7,6 +7,32 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Jobs: the opening team, 24 Sep 2026
+
+The six opening-team roles now have a card each on `/jobs/` and a page each at `/jobs/<slug>/` (`host`, `server`, `bartender`, `pizzaiolo`, `line-cook`, `kitchen-porter`), in both languages.
+
+Not listed line by line, because they are the approved text from the hiring brief: the Vietnamese job descriptions on the six pages (`build/jobs/<slug>.md`), the card lines and apply questions (`build/jobs-data.json`), and the labels the brief gave. Those labels are “Bộ phận phục vụ”, “Bếp”, “+ phí phục vụ & tip ước tính 2.000.000 – 4.000.000 VNĐ/tháng”, “Số lượng: 2”, “Hạn nộp: Chủ nhật 04/10 · Bắt đầu: thứ Hai 12/10”, “Xem mô tả công việc”, “Ứng tuyển”, the closed note “Đợt tuyển dụng này đã đóng vào Chủ nhật 04/10/2026. Cảm ơn tất cả các bạn đã ứng tuyển.”, and the Apply email (“Họ tên: / Số điện thoại / Zalo: / … / Câu trả lời của bạn: / (Vui lòng đính kèm CV.)”). New and changed lines that aren’t from the brief:
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /jobs/ | benefit: A share of the 5% service charge and the tip pool for floor and kitchen roles, paid quarterly, starting once we open. [was “A share of the 5% service charge and the tip pool, paid quarterly, for floor and kitchen roles.”] | Một phần trong 5% phí phục vụ và quỹ tip của nhà hàng, trả hàng quý, cho các vị trí phục vụ và bếp. | Một phần trong 5% phí phục vụ và quỹ tip cho các vị trí phục vụ và bếp, trả hàng quý, bắt đầu khi nhà hàng mở cửa. |
+| /jobs/ | card: Base salary 9,000,000–10,000,000 VND gross a month | — | Lương cơ bản 9.000.000 – 10.000.000 VNĐ gross/tháng |
+| /jobs/ | card: the Vietnamese title under the English one (English view only), e.g. Lễ tân nhà hàng | — | the role’s Vietnamese title without “(Host)” and the like |
+| /jobs/ | card links, for screen readers only: Read the role: Host · Apply: Host | — | Xem mô tả công việc: Lễ tân nhà hàng (Host) · Ứng tuyển: Lễ tân nhà hàng (Host) (the role’s Vietnamese title after the colon) |
+| role pages | fact: Service charge & tips · Est. 2,000,000 – 4,000,000 VND per month, starting once we open | — | Phí phục vụ & tip · Ước tính 2.000.000 – 4.000.000 VNĐ/tháng, bắt đầu khi nhà hàng mở cửa |
+| role pages | fact: Typical monthly total · 11,000,000 – 14,000,000 VND | — | Tổng thu nhập hằng tháng (ước tính) · 11.000.000 – 14.000.000 VNĐ |
+| role pages | Read the full job description (the fold) | — | Xem toàn bộ mô tả công việc |
+| role pages | See open roles (button at the end) | — | Xem vị trí tuyển dụng (as on /about/) |
+| role pages | page title: Pizzaiolo — Sol, Tây Hồ | — | Đầu bếp Pizza (Pizzaiolo) — Sol, Tây Hồ (the role’s Vietnamese title) |
+| role pages | meta description: Pizzaiolo at Sol, Tây Hồ, Hanoi. Base salary 11,000,000–14,000,000 VND a month, plus service charge and tips, est. 2,000,000–4,000,000 VND a month. Applications close Sunday 4 October 2026. | — | Tuyển Đầu bếp Pizza (Pizzaiolo) tại Sol, Tây Hồ, Hà Nội. Lương cơ bản 11–14 triệu + phí phục vụ ước tính 2–4 triệu/tháng. Hạn nộp 04/10/2026. |
+| role pages | share card (Vietnamese only, the brief’s pattern) | — | Tuyển Pizzaiolo — Sol, Tây Hồ · Lương cơ bản 11–14 triệu + phí phục vụ ước tính 2–4 triệu/tháng. Hạn nộp 04/10/2026. |
+
+No longer on the site:
+
+- /jobs/: the Host card (“Khu phục vụ · Toàn thời gian”, “Lễ tân (Host)”, its description, its pay line and “Ứng tuyển: gửi email tới jobs@sol.pizza, tiêu đề ghi “Host””), now the Host card and page above. The page’s meta description, unchanged, still says “Chúng tôi đang tuyển Lễ tân (Host) và đội ngũ khai trương…”.
+- /jobs/: the “Opening team” card (“Phục vụ và bếp”, “Đội ngũ khai trương” and its description, which listed baristas).
+- /jobs/: the benefit “Được tài trợ chứng chỉ WSET Level 3 hoặc Certified Sommelier sau 12 tháng, cho đội phục vụ.” None of the six job descriptions offers it.
+
 ## Website feedback, 24 Sep 2026: tabs and the booking box
 
 Story and Visit are now the About and Booking tabs (`/about/`, `/booking/`). Their lines in the /story/ and /visit/ tables below moved with them unchanged, and so did the home page's “What Sol is”, three boxes and pull quote (now on `/about/`). The old page titles and the lines listed under “No longer on the site” are gone. New lines:
@@ -236,4 +262,4 @@ The brief says dish, wine and drink names stay as written in both languages. The
 1. **Names.** Three Vietnamese reviewers suggested bringing back the old Vietnamese for the generic items in the table above (still water, lemonade, ginger beer, which can read as a beer, marinated olives and so on) and keeping true names (Negroni, Gricia, Dr Pepper, the wines) as written. Say which you prefer.
 2. **Service charge.** The menus say “phí dịch vụ” (old text); /jobs/ says “phí phục vụ” (the benefits list, and now the Host pay line). One term site-wide?
 3. **Spelling.** Tone marks follow the older style throughout (tòa, thỏa, Cộng hòa); the three “toà” in this build were changed to “tòa” to match.
-4. **Role pages.** The three job descriptions stay in English, with one Vietnamese line saying so.
+4. **Role pages.** The three filled job descriptions stay in English, with one Vietnamese line saying so. The six opening-team pages are fully in Vietnamese.
