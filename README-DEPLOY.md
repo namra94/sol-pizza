@@ -19,10 +19,17 @@ Connected. Workers → sol-pizza → Settings → Builds:
 | Production branch    | `main`                             |
 | Build command        | `npm run build`                    |
 | Deploy command       | `npx wrangler deploy`              |
+| Preview command      | `npx wrangler preview` (other branches) |
 | Root directory       | `/`                                |
 
 The build image has Node 24 and Python 3.13, which is all the build needs. Each
 build shows up as a "Workers Builds: sol-pizza" check on the commit in GitHub.
+
+A push to any other branch runs a **preview build**: the same build, then
+`npx wrangler preview`, which puts that branch on its own Preview URL (posted on
+the pull request) and leaves sol.pizza alone. It needs the `"previews": {}` block
+in `wrangler.jsonc`; without it every preview build fails. Preview URLs are
+public unless Cloudflare Access protects them.
 
 ## By hand
 
