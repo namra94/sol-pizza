@@ -26,8 +26,10 @@ descendant-span selectors skip `[data-l]` (the language spans) and
 `.filled li span + span` is now a child selector. The website feedback of
 24 Sep 2026 changed them too: EB Garamond for body text, BN Arora and Plunct
 switched on, the design-system tokens (`--surface-raised`, `--ink-on-brand`,
-`--ink-on-sun`, `--focus`) and a 2px focus ring with a 2px offset; the header
-comment in each file lists what changed. Don't restyle them otherwise;
+`--ink-on-sun`, `--focus`) and a 2px focus ring with a 2px offset, and the
+footer column headings in EB Garamond SemiBold (600, the one extra weight in
+`FONT_PLAN`; `<strong>` text uses it too); the header comment in each file lists
+what changed. Don't restyle them otherwise;
 put anything the design doesn't cover in `design/site.css`.
 `design/printed-menu.js` is the delivered header script with the language code
 merged into this repo's markup.

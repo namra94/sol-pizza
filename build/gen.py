@@ -69,7 +69,8 @@ BN_ARORA_URL = '/assets/fonts/bn-arora-400-normal.woff2'
 FONT_PLAN = [
     # (npm package under @fontsource, CSS family, [(weight, style)])
     ('philosopher', 'Philosopher', [(400, 'normal')]),
-    ('eb-garamond',  'EB Garamond', [(400, 'normal'), (400, 'italic')]),
+    ('eb-garamond',  'EB Garamond', [(400, 'normal'), (400, 'italic'),
+                                     (600, 'normal')]),   # 600: the footer column headings (printed-menu.css)
 ]
 FONT_SUBSETS = ['latin', 'latin-ext', 'vietnamese']
 # Above the fold on every page: BN Arora (headings) and EB Garamond (text).
@@ -724,10 +725,10 @@ def build_about():
                             'Đóng cửa là quyết định khó khăn hơn, và là quyết định đúng.'),
             # HIDE until Arman supplies it: one line on what closing meant to him and the team.
         ], level=3),
-        # The Solar Envoy, once on the page: small, to one side of the text about the
-        # building and its oven (site.css keeps his clear space).
+        # The Solar Envoy, once on the page: large and faint behind the text about the
+        # building and its oven (site.css).
         prose_section('s-the-building', 2, t('The building', 'Tòa nhà'), [
-            '<img class="envoy" src="/assets/envoy-at-the-oven.svg" alt="" width="64" height="96" loading="lazy">',
+            '<img class="envoy" src="/assets/envoy-at-the-oven.svg" alt="" width="150" height="225" loading="lazy">',
             '<p>%s</p>' % t(
                 'Sol takes the first two floors of a building on Quang An — under 200 square metres, '
                 'small enough to run properly and big enough for what the old place couldn’t do.',
