@@ -92,7 +92,8 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
 }
 
 /* ------------------------------------------------------------------ booking
-   The booking box (#book): phone and email as plain text to copy, not buttons. */
+   The booking box (#book): phone, email and Instagram as plain text to copy,
+   not buttons. */
 .book-contact { margin-top: 26px; }
 .book-contact > div { display: flex; justify-content: center; align-items: baseline; gap: 12px; }
 .book-contact > div + div { margin-top: 6px; }

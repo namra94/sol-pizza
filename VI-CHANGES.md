@@ -46,6 +46,7 @@ Story and Visit are now the About and Booking tabs (`/about/`, `/booking/`). The
 | /404 | button: Booking | Ghé thăm (for “Visit”) | Đặt bàn |
 | /booking/ | Phone (booking box; replaces the “Email us” and “Call us” buttons) | Gửi email, Gọi điện (the buttons) | Điện thoại |
 | /booking/ | Email (booking box) | — | Email |
+| /booking/ | Instagram (booking box: @solhanoi; added 26 Sep) | — | Instagram (unchanged) |
 
 No longer on the site (the lines stay in the tables below for the record):
 

@@ -87,6 +87,7 @@ EMAIL      = 'hello@sol.pizza'
 MAPS_URL   = ('https://www.google.com/maps/search/?api=1&amp;query=Sol+Hanoi%2C+7+Ng%C3%B5+88+'
               'Qu%E1%BA%A3ng+An%2C+T%C3%A2y+H%E1%BB%93%2C+H%C3%A0+N%E1%BB%99i')
 INSTAGRAM  = 'https://www.instagram.com/solhanoi/'
+INSTA_HANDLE = '@solhanoi'
 
 # ResDiary: paste the widget URL here (ResDiary > Promote > Widget configurator >
 # Embed Code) and rebuild. The Booking page's booking box then shows the widget.
@@ -792,7 +793,7 @@ def build_booking():
 <div class="wrap"><section class="offer booking" id="book" aria-labelledby="book-h">
   <p class="eyebrow">{k1}</p><h2 id="book-h">{book}</h2>
   <p>{booking_p}</p>
-  {widget}<dl class="book-contact"><div><dt>{l_phone}</dt><dd>{phone}</dd></div><div><dt>Email</dt><dd>{email}</dd></div></dl>
+  {widget}<dl class="book-contact"><div><dt>{l_phone}</dt><dd>{phone}</dd></div><div><dt>Email</dt><dd>{email}</dd></div><div><dt>Instagram</dt><dd>{insta_h}</dd></div></dl>
   <p class="offer-note">{groups}</p>
 </section></div>
 <div class="wrap"><div class="visit-info">
@@ -810,8 +811,9 @@ def build_booking():
                            'Sol nằm ở hai tầng đầu của tòa nhà số 7, ngõ 88 Quảng An. Chúng tôi sắp khai trương.')),
         k1=t('Reservations', 'Đặt chỗ'), book=BOOK, booking_p=booking_p, widget=widget,
         # Until online booking is live: the number and address as text to copy,
-        # not buttons that open another app (Linh, 24 Sep).
-        l_phone=t('Phone', 'Điện thoại'), email=EMAIL, tel=PHONE_TEL,
+        # not buttons that open another app (Linh, 23 Sep). The Instagram handle as
+        # text too, for guests who'd rather send a message (Anh Hoang, 24 Sep).
+        l_phone=t('Phone', 'Điện thoại'), email=EMAIL, tel=PHONE_TEL, insta_h=INSTA_HANDLE,
         groups=t('Seven or more? Email us and we’ll look after you personally.',
                  'Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn.'),
         l_hours=t('Opening hours', 'Giờ mở cửa'), mon=t('Monday', 'Thứ Hai'),
