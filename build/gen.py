@@ -69,7 +69,8 @@ BN_ARORA_URL = '/assets/fonts/bn-arora-400-normal.woff2'
 FONT_PLAN = [
     # (npm package under @fontsource, CSS family, [(weight, style)])
     ('philosopher', 'Philosopher', [(400, 'normal')]),
-    ('eb-garamond',  'EB Garamond', [(400, 'normal'), (400, 'italic')]),
+    ('eb-garamond',  'EB Garamond', [(400, 'normal'), (400, 'italic'),
+                                     (600, 'normal')]),   # 600: the footer column headings (printed-menu.css)
 ]
 FONT_SUBSETS = ['latin', 'latin-ext', 'vietnamese']
 # Above the fold on every page: BN Arora (headings) and EB Garamond (text).
@@ -86,6 +87,7 @@ EMAIL      = 'hello@sol.pizza'
 MAPS_URL   = ('https://www.google.com/maps/search/?api=1&amp;query=Sol+Hanoi%2C+7+Ng%C3%B5+88+'
               'Qu%E1%BA%A3ng+An%2C+T%C3%A2y+H%E1%BB%93%2C+H%C3%A0+N%E1%BB%99i')
 INSTAGRAM  = 'https://www.instagram.com/solhanoi/'
+INSTA_HANDLE = '@solhanoi'
 
 # ResDiary: paste the widget URL here (ResDiary > Promote > Widget configurator >
 # Embed Code) and rebuild. The Booking page's booking box then shows the widget.
@@ -724,10 +726,10 @@ def build_about():
                             'Đóng cửa là quyết định khó khăn hơn, và là quyết định đúng.'),
             # HIDE until Arman supplies it: one line on what closing meant to him and the team.
         ], level=3),
-        # The Solar Envoy, once on the page: small, to one side of the text about the
-        # building and its oven (site.css keeps his clear space).
+        # The Solar Envoy, once on the page: large and faint behind the text about the
+        # building and its oven (site.css).
         prose_section('s-the-building', 2, t('The building', 'Tòa nhà'), [
-            '<img class="envoy" src="/assets/envoy-at-the-oven.svg" alt="" width="64" height="96" loading="lazy">',
+            '<img class="envoy" src="/assets/envoy-at-the-oven.svg" alt="" width="150" height="225" loading="lazy">',
             '<p>%s</p>' % t(
                 'Sol takes the first two floors of a building on Quang An — under 200 square metres, '
                 'small enough to run properly and big enough for what the old place couldn’t do.',
@@ -791,7 +793,7 @@ def build_booking():
 <div class="wrap"><section class="offer booking" id="book" aria-labelledby="book-h">
   <p class="eyebrow">{k1}</p><h2 id="book-h">{book}</h2>
   <p>{booking_p}</p>
-  {widget}<dl class="book-contact"><div><dt>{l_phone}</dt><dd>{phone}</dd></div><div><dt>Email</dt><dd>{email}</dd></div></dl>
+  {widget}<dl class="book-contact"><div><dt>{l_phone}</dt><dd>{phone}</dd></div><div><dt>Email</dt><dd>{email}</dd></div><div><dt>Instagram</dt><dd>{insta_h}</dd></div></dl>
   <p class="offer-note">{groups}</p>
 </section></div>
 <div class="wrap"><div class="visit-info">
@@ -809,8 +811,9 @@ def build_booking():
                            'Sol nằm ở hai tầng đầu của tòa nhà số 7, ngõ 88 Quảng An. Chúng tôi sắp khai trương.')),
         k1=t('Reservations', 'Đặt chỗ'), book=BOOK, booking_p=booking_p, widget=widget,
         # Until online booking is live: the number and address as text to copy,
-        # not buttons that open another app (Linh, 24 Sep).
-        l_phone=t('Phone', 'Điện thoại'), email=EMAIL, tel=PHONE_TEL,
+        # not buttons that open another app (Linh, 23 Sep). The Instagram handle as
+        # text too, for guests who'd rather send a message (Anh Hoang, 24 Sep).
+        l_phone=t('Phone', 'Điện thoại'), email=EMAIL, tel=PHONE_TEL, insta_h=INSTA_HANDLE,
         groups=t('Seven or more? Email us and we’ll look after you personally.',
                  'Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn.'),
         l_hours=t('Opening hours', 'Giờ mở cửa'), mon=t('Monday', 'Thứ Hai'),

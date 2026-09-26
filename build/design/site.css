@@ -55,10 +55,15 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
   color: var(--sol-red);
 }
 .offer h3 { font-family: var(--display); font-size: var(--fs-h2); line-height: 1.05; color: var(--sol-red); }
+/* "Build it with us": no rules, a plain centred call to action (24 Sep feedback:
+   too many lines above the footer). */
+.page-about .offer { border-top: 0; border-bottom: 0; }
+.page-about .offer::before, .page-about .offer::after { content: none; }
 
 /* ------------------------------------------------------------------ characters
    Fixed-colour SVGs, placed as supplied: never recoloured or stretched, and only
-   on the cream page (never on red or wood brown).
+   on the cream page (never on red or wood brown). The one exception: the Envoy
+   on /about/ is faint (8% opacity) behind the text, Arman's call on 25 Sep 2026.
    The food characters sit beside the title of the page they show (Food: the
    tomatoes, Wine: the grape), 32–96px. An empty box as wide as the character on
    the other side keeps the title centred. */
@@ -67,16 +72,17 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
 .title-art h1 { min-width: 0; }
 .title-art img { flex: none; width: var(--art-w); height: auto; margin-block: 8px; }
 
-/* The Solar Envoy, once on /about/: small (96px tall), to one side of the text
-   about the building and its oven, with clear space around him wider than his
-   head. */
-.has-envoy { position: relative; }
-.has-envoy::after { content: ""; display: block; clear: both; }
-.has-envoy .envoy { position: absolute; top: 4px; right: calc(100% + 56px); width: 64px; height: 96px; }
-
-/* below 960px the margin is too narrow for him and his clear space */
-@media (max-width: 960px) {
-  .has-envoy .envoy { position: static; float: right; width: 48px; height: 72px; margin: 4px 0 28px 40px; }
+/* The Solar Envoy, once on /about/: large and faint behind the text about the
+   building and its oven (24 Sep feedback: blend him into the page), clear of the
+   heading. Body text over him is 9.4:1 (measured). */
+.has-envoy { position: relative; isolation: isolate; }
+.has-envoy .envoy {
+  position: absolute; z-index: -1; left: 50%; top: 50%;
+  width: 150px; height: 225px; transform: translate(-50%, -38%);
+  opacity: .08; pointer-events: none;
+}
+@media (max-width: 760.98px) {
+  .has-envoy .envoy { width: 140px; height: 210px; }
 }
 /* phones: the character sits above the title, so the title keeps the full width and stays centred */
 @media (max-width: 760.98px) {
@@ -86,7 +92,8 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
 }
 
 /* ------------------------------------------------------------------ booking
-   The booking box (#book): phone and email as plain text to copy, not buttons. */
+   The booking box (#book): phone, email and Instagram as plain text to copy,
+   not buttons. */
 .book-contact { margin-top: 26px; }
 .book-contact > div { display: flex; justify-content: center; align-items: baseline; gap: 12px; }
 .book-contact > div + div { margin-top: 6px; }

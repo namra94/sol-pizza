@@ -8,11 +8,13 @@
    Type, after the first review (23 Sep 2026): two typefaces and seven sizes.
    Headings are the display face; everything else is the text serif. Every
    small label shares one style (the "labels" rule below): the serif in
-   capitals, not small caps. Sizes come from the --fs-* tokens in tokens.css.
+   capitals, not small caps; the footer column headings are the one exception,
+   in SemiBold. Sizes come from the --fs-* tokens in tokens.css.
    Website feedback (24 Sep 2026): the focus ring is 2px in --focus with a 2px
    offset; the buttons take the --ink-on-* tokens; .hand takes --hand (Plunct
    on English pages); the three boxes have no illustrations (.trio-art is
-   gone); .book-contact dt joins the labels rule. */
+   gone); .book-contact dt joins the labels rule; the footer column headings
+   are EB Garamond SemiBold (600), the one 600 weight on the site. */
 
 /* ------------------------------------------------------------------ base */
 *, *::before, *::after { box-sizing: border-box; }
@@ -436,7 +438,7 @@ html.sheet-open { overflow: hidden; }
 .footer-logo { display: inline-block; }
 .footer-logo img { height: 32px; width: auto; }
 .footer-cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; margin-top: 40px; }
-.footer-cols h2 { margin-bottom: 10px; color: var(--sol-red); }
+.footer-cols h2 { margin-bottom: 10px; font-weight: 600; color: var(--sol-red); }   /* the labels style in SemiBold */
 .footer-cols p, .footer-cols li { font-size: var(--fs-small); line-height: 1.6; }
 .footer-cols a:hover { color: var(--sol-red); }
 .legal { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line); font-size: var(--fs-small); color: var(--ink-muted); }
