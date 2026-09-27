@@ -7,6 +7,20 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Public site: home page and jobs, 27 Sep 2026
+
+Until the rest of the site is ready, sol.pizza shows the home page and the jobs section only (`/jobs/`, the role pages, `/privacy/`). About, Menu and Booking are unchanged and stay on the full-site preview (https://full-site-sol-pizza.polarized-jar.workers.dev), which still shows every page and line as before. On sol.pizza, these lines are new or in a new place. Only “Trang chủ” is new text; the others are already on the site.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| every page | header tab: Work with us (the only tab; also the only link in the mobile menu) | — (the tabs were Giới thiệu · Thực đơn · Đặt bàn) | Tuyển dụng (as in the footer) |
+| / | red button: See open roles (replaces “Book a table”) | Đặt bàn | Xem vị trí tuyển dụng (as on /about/ and the role pages) |
+| / | outline button: @solhanoi on Instagram (replaces “See the menu”) | Xem thực đơn | @solhanoi trên Instagram (as in the footer) |
+| /404 | red button: Home (replaces “Menu”) | Thực đơn | Trang chủ |
+| /404 | outline button: See open roles (replaces “Booking”) | Đặt bàn | Xem vị trí tuyển dụng |
+
+Not on sol.pizza for now (still on the full-site preview, unchanged): the header tabs “Giới thiệu”, “Thực đơn”, “Đặt bàn” and the Food / Wine / Bar tabs under Thực đơn; the same three links in the footer’s “Thêm” column, which now lists “Tuyển dụng” and “Bảo mật”; the home buttons “Đặt bàn” and “Xem thực đơn”; the 404 buttons “Thực đơn” and “Đặt bàn”.
+
 ## Jobs: the opening team, 24 Sep 2026
 
 The six opening-team roles now have a card each on `/jobs/` and a page each at `/jobs/<slug>/` (`host`, `server`, `bartender`, `pizzaiolo`, `line-cook`, `kitchen-porter`), in both languages.

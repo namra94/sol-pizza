@@ -1,7 +1,7 @@
 {
   // sol.pizza — served by a Cloudflare Worker with static assets.
-  // Deploy:  npx wrangler deploy        (after `npx wrangler login`)
-  // Build first: python3 build/gen.py   (writes ./dist)
+  // Deploy:  npm run deploy   (after `npx wrangler login`): builds the public site
+  //          into ./dist (python3 build/gen.py --public), then runs wrangler deploy
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "sol-pizza",
   // The Cloudflare account that serves sol.pizza ("Polarized Jar"). Pinned because

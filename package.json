@@ -4,7 +4,8 @@
   "description": "sol.pizza — static site, built by build/gen.py into dist/, served by the sol-pizza Cloudflare Worker",
   "scripts": {
     "build": "python3 build/gen.py",
-    "deploy": "wrangler deploy",
+    "build:full": "python3 build/gen.py --full",
+    "deploy": "python3 build/gen.py --public && wrangler deploy",
     "pack-assets": "python3 build/pack_assets.py"
   },
   "devDependencies": {

@@ -1,6 +1,8 @@
 # build/ — how the site is generated
 
-`python3 build/gen.py` (or `npm run build`) writes the whole site into `dist/`:
+`python3 build/gen.py` (or `npm run build`) writes the public site into `dist/`,
+and `python3 build/gen.py --full` (or `npm run build:full`) the whole site; see
+"Build modes" below. Either way:
 
 1. **Fonts.** Copies the Philosopher and EB Garamond woff2 files
    (Latin, Latin Extended, Vietnamese) out of `node_modules/@fontsource` into
@@ -11,12 +13,49 @@
 3. **Pages.** Home, About, the three menu pages (from `menu-data.json`), Booking,
    Jobs and the opening-team role pages (from `jobs-data.json` and `jobs/*.md`),
    the filled role pages and the privacy notice (re-wrapped from `src/`), 404.
+   The public build skips the pages that aren't public yet.
 4. **Support files.** `sitemap.xml` (including the six role pages), `robots.txt`,
-   and `src/_redirects` copied to `dist/_redirects`.
+   and `dist/_redirects`: `src/_redirects` as it is, or in the public build that
+   file rewritten for the pages that aren't public yet (below).
 5. **Optimise.** Minifies the CSS (csso) and JS (terser), gives everything in
    `dist/assets/` a content-hashed name, inlines the free fonts' `@font-face`
    rules into each page, quantises the share cards if Pillow is installed, and
    writes `dist/_headers` (caching, security headers, a font preload hint).
+6. **Link check** (public build). Every `href`, `src`, canonical and alternate
+   link, `og:url`, `og:image`, JSON-LD address, CSS `url()`, sitemap and
+   `robots.txt` address, font preload and redirect destination must be a file in
+   `dist/` or a redirect, and none may lead to a page that isn't public yet (nor
+   may such a page be in `dist/`). If one does, the build stops and lists it.
+
+The checks on the data run in both modes: the wine counts (`PROSE_WINE_COUNTS`)
+and the job descriptions against `jobs-data.json` (salaries, openings, dates).
+
+## Build modes
+
+Until the rest of the site is ready, sol.pizza is a temporary home page plus the
+jobs section. `HIDDEN`, near the top of `gen.py`, lists the pages that aren't
+public yet by their header tab (`about`, `menu`, `booking`, as in `NAV_TABS`).
+Every build prints its mode on its first line.
+
+| | Public (the default) | Full |
+| --- | --- | --- |
+| Run by | `npm run build`, `npm run deploy` (`--public`), Workers Builds on `main` and on every other branch (pull request previews) | `npm run build:full` (`--full`), Workers Builds on the `full-site` branch (`WORKERS_CI_BRANCH=full-site`) |
+| Pages | Home, Jobs and the role pages, privacy, 404. The pages in `HIDDEN` aren't written, and neither are the share cards and illustrations only they use | Every page, exactly as before the split |
+| Header | The public tabs, plus Work with us while anything is hidden; no Food / Wine / Bar tabs while Menu is hidden | About · Menu · Booking |
+| Footer "More" | The public tabs, Work with us, Privacy | About, Menu, Booking, Work with us, Privacy |
+| Home buttons | The first two of Book a table, See the menu, See open roles and @solhanoi on Instagram whose page is public (red, then outline): now See open roles and @solhanoi on Instagram | Book a table, See the menu |
+| 404 buttons | The first two of Menu, Booking, Home and See open roles whose page is public: now Home and See open roles | Menu, Booking |
+| Home JSON-LD | `hasMenu` and `acceptsReservations` only while Menu and Booking are public | Both |
+| Sitemap | Only public pages: `/`, `/jobs/` and the open role pages | Every page |
+| `_redirects` | The hidden pages (with and without the slash, and anything under them) and every old address in `src/_redirects` that leads to one go to `/` with a **302** (browsers cache a 301, and these pages come back); the rest of `src/_redirects` (`/careers` → `/jobs/`) as it is | `src/_redirects` as it is |
+| Search | Indexable, as now | `noindex`: `X-Robots-Tag: noindex` in `_headers`, `Disallow: /` in `robots.txt` |
+| Link check | Yes | No |
+
+`--public` builds the public site even on the `full-site` branch; `npm run
+deploy` uses it, so a full build can't be deployed by accident. With `HIDDEN`
+empty the public build is the whole site, the same as the full build without
+`noindex`. To put a page live, delete its key from `HIDDEN` (README.md, "Putting
+a page live").
 
 ## The design files
 

@@ -1,8 +1,12 @@
-sol.pizza — deploy the built site to the sol-pizza Worker
+sol.pizza — build the public site and deploy it to the sol-pizza Worker
 
-Needs Node.js (nodejs.org, LTS). Then, in Terminal, inside this folder:
+Only if Workers Builds is off: a push to main already deploys (README-DEPLOY.md).
+Needs Node.js (nodejs.org, LTS) and Python 3. Then, in Terminal, inside this folder:
 
+  npm ci                   # first time only — fonts, the minifiers and wrangler
   npx wrangler login       # first time only — opens your browser, click Allow
-  npx wrangler deploy      # uploads ./dist to the sol-pizza Worker (~10 seconds)
+  npm run deploy           # builds the public site into ./dist, then uploads it (~30 seconds)
 
-That's it. The site is live as soon as the second command finishes.
+That's it. The site is live as soon as the last command finishes.
+Always deploy with npm run deploy: it builds the public site first, so the full
+build (npm run build:full, every page, noindex) can never reach sol.pizza.
