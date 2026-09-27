@@ -3,6 +3,7 @@
 Build the sol.pizza static site: the "Printed menu" design.
 
     npm run build          (= python3 build/gen.py; run `npm ci` once first, for the fonts)
+    npm run build:full     (= python3 build/gen.py --full: the whole site, see HIDDEN)
 
 Writes plain, readable HTML into dist/, which the sol-pizza Worker serves.
 Every page is generated here. Each line of copy appears twice, English then
@@ -15,9 +16,10 @@ Vietnamese, so the two never drift apart; the menu lives in build/menu-data.json
   src/                 role pages and privacy notice (re-wrapped here, copy
                        untouched), _redirects, favicon.svg, pixel.js
 """
-import os, re, sys, json, stat, shutil, hashlib, subprocess, base64, html as _html
+import os, re, sys, json, stat, shutil, hashlib, subprocess, base64, argparse, html as _html
 from datetime import date, datetime
-from urllib.parse import quote
+from html.parser import HTMLParser
+from urllib.parse import quote, unquote, urljoin, urlsplit
 
 HERE   = os.path.dirname(os.path.abspath(__file__))
 ROOT   = os.path.dirname(HERE)
@@ -30,6 +32,39 @@ SITE   = 'https://sol.pizza'
 GA_ID  = 'G-SLBWDVH550'
 FB_PIX = '856214124247013'
 TODAY  = date.today().isoformat()
+
+# --------------------------------------------------------------------------
+# NOT YET PUBLIC: EDIT THIS to put a page live
+#   Until the rest of the site is ready, sol.pizza is the home page and the jobs
+#   section (/jobs/, the role pages, /privacy/). The pages under these header
+#   tabs (keys as in NAV_TABS) stay in the repo and on the full-site preview, but
+#   the public build leaves them out: no page in dist/, no share card, tab, footer
+#   link, home or 404 button, sitemap entry or structured data, and their
+#   addresses (and the old ones in src/_redirects that lead to them) go to the
+#   home page with a 302. While any page is hidden the header has a Work with us
+#   tab. To put a page live, delete its key and push to main; an empty list is
+#   the whole site.
+# --------------------------------------------------------------------------
+HIDDEN = ['about', 'menu', 'booking']
+
+# Build mode. Public, the default: npm run build, and Workers Builds on main and
+# on every other branch (pull request previews). Full, the whole site whatever
+# HIDDEN says, with noindex so a preview stays out of search: npm run build:full
+# (--full), and Workers Builds on the full-site branch. --public overrides the
+# branch: npm run deploy uses it, so a full build can't reach sol.pizza.
+_cli = argparse.ArgumentParser(description='Build sol.pizza into dist/.')
+_mode = _cli.add_mutually_exclusive_group()
+_mode.add_argument('--full', action='store_true', help='the whole site, noindex (the full-site preview)')
+_mode.add_argument('--public', action='store_true', help='the public site, even on the full-site branch')
+ARGS = _cli.parse_args()
+CI_BRANCH = os.environ.get('WORKERS_CI_BRANCH', '')
+FULL = ARGS.full or (not ARGS.public and CI_BRANCH == 'full-site')
+HIDE = set() if FULL else set(HIDDEN)
+if FULL:
+    print('Build mode: FULL (%s): every page, noindex'
+          % ('--full' if ARGS.full else 'WORKERS_CI_BRANCH=full-site'))
+else:
+    print('Build mode: PUBLIC: not yet public: %s' % (', '.join(HIDDEN) or 'nothing, the whole site'))
 
 
 def read(path):
@@ -155,7 +190,10 @@ if (WINES_TOTAL, WINES_GLASS) != PROSE_WINE_COUNTS:
 # lines that repeat across pages
 BOOK       = t('Book a table', 'Đặt bàn')
 HOURS_TAB  = t('Tue–Sun, 5pm–11pm', 'Thứ Ba – CN, 17:00 – 23:00')
-INSTA_LINK = '<a href="%s">%s</a>' % (INSTAGRAM, t('@solhanoi on Instagram', '@solhanoi trên Instagram'))
+INSTA_TEXT = t('@solhanoi on Instagram', '@solhanoi trên Instagram')
+INSTA_LINK = '<a href="%s">%s</a>' % (INSTAGRAM, INSTA_TEXT)
+JOBS_TAB   = t('Work with us', 'Tuyển dụng')
+SEE_ROLES  = t('See open roles', 'Xem vị trí tuyển dụng')
 MAPS_LINK_TEXT = t('Open in Google Maps', 'Mở trong Google Maps')
 WINE_TAB   = t('%d wines, %d by the glass' % (WINES_TOTAL, WINES_GLASS),
                '%d loại vang, %d loại theo ly' % (WINES_TOTAL, WINES_GLASS))
@@ -165,11 +203,41 @@ MENU_TABS = [  # (key, href, name, descriptor)
     ('wine', '/menu/wine/', t('Wine', 'Vang'),     WINE_TAB),
     ('bar',  '/menu/bar/',  t('Bar', 'Quầy bar'),  t('Cocktails, beer and sake', 'Cocktail, bia và sake')),
 ]
-# The three tabs in the header, the mobile nav sheet and the footer: (key, href, name).
-# Menu keeps its Food / Wine / Bar sub-tabs (MENU_TABS).
+# The full site's three tabs, in the header, the mobile nav sheet and the footer:
+# (key, href, name). Menu keeps its Food / Wine / Bar sub-tabs (MENU_TABS). The public
+# build shows only the public ones, plus Work with us while anything is HIDDEN (shown_tabs()).
 NAV_TABS = [('about',   '/about/',   t('About', 'Giới thiệu')),
             ('menu',    '/menu/',    t('Menu', 'Thực đơn')),
             ('booking', '/booking/', t('Booking', 'Đặt bàn'))]
+assert set(HIDDEN) <= {key for key, _, _ in NAV_TABS}, 'HIDDEN: use the keys of NAV_TABS'
+
+# Every page under a hidden tab's address is hidden: /menu/ hides /menu/wine/ and /menu/bar/.
+HIDDEN_PATHS = [href for key, href, _ in NAV_TABS if key in HIDE]
+
+
+def live(key):
+    """Is this tab's page public in this build? Always, in the full build."""
+    return key not in HIDE
+
+
+def hidden(url):
+    """Does this address (a path or a sol.pizza URL) lead to a page that isn't public yet?"""
+    path = urlsplit(url).path or '/'
+    return any(path == p.rstrip('/') or path.startswith(p) for p in HIDDEN_PATHS)
+
+
+def shown_tabs():
+    """The tabs in the header and the nav sheet: the public ones, plus Work with us while
+    any page is hidden (the jobs section is most of the public site then)."""
+    return [tab for tab in NAV_TABS if live(tab[0])] + ([('jobs', '/jobs/', JOBS_TAB)] if HIDE else [])
+
+
+def buttons(options):
+    """The first two options whose page is public, as a red button and an outline one.
+    options: (NAV_TABS key, or None for a page that is always public, href, name)."""
+    shown = [(href, name) for key, href, name in options if key is None or live(key)][:2]
+    return ''.join('<a class="btn %s" href="%s">%s</a>' % (cls, href, name)
+                   for cls, (href, name) in zip(('btn-red', 'btn-outline'), shown))
 
 
 # --------------------------------------------------------------------------
@@ -284,17 +352,19 @@ def lang_switch():
 
 
 def tab_current(key, cur):
-    """aria-current for a header tab. cur: about / food / wine / bar / booking, or None.
-    Menu is the current page on Food (/menu/) and the current section on Wine and Bar."""
+    """aria-current for a header tab. cur: about / food / wine / bar / booking / jobs / role, or None.
+    Menu is the current page on Food (/menu/) and the current section on Wine and Bar;
+    Work with us (the public build's tab) is the current page on /jobs/ and the current
+    section on the role pages."""
     if key == cur or (key == 'menu' and cur == 'food'):
         return ' aria-current="page"'
-    if key == 'menu' and cur in ('wine', 'bar'):
+    if (key == 'menu' and cur in ('wine', 'bar')) or (key == 'jobs' and cur == 'role'):
         return ' aria-current="true"'
     return ''
 
 
 def header(cur):
-    """cur: about / food / wine / bar / booking, or None."""
+    """cur: about / food / wine / bar / booking / jobs / role, or None."""
     def subtabs():
         return ''.join('<li><a href="%s"%s>%s<span>%s</span></a></li>'
                        % (href, ' aria-current="page"' if key == cur else '', name, sub)
@@ -304,7 +374,11 @@ def header(cur):
         return ''.join('<li><a href="%s"%s%s>%s%s</a></li>'
                        % (href, ' data-menu-link' if caret and key == 'menu' else '',
                           tab_current(key, cur), name, CARET if caret and key == 'menu' else '')
-                       for key, href, name in NAV_TABS)
+                       for key, href, name in shown_tabs())
+
+    # The Food / Wine / Bar tabs, only while Menu is public
+    subnav = ('  <nav class="subnav" %s><div class="wrap"><ul>%s</ul></div></nav>\n'
+              % (label('Menu sections', 'Các mục thực đơn'), subtabs())) if live('menu') else ''
 
     return """<header class="site-header" data-site-header>
   <div class="mbar">
@@ -319,8 +393,7 @@ def header(cur):
       <ul class="nav-links">{tabs}</ul>
     </nav>
   </div>
-  <nav class="subnav" {sub_l}><div class="wrap"><ul>{subtabs}</ul></div></nav>
-</header>
+{subnav}</header>
 <div class="navsheet" id="navsheet" role="dialog" aria-modal="true" {sheet_l} tabindex="-1" hidden>
   <div class="navsheet-top"><span></span><a href="/" {home}>{logo_s}</a>
     <button class="navsheet-close" type="button" {close_l} data-sheet-close>{close}</button></div>
@@ -331,15 +404,14 @@ def header(cur):
 </div>
 """.format(lang=lang_switch(), home=HOME_LABEL, logo_s=logo(74, 26), logo_l=logo(165, 58),
            open_l=label('Open navigation', 'Mở menu điều hướng'), burger=BURGER,
-           main_l=label('Main', 'Điều hướng chính'), tabs=tabs(True),
-           sub_l=label('Menu sections', 'Các mục thực đơn'), subtabs=subtabs(),
+           main_l=label('Main', 'Điều hướng chính'), tabs=tabs(True), subnav=subnav,
            sheet_l=label('Navigation', 'Điều hướng'), sheet_tabs=tabs(False),
            close_l=label('Close navigation', 'Đóng menu điều hướng'), close=CLOSE, hours=HOURS_TAB)
 
 
 def footer():
-    more = [(href, name) for _, href, name in NAV_TABS] + [
-        ('/jobs/', t('Work with us', 'Tuyển dụng')), ('/privacy/', t('Privacy', 'Bảo mật'))]
+    more = [(href, name) for key, href, name in NAV_TABS if live(key)] + [
+        ('/jobs/', JOBS_TAB), ('/privacy/', t('Privacy', 'Bảo mật'))]
     return """<footer class="site-footer">
   <div class="wrap"><div class="footer-inner">
     <a class="footer-logo" href="/" {home}>{logo}</a>
@@ -363,7 +435,8 @@ def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website
          og_text=None, og_locale=('en_GB', 'vi_VN')):
     """Write one page. title and desc are (English, Vietnamese) pairs.
     verbatim: leave main's text exactly as it is (the privacy notice).
-    og_text, og_locale: see head()."""
+    og_text, og_locale: see head(). A page that isn't public yet (HIDDEN) is built but
+    not written, so a mistake in it still stops the public build; returns None."""
     doc = head(path, title, desc, og, ogtype, extra, index, og_text, og_locale)
     doc += '<body class="%s"%s>\n%s\n' % (body_class, body_attrs, SUN_SPRITE)
     doc += nbsp('<a class="skip" href="#main">%s</a>\n' % t('Skip to content', 'Chuyển đến nội dung chính')
@@ -371,6 +444,8 @@ def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website
     doc += main if verbatim else nbsp(main)
     doc += nbsp(footer())
     doc += '</body>\n</html>\n'
+    if hidden(path):
+        return None
     if out is None:
         out = os.path.join(DIST, path.strip('/'), 'index.html') if path != '/' \
               else os.path.join(DIST, 'index.html')
@@ -388,7 +463,7 @@ def og_image(name):
 HOME_DESC = ('Wood-fired pizza, pasta made in-house and 26 wines by the glass. '
              'Sol opens soon at No 7, Lane 88 Quang An, Tây Hồ, Hanoi.')
 
-SCHEMA = '<script type="application/ld+json">\n%s\n</script>' % json.dumps({
+RESTAURANT = {
     '@context': 'https://schema.org',
     '@type': 'Restaurant',
     '@id': 'https://sol.pizza/#restaurant',
@@ -418,7 +493,13 @@ SCHEMA = '<script type="application/ld+json">\n%s\n</script>' % json.dumps({
     }],
     'sameAs': [INSTAGRAM],
     'parentOrganization': {'@type': 'Organization', 'name': 'Công ty TNHH Aurelian'},
-}, ensure_ascii=False, indent=2)
+}
+# These two point at the Menu and Booking pages: only while those are public.
+if not live('menu'):
+    del RESTAURANT['hasMenu']
+if not live('booking'):
+    del RESTAURANT['acceptsReservations']
+SCHEMA = '<script type="application/ld+json">\n%s\n</script>' % json.dumps(RESTAURANT, ensure_ascii=False, indent=2)
 
 
 # ==========================================================================
@@ -439,7 +520,7 @@ def build_home():
   <h1 class="hero-title">{h1}</h1>
   <p class="hand hero-hand">{hand}</p>
   <p class="hero-lead">{lead}</p>
-  <div class="actions"><a class="btn btn-red" href="/booking/">{book}</a><a class="btn btn-outline" href="/menu/">{see_menu}</a></div>
+  <div class="actions">{actions}</div>
 </section>
 <div class="wrap"><dl class="facts">{facts}</dl></div>
 </main>
@@ -447,13 +528,16 @@ def build_home():
         eyebrow=t('Opening soon · Tây Hồ, Hanoi', 'Sắp khai trương · Tây Hồ, Hà Nội'),
         # lang="vi": BN Arora has no Vietnamese letters, so site.css sets the name in Philosopher
         h1=t('Sol is back in <span lang="vi">Tây Hồ</span>.', 'Sol trở lại Tây Hồ.'),
-        hand=t('with the oven we always wanted', 'cùng chiếc lò chúng tôi luôn mong muốn'),
+        hand=t('sunshine, after dark', 'ánh nắng, sau hoàng hôn'),
         lead=t('Sol Pizza closed last year. Sol opens on the same stretch of Tây Hồ with more room: '
                'a bigger kitchen, a proper bar and a Pavesi wood-fired oven built in Italy.',
                'Sol Pizza đã đóng cửa năm ngoái. Sol sẽ mở lại ngay trên con phố ấy ở Tây Hồ, với nhiều '
                'không gian hơn: căn bếp rộng hơn, một quầy bar đúng nghĩa và chiếc lò củi Pavesi chế '
                'tác tại Ý.'),
-        book=BOOK, see_menu=t('See the menu', 'Xem thực đơn'),
+        # Book a table and See the menu; while those pages aren't public, See open
+        # roles and Instagram
+        actions=buttons([('booking', '/booking/', BOOK), ('menu', '/menu/', t('See the menu', 'Xem thực đơn')),
+                         (None, '/jobs/', SEE_ROLES), (None, INSTAGRAM, INSTA_TEXT)]),
         # The photo band goes here, between the buttons and the facts row, once
         # there's photography: 1040 × 520 (2:1).
         facts=''.join('<div><dt>%s</dt><dd>%s</dd></div>' % f for f in facts),
@@ -759,7 +843,7 @@ def build_about():
               'first team in the new room, start here.',
               'Chúng tôi đang tuyển cho cả bếp và khu phục vụ trước ngày khai trương. Nếu bạn muốn là '
               'một phần của đội ngũ đầu tiên, các vị trí đang mở ở đây.'),
-            t('See open roles', 'Xem vị trí tuyển dụng')),
+            SEE_ROLES),
         '</section>',
         '</main>', ''])
     return page('/about/', 'page-about',
@@ -1216,7 +1300,7 @@ def build_jobs():
           'gets a reply.',
           'Chúng tôi đang tuyển Lễ tân (Host) và đội ngũ khai trương cho khu phục vụ và bếp. Mọi hồ '
           'sơ đều được phản hồi.'),
-         main, og=og_image('jobs'), extra=ROUND_SCRIPT, body_attrs=' data-page="index"')
+         main, cur='jobs', og=og_image('jobs'), extra=ROUND_SCRIPT, body_attrs=' data-page="index"')
     for r in OPEN_ROLES:
         build_open_role(r)
     for r in ROLES:
@@ -1270,7 +1354,7 @@ def build_open_role(r):
             '<div class="apply-bar">%s</div>\n%s\n</main>\n'
             % (closed_text(), t(esc(en['eyebrow']), esc(vi['eyebrow'])), t(esc(r['name_en']), esc(r['name_vi'])),
                apply_button(r), '\n'.join(facts), '\n'.join(prose), apply_button(r),
-               t('See open roles', 'Xem vị trí tuyển dụng'), apply_button(r), APPLY_SCRIPT))
+               SEE_ROLES, apply_button(r), APPLY_SCRIPT))
 
     # Search and sharing. The share card is in Vietnamese: the ads bring Vietnamese speakers.
     posting = {
@@ -1308,7 +1392,7 @@ def build_open_role(r):
     desc_vi = 'Tuyển %s tại Sol, Tây Hồ, Hà Nội. %s' % (r['name_vi'], og_desc)
     page(open_role_path(r), 'page-role',
          (esc_attr('%s — Sol, Tây Hồ' % r['name_en']), esc_attr('%s — Sol, Tây Hồ' % r['name_vi'])),
-         (esc_attr(desc_en), esc_attr(desc_vi)), main, og=og_image('jobs'),
+         (esc_attr(desc_en), esc_attr(desc_vi)), main, cur='role', og=og_image('jobs'),
          og_text=(esc_attr(og_title), esc_attr(og_desc)), og_locale=('vi_VN', 'en_GB'),
          extra=ROUND_SCRIPT + '\n' + ld,
          body_attrs=' data-page="role" data-role="%s" data-slug="%s"' % (esc_attr(r['name_en']), r['slug']))
@@ -1365,7 +1449,7 @@ def build_role(r):
         titles = (title, '%s — Sol, Tây Hồ' % r['name_vi'])
         descs = (desc, 'Mô tả công việc %s tại Sol, Tây Hồ, Hà Nội.' % r['name_vi'].lower())
     page(role_path(r), 'page-role', titles, descs,
-         main, og='%s/jobs/og-%s.png' % (SITE, r['slug']),
+         main, cur='role', og='%s/jobs/og-%s.png' % (SITE, r['slug']),
          extra='<meta name="robots" content="noindex,follow">' if filled else '',
          body_attrs=' data-page="%s" data-role="%s" data-slug="%s"'
                     % ('role-filled' if filled else 'role', r['name_en'], r['slug']),
@@ -1405,10 +1489,13 @@ def build_privacy():
 # 404 and support files
 # ==========================================================================
 def build_404():
+    # Menu and Booking; while those pages aren't public, Home and See open roles
     main = ('<main id="main" class="wrap">\n<header class="page-title"><h1>%s</h1></header>\n'
-            '<div class="actions"><a class="btn btn-red" href="/menu/">%s</a><a class="btn btn-outline" href="/booking/">%s</a></div>\n'
+            '<div class="actions">%s</div>\n'
             '</main>\n' % (t('We can’t find that page.', 'Chúng tôi không tìm thấy trang này.'),
-                           t('Menu', 'Thực đơn'), t('Booking', 'Đặt bàn')))
+                           buttons([('menu', '/menu/', t('Menu', 'Thực đơn')),
+                                    ('booking', '/booking/', t('Booking', 'Đặt bàn')),
+                                    (None, '/', t('Home', 'Trang chủ')), (None, '/jobs/', SEE_ROLES)])))
     return page('/404.html', 'page-404', ('Page not found — Sol', 'Không tìm thấy trang — Sol'),
                 ('Page not found.', 'Không tìm thấy trang.'), main, og=og_image('home'), index=False,
                 extra='<meta name="robots" content="noindex">', body_attrs=' data-page="404"',
@@ -1421,6 +1508,7 @@ SITEMAP_PAGES = ['/', '/about/', '/menu/', '/menu/wine/', '/menu/bar/', '/bookin
 def build_support():
     pages = SITEMAP_PAGES + [role_path(r) for r in ROLES if r['status'] == 'open'] + \
         [open_role_path(r) for r in OPEN_ROLES]
+    pages = [p for p in pages if not hidden(p)]
     urls = []
     for p in pages:
         pri = '1.0' if p == '/' else ('0.9' if p.startswith(('/about/', '/menu/', '/booking/')) else '0.6')
@@ -1433,10 +1521,99 @@ def build_support():
           '<?xml version="1.0" encoding="UTF-8"?>\n'
           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
           '        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' + '\n'.join(urls) + '\n</urlset>\n')
+    # The full build is the full-site preview: it stays out of search. The public build never does.
     write(os.path.join(DIST, 'robots.txt'),
-          'User-agent: *\nAllow: /\nDisallow: /privacy/\n\nSitemap: %s/sitemap.xml\n' % SITE)
-    # Redirects live in src/_redirects; Cloudflare applies the copy in dist/.
-    shutil.copy2(os.path.join(SRC, '_redirects'), os.path.join(DIST, '_redirects'))
+          'User-agent: *\n%s\nSitemap: %s/sitemap.xml\n'
+          % ('Disallow: /\n' if FULL else 'Allow: /\nDisallow: /privacy/\n', SITE))
+    redirects()
+
+
+# The addresses the public build sends to the home page: the hidden pages' own and
+# the old ones from src/_redirects that led to them (redirects(), check_links()).
+HIDDEN_REDIRECTS = set()
+
+
+def redirect_rules(text):
+    """(source, destination, code) for each rule in a _redirects file."""
+    rules = []
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) >= 2 and not parts[0].startswith('#'):
+            rules.append((parts[0], parts[1], parts[2] if len(parts) > 2 else '302'))
+    return rules
+
+
+def redirects():
+    """dist/_redirects; Cloudflare applies it (the Worker is assets-only). While every
+    page is public (the full build, or HIDDEN empty) it is src/_redirects as it is.
+    Otherwise the addresses of the pages that aren't public yet and every old address in
+    src/_redirects that leads to one, each with and without the slash, go to the home
+    page with a 302, not a 301: browsers cache a 301, and these pages come back. The
+    rest of src/_redirects stays as it is. Static rules first, splats last."""
+    src, out = os.path.join(SRC, '_redirects'), os.path.join(DIST, '_redirects')
+    if not HIDE:
+        shutil.copy2(src, out)
+        return
+
+    def dynamic(path):
+        return '*' in path or ':' in path
+
+    def both(path):
+        if path.endswith('.html') or dynamic(path):
+            return [path]
+        return [path, path.rstrip('/')] if path.endswith('/') else [path, path + '/']
+
+    # each hidden page, with and without the slash, and as .html where no splat below
+    # catches it (/about.html; /menu/wine.html falls under /menu/*)
+    pages = [q for p in SITEMAP_PAGES if hidden(p)
+             for q in both(p) + [p.rstrip('/') + '.html']
+             if not (q.endswith('.html') and any(q.startswith(h) for h in HIDDEN_PATHS))]
+    old, kept = [], []
+    for source, dest, code in redirect_rules(read(src)):
+        if hidden(dest):
+            old += [q for q in both(source) if q not in pages + old]
+        else:
+            kept.append((source, dest, code))
+    HIDDEN_REDIRECTS.update(pages + old)
+
+    def rules(heading, rows):
+        rows = list(rows)
+        return ['', '# ' + heading] + ['%-22s %-14s %s' % r for r in rows] if rows else []
+
+    lines = [
+        '# sol.pizza redirects for the PUBLIC build, written by build/gen.py from',
+        '# src/_redirects and HIDDEN: edit those, not this file. The pages not public',
+        '# yet and the old addresses that led to them go to the home page with a 302,',
+        '# not a 301: browsers cache a 301, and these pages come back.',
+        '# Not public yet: %s.' % ', '.join(HIDDEN),
+    ]
+    lines += rules('Not public yet', ((p, '/', 302) for p in pages if not dynamic(p)))
+    lines += rules('Old addresses (src/_redirects) that led to them',
+                   ((p, '/', 302) for p in old if not dynamic(p)))
+    lines += rules('The rest of src/_redirects', (r for r in kept if not dynamic(r[0])))
+    lines += rules('Splats last: anything else under a page not public yet, then src/_redirects',
+                   [('%s*' % p, '/', 302) for p in HIDDEN_PATHS]
+                   + [(p, '/', 302) for p in pages + old if dynamic(p)]
+                   + [r for r in kept if dynamic(r[0])])
+    write(out, '\n'.join(lines) + '\n')
+
+
+def leave_out_unused():
+    """Public build: the share cards and illustrations no public page uses (those of the
+    pages not public yet) aren't in dist/ either."""
+    used = '\n'.join(read(os.path.join(root, f)) for root, _, files in os.walk(DIST)
+                     for f in files if f.endswith(('.html', '.css')))
+    gone = []
+    for folder in (DIST, os.path.join(DIST, 'jobs'), os.path.join(DIST, 'assets')):
+        for f in sorted(os.listdir(folder)):
+            rel = os.path.relpath(os.path.join(folder, f), DIST).replace(os.sep, '/')
+            card = f.startswith('og-') and f.endswith('.png')
+            art = folder.endswith('assets') and f.endswith('.svg')
+            if (card or art) and '/' + rel not in used:
+                os.remove(os.path.join(folder, f))
+                gone.append(rel)
+    if gone:
+        print('left out, no public page uses them:', ', '.join(gone))
 
 
 def copy_existing():
@@ -1538,13 +1715,13 @@ def optimise():
 # build/README.md before replacing it), cached for a year.
 # Link: early hints: the two fonts above the fold, and the Adobe kit's hosts
 # (its CSS on use.typekit.net @imports Adobe's counter from p.typekit.net).
-/*
+%(robots)s/*
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
   Cache-Control: public, max-age=0, must-revalidate
-  Link: %s, <https://use.typekit.net>; rel=preconnect; crossorigin, <https://use.typekit.net>; rel=preconnect, <https://p.typekit.net>; rel=preconnect
+  Link: %(link)s, <https://use.typekit.net>; rel=preconnect; crossorigin, <https://use.typekit.net>; rel=preconnect, <https://p.typekit.net>; rel=preconnect%(noindex)s
 
 /assets/*
   ! Cache-Control
@@ -1560,7 +1737,128 @@ def optimise():
   ! Cache-Control
   ! Link
   Cache-Control: public, max-age=86400
-""" % ', '.join('<%s>; rel=preload; as=font; type=font/woff2; crossorigin' % f for f in PRELOAD_FONTS))
+""" % dict(link=', '.join('<%s>; rel=preload; as=font; type=font/woff2; crossorigin' % f for f in PRELOAD_FONTS),
+           # The full build is the full-site preview: it stays out of search. The public build never does.
+           robots='# X-Robots-Tag: this is the full build (the full-site preview), kept out of search.\n'
+                  if FULL else '',
+           noindex='\n  X-Robots-Tag: noindex' if FULL else ''))
+
+
+# ==========================================================================
+# LINK CHECK   (the end of every public build)
+# Every address in dist/ must be a file there or a redirect, and none may lead
+# to a page that isn't public yet: href and src (canonical and alternate links
+# included), og:url and og:image, the JSON-LD, CSS url()s, the sitemap,
+# robots.txt, the font preloads in _headers and the redirects' destinations.
+# ==========================================================================
+class _Links(HTMLParser):
+    """The addresses in one page: (where, address)."""
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.found, self._ld, self._style = [], None, None
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        for k in ('href', 'src'):
+            if a.get(k):
+                self.found.append(('<%s %s>' % (tag, k), a[k]))
+        if tag == 'meta' and a.get('property') in ('og:url', 'og:image') and a.get('content'):
+            self.found.append((a['property'], a['content']))
+        if tag == 'script' and a.get('type') == 'application/ld+json':
+            self._ld = []
+        if tag == 'style':
+            self._style = []
+
+    def handle_data(self, data):
+        for buf in (self._ld, self._style):
+            if buf is not None:
+                buf.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == 'script' and self._ld is not None:
+            self.found += [('JSON-LD', u) for u in _json_urls(json.loads(''.join(self._ld)))]
+            self._ld = None
+        if tag == 'style' and self._style is not None:
+            self.found += [('<style> url()', u) for u in _css_urls(''.join(self._style))]
+            self._style = None
+
+
+def _json_urls(v):
+    if isinstance(v, dict):
+        v = list(v.values())
+    if isinstance(v, list):
+        return [u for x in v for u in _json_urls(x)]
+    return [v] if isinstance(v, str) and (v == SITE or v.startswith(SITE + '/')) else []
+
+
+def _css_urls(css):
+    return [u for u in re.findall(r'url\(\s*[\'"]?([^\'")]+)', css) if not u.startswith('data:')]
+
+
+def _site_path(url, base):
+    """The path on sol.pizza an address leads to, or None (another site, mailto:, #…)."""
+    if url.startswith(('#', 'mailto:', 'tel:', 'data:', 'javascript:')):
+        return None
+    parts = urlsplit(urljoin(SITE + base, url))
+    return (unquote(parts.path) or '/') if parts.netloc == 'sol.pizza' else None
+
+
+def _served(path, rules):
+    """True if the sol-pizza Worker answers this path with a redirect from dist/_redirects
+    or a file from dist/ (html_handling auto-trailing-slash), not the 404 page."""
+    for source, _, _ in rules:
+        if path == source or (source.endswith('*') and path.startswith(source[:-1])):
+            return True
+    if path in ('/_headers', '/_redirects'):
+        return False
+    f = os.path.join(DIST, *[p for p in path.split('/') if p])
+    if path.endswith('/'):
+        return os.path.isfile(os.path.join(f, 'index.html')) or (path != '/' and os.path.isfile(f.rstrip(os.sep) + '.html'))
+    return os.path.isfile(f) or os.path.isfile(f + '.html') or os.path.isfile(os.path.join(f, 'index.html'))
+
+
+def check_links():
+    rules = redirect_rules(read(os.path.join(DIST, '_redirects')))
+    problems, count = [], [0, 0]
+
+    def check(where, what, url, base='/'):
+        path = _site_path(url, base)
+        if path is None:
+            return
+        count[1] += 1
+        if hidden(path) or path in HIDDEN_REDIRECTS:
+            problems.append("%s: %s %s leads to a page that isn't public yet" % (where, what, url))
+        elif not _served(path, rules):
+            problems.append('%s: %s %s is neither in dist/ nor a redirect' % (where, what, url))
+
+    for root, _, files in os.walk(DIST):
+        for f in sorted(files):
+            rel = os.path.relpath(os.path.join(root, f), DIST).replace(os.sep, '/')
+            if hidden('/' + rel):
+                problems.append("dist/%s: written, but it isn't public yet" % rel)
+            if f.endswith('.html'):
+                count[0] += 1
+                base = '/' + (rel[:-len('index.html')] if f == 'index.html' else rel[:-len('.html')])
+                links = _Links()
+                links.feed(read(os.path.join(root, f)))
+                links.close()
+                for what, url in links.found:
+                    check('dist/' + rel, what, url, base)
+            elif f.endswith('.css'):
+                for url in _css_urls(read(os.path.join(root, f))):
+                    check('dist/' + rel, 'url()', url, '/' + rel)
+    for url in re.findall(r'<loc>([^<]+)</loc>|href="([^"]+)"', read(os.path.join(DIST, 'sitemap.xml'))):
+        check('dist/sitemap.xml', 'address', ''.join(url))
+    for url in re.findall(r'(?im)^Sitemap:\s*(\S+)', read(os.path.join(DIST, 'robots.txt'))):
+        check('dist/robots.txt', 'Sitemap:', url)
+    for url in re.findall(r'<(/[^>]*)>', read(os.path.join(DIST, '_headers'))):
+        check('dist/_headers', 'Link:', url)
+    for source, dest, _ in rules:
+        check('dist/_redirects', source + ' ->', re.sub(r'/:[A-Za-z]\w*.*$', '/', dest))
+    if problems:
+        raise SystemExit('Link check failed (public build):\n  ' + '\n  '.join(problems))
+    print('link check: %d pages, %d addresses, all in dist/ or redirects; none lead to %s'
+          % (count[0], count[1], ', '.join(HIDDEN) or 'a hidden page'))
 
 
 # ==========================================================================
@@ -1633,12 +1931,21 @@ if __name__ == '__main__':
             os.chmod(p, stat.S_IWRITE)
             os.remove(p)
     copy_existing()
+    # Every page is built in both modes; page() doesn't write the ones not public yet.
     for fn in (build_home, build_about, build_food, build_wine, build_bar, build_booking,
                build_privacy, build_404):
-        print('wrote', os.path.relpath(fn(), ROOT))
+        out = fn()
+        if out:
+            print('wrote', os.path.relpath(out, ROOT))
+    if HIDE:
+        print('built but not written, not public yet:', ', '.join(p for p in SITEMAP_PAGES if hidden(p)))
     build_jobs()
     print('wrote jobs/ and the role pages')
     build_support()
     print('wrote support files')
+    if HIDE:
+        leave_out_unused()
     optimise()
     print('optimised')
+    if not FULL:
+        check_links()

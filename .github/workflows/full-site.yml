@@ -1,0 +1,30 @@
+# Keeps the full-site branch a copy of main. Workers Builds builds that branch as
+# the whole site (build/gen.py switches to --full when WORKERS_CI_BRANCH is
+# full-site, with noindex) and puts it on its own Preview URL, the stable review
+# link for the pages that aren't public yet:
+#   https://full-site-sol-pizza.polarized-jar.workers.dev
+# full-site is a mirror: never commit to it. Every push to main overwrites it.
+name: Mirror main to full-site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:        # Actions -> Mirror main to full-site -> Run workflow
+
+permissions:
+  contents: write
+
+concurrency:
+  group: full-site
+  cancel-in-progress: true
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Force-push main to full-site
+        run: git push --force origin HEAD:refs/heads/full-site
