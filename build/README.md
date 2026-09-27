@@ -13,7 +13,9 @@ and `python3 build/gen.py --full` (or `npm run build:full`) the whole site; see
 3. **Pages.** Home, About, the three menu pages (from `menu-data.json`), Booking,
    Jobs and the opening-team role pages (from `jobs-data.json` and `jobs/*.md`),
    the filled role pages and the privacy notice (re-wrapped from `src/`), 404.
-   The public build skips the pages that aren't public yet.
+   The public build builds the pages that aren't public yet but doesn't write
+   them, so a mistake in one still stops every build, pull request previews
+   included.
 4. **Support files.** `sitemap.xml` (including the six role pages), `robots.txt`,
    and `dist/_redirects`: `src/_redirects` as it is, or in the public build that
    file rewritten for the pages that aren't public yet (below).

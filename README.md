@@ -13,11 +13,11 @@ are reviewable in full at **https://full-site-sol-pizza.polarized-jar.workers.de
 | Route | Page | On sol.pizza |
 | --- | --- | --- |
 | `/` | Home: the hero and the facts row | Public (buttons: See open roles, @solhanoi on Instagram) |
-| `/about/` | About tab: the restaurant introduction and our story (the old `/story/` redirects here) | Not yet: 302 to `/` |
+| `/about/` | About tab: the restaurant introduction and our story (on the full site, the old `/story/` redirects here) | Not yet: 302 to `/` |
 | `/menu/` | Menu tab: Food | Not yet: 302 to `/` |
-| `/menu/wine/` | Menu: Wine (the old `/wine/` redirects here) | Not yet: 302 to `/` |
+| `/menu/wine/` | Menu: Wine (on the full site, the old `/wine/` redirects here) | Not yet: 302 to `/` |
 | `/menu/bar/` | Menu: Bar | Not yet: 302 to `/` |
-| `/booking/` | Booking tab: the booking box at `/booking/#book`, hours, address, contact (the old `/visit/` redirects here) | Not yet: 302 to `/` |
+| `/booking/` | Booking tab: the booking box at `/booking/#book`, hours, address, contact (on the full site, the old `/visit/` redirects here) | Not yet: 302 to `/` |
 | `/jobs/` | Work with us: the opening-team cards, plus the role pages under `/jobs/` | Public |
 | `/jobs/<slug>/` | The six opening-team roles: `host`, `server`, `bartender`, `pizzaiolo`, `line-cook`, `kitchen-porter` | Public |
 | `/jobs/<slug>` | The three filled roles, under "Recently filled": `restaurant-accountant`, `sous-chef`, `restaurant-supervisor` | Public |
@@ -190,7 +190,8 @@ build/assets/           logo, illustrations, sun pattern (SVG)
 build/og/               share cards: og-*.html sources, rendered by og.js
 build/assets.b64.json   the share-card PNGs and BN Arora, as text (see build/pack_assets.py)
 src/jobs/ src/privacy/  role pages and the privacy notice, re-wrapped at build time
-src/_redirects          copied to dist/; Cloudflare applies it
+src/_redirects          copied to dist/ as it is (full build) or rewritten for HIDDEN
+                        (public build, see build/README.md); Cloudflare applies it
 src/favicon.svg src/pixel.js
 ```
 

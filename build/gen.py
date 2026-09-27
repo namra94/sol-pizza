@@ -203,8 +203,9 @@ MENU_TABS = [  # (key, href, name, descriptor)
     ('wine', '/menu/wine/', t('Wine', 'Vang'),     WINE_TAB),
     ('bar',  '/menu/bar/',  t('Bar', 'Quầy bar'),  t('Cocktails, beer and sake', 'Cocktail, bia và sake')),
 ]
-# The three tabs in the header, the mobile nav sheet and the footer: (key, href, name).
-# Menu keeps its Food / Wine / Bar sub-tabs (MENU_TABS).
+# The full site's three tabs, in the header, the mobile nav sheet and the footer:
+# (key, href, name). Menu keeps its Food / Wine / Bar sub-tabs (MENU_TABS). The public
+# build shows only the public ones, plus Work with us while anything is HIDDEN (shown_tabs()).
 NAV_TABS = [('about',   '/about/',   t('About', 'Giới thiệu')),
             ('menu',    '/menu/',    t('Menu', 'Thực đơn')),
             ('booking', '/booking/', t('Booking', 'Đặt bàn'))]
@@ -434,8 +435,8 @@ def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website
          og_text=None, og_locale=('en_GB', 'vi_VN')):
     """Write one page. title and desc are (English, Vietnamese) pairs.
     verbatim: leave main's text exactly as it is (the privacy notice).
-    og_text, og_locale: see head()."""
-    assert not hidden(path), '%s is not public yet (HIDDEN): the public build must not write it' % path
+    og_text, og_locale: see head(). A page that isn't public yet (HIDDEN) is built but
+    not written, so a mistake in it still stops the public build; returns None."""
     doc = head(path, title, desc, og, ogtype, extra, index, og_text, og_locale)
     doc += '<body class="%s"%s>\n%s\n' % (body_class, body_attrs, SUN_SPRITE)
     doc += nbsp('<a class="skip" href="#main">%s</a>\n' % t('Skip to content', 'Chuyển đến nội dung chính')
@@ -443,6 +444,8 @@ def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website
     doc += main if verbatim else nbsp(main)
     doc += nbsp(footer())
     doc += '</body>\n</html>\n'
+    if hidden(path):
+        return None
     if out is None:
         out = os.path.join(DIST, path.strip('/'), 'index.html') if path != '/' \
               else os.path.join(DIST, 'index.html')
@@ -1560,7 +1563,11 @@ def redirects():
             return [path]
         return [path, path.rstrip('/')] if path.endswith('/') else [path, path + '/']
 
-    pages = [q for p in SITEMAP_PAGES if hidden(p) for q in both(p)]
+    # each hidden page, with and without the slash, and as .html where no splat below
+    # catches it (/about.html; /menu/wine.html falls under /menu/*)
+    pages = [q for p in SITEMAP_PAGES if hidden(p)
+             for q in both(p) + [p.rstrip('/') + '.html']
+             if not (q.endswith('.html') and any(q.startswith(h) for h in HIDDEN_PATHS))]
     old, kept = [], []
     for source, dest, code in redirect_rules(read(src)):
         if hidden(dest):
@@ -1924,13 +1931,14 @@ if __name__ == '__main__':
             os.chmod(p, stat.S_IWRITE)
             os.remove(p)
     copy_existing()
-    # (the NAV_TABS key a page is under, or None: always public; its builder)
-    for key, fn in ((None, build_home), ('about', build_about), ('menu', build_food), ('menu', build_wine),
-                    ('menu', build_bar), ('booking', build_booking), (None, build_privacy), (None, build_404)):
-        if key is None or live(key):
-            print('wrote', os.path.relpath(fn(), ROOT))
+    # Every page is built in both modes; page() doesn't write the ones not public yet.
+    for fn in (build_home, build_about, build_food, build_wine, build_bar, build_booking,
+               build_privacy, build_404):
+        out = fn()
+        if out:
+            print('wrote', os.path.relpath(out, ROOT))
     if HIDE:
-        print('left out, not public yet:', ', '.join(p for p in SITEMAP_PAGES if hidden(p)))
+        print('built but not written, not public yet:', ', '.join(p for p in SITEMAP_PAGES if hidden(p)))
     build_jobs()
     print('wrote jobs/ and the role pages')
     build_support()

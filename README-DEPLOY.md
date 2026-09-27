@@ -54,8 +54,15 @@ the production branch.
 
 - **Never commit to `full-site`.** It is a mirror of `main`, and the next push
   to `main` overwrites it. Work on a branch and merge to `main` as usual.
-- To refresh it by hand: GitHub → Actions → Mirror main to full-site → Run
-  workflow.
+- To mirror by hand: GitHub → Actions → Mirror main to full-site → Run
+  workflow. That only moves `full-site` when `main` has moved; to rebuild the
+  same commit (say its `full-site` build failed), rerun that build from its
+  check on GitHub (the "Workers Builds: sol-pizza" check → Details → Rerun).
+- `full-site` is the same commit as `main`, so each commit on `main` gets two
+  "Workers Builds: sol-pizza" runs under one check name, the production deploy
+  and the `full-site` preview, and GitHub shows the later one. To see whether
+  sol.pizza deployed, look at Workers → sol-pizza → Deployments, not only the
+  check on the commit.
 - Never make `full-site` the production branch in Workers Builds: sol.pizza
   would serve the full site with `noindex`.
 - To see the full build of a branch before it's merged, run `npm run build:full`
@@ -81,3 +88,7 @@ build left in `./dist` by `npm run build:full` can't reach sol.pizza.
 npx wrangler deployments list        # note the version id that was live before
 npx wrangler rollback <version-id>
 ```
+
+Don't roll back to a version deployed before the public/full split (the commit
+"Public site: home and jobs only; full site on full-site"): those versions serve
+the whole site, About, Menu and Booking included, with 301s into them.
