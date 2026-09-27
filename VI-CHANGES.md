@@ -7,6 +7,14 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Home tagline, 28 Sep 2026
+
+The hand-written line under the home page heading changed (both the public site and the full site).
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| / | sunshine, after dark (was “with the oven we always wanted”) | cùng chiếc lò chúng tôi luôn mong muốn | ánh nắng, sau hoàng hôn |
+
 ## Public site: home page and jobs, 27 Sep 2026
 
 Until the rest of the site is ready, sol.pizza shows the home page and the jobs section only (`/jobs/`, the role pages, `/privacy/`). About, Menu and Booking are unchanged and stay on the full-site preview (https://full-site-sol-pizza.polarized-jar.workers.dev), which still shows every page and line as before. On sol.pizza, these lines are new or in a new place. Only “Trang chủ” is new text; the others are already on the site.

@@ -528,7 +528,7 @@ def build_home():
         eyebrow=t('Opening soon · Tây Hồ, Hanoi', 'Sắp khai trương · Tây Hồ, Hà Nội'),
         # lang="vi": BN Arora has no Vietnamese letters, so site.css sets the name in Philosopher
         h1=t('Sol is back in <span lang="vi">Tây Hồ</span>.', 'Sol trở lại Tây Hồ.'),
-        hand=t('with the oven we always wanted', 'cùng chiếc lò chúng tôi luôn mong muốn'),
+        hand=t('sunshine, after dark', 'ánh nắng, sau hoàng hôn'),
         lead=t('Sol Pizza closed last year. Sol opens on the same stretch of Tây Hồ with more room: '
                'a bigger kitchen, a proper bar and a Pavesi wood-fired oven built in Italy.',
                'Sol Pizza đã đóng cửa năm ngoái. Sol sẽ mở lại ngay trên con phố ấy ở Tây Hồ, với nhiều '
