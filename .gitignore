@@ -20,3 +20,6 @@ rdtest.js
 verify.js
 livecheck.js
 cf-*.json
+
+# local secrets for `wrangler dev` (see .dev.vars.example)
+.dev.vars
