@@ -1,8 +1,9 @@
 # build/ — how the site is generated
 
-`python3 build/gen.py` (or `npm run build`) writes the public site into `dist/`,
-and `python3 build/gen.py --full` (or `npm run build:full`) the whole site; see
-"Build modes" below. Either way:
+`python3 build/gen.py` (or `npm run build`) writes the public site into `dist/`:
+every page not in `HIDDEN`, which is empty, so the whole site.
+`python3 build/gen.py --full` (or `npm run build:full`) writes every page with
+`noindex`; see "Build modes" below. Either way:
 
 1. **Fonts.** Copies the Philosopher and EB Garamond woff2 files
    (Latin, Latin Extended, Vietnamese) out of `node_modules/@fontsource` into
@@ -15,12 +16,11 @@ and `python3 build/gen.py --full` (or `npm run build:full`) the whole site; see
    the filled role pages and the privacy notice (re-wrapped from `src/`), the
    kitchen's pages (`/dough/`, `/dough/log/`, `/dough/login/`: behind the kitchen
    password, which `worker/index.js` checks; `noindex`), 404.
-   The public build builds the pages that aren't public yet but doesn't write
-   them, so a mistake in one still stops every build, pull request previews
-   included.
+   The public build builds any page in `HIDDEN` but doesn't write it, so a
+   mistake in one still stops every build, pull request previews included.
 4. **Support files.** `sitemap.xml` (including the six role pages), `robots.txt`,
-   and `dist/_redirects`: `src/_redirects` as it is, or in the public build that
-   file rewritten for the pages that aren't public yet (below).
+   and `dist/_redirects`: `src/_redirects` as it is, or, in a public build while
+   `HIDDEN` lists a page, that file rewritten for it (below).
 5. **Optimise.** Minifies the CSS (csso) and JS (terser), gives everything in
    `dist/assets/` a content-hashed name, inlines the free fonts' `@font-face`
    rules into each page, quantises the share cards if Pillow is installed, and
@@ -29,38 +29,39 @@ and `python3 build/gen.py --full` (or `npm run build:full`) the whole site; see
    link, `og:url`, `og:image`, JSON-LD address, CSS `url()`, sitemap and
    `robots.txt` address, font preload and redirect destination must be a file in
    `dist/`, a redirect or an address the Worker answers (`WORKER_PATHS`: the
-   kitchen's `/api/`), and none may lead to a page that isn't public yet (nor
-   may such a page be in `dist/`). If one does, the build stops and lists it.
+   kitchen's `/api/`), and none may lead to a page in `HIDDEN` (nor may such a
+   page be in `dist/`). If one does, the build stops and lists it.
 
 The checks on the data run in both modes: the wine counts (`PROSE_WINE_COUNTS`)
 and the job descriptions against `jobs-data.json` (salaries, openings, dates).
 
 ## Build modes
 
-Until the rest of the site is ready, sol.pizza is a temporary home page plus the
-jobs section. `HIDDEN`, near the top of `gen.py`, lists the pages that aren't
-public yet by their header tab (`about`, `menu`, `booking`, as in `NAV_TABS`).
-Every build prints its mode on its first line.
+Every page is public: `HIDDEN`, near the top of `gen.py`, is empty, so the public
+build is the whole site and starts "Build mode: PUBLIC: not yet public: nothing,
+the whole site". To take a page down, add its header tab's key (`about`, `menu`,
+`booking`, as in `NAV_TABS`); the Public column says what changes then. Every
+build prints its mode on its first line.
 
 | | Public (the default) | Full |
 | --- | --- | --- |
 | Run by | `npm run build`, `npm run deploy` (`--public`), Workers Builds on `main` and on every other branch (pull request previews) | `npm run build:full` (`--full`), Workers Builds on the `full-site` branch (`WORKERS_CI_BRANCH=full-site`) |
-| Pages | Home, Jobs and the role pages, privacy, 404. The pages in `HIDDEN` aren't written, and neither are the share cards and illustrations only they use | Every page, exactly as before the split |
-| Header | The public tabs, plus Work with us while anything is hidden; no Food / Wine / Bar tabs while Menu is hidden | About · Menu · Booking |
+| Pages | Every page not in `HIDDEN` (now all of them). A hidden page isn't written, and neither are the share cards and illustrations only it uses | Every page |
+| Header | The public tabs, plus Work with us while anything is hidden; no Food / Wine / Bar tabs while Menu is hidden. Now About · Menu · Booking | About · Menu · Booking |
 | Footer "More" | The public tabs, Work with us, Privacy | About, Menu, Booking, Work with us, Privacy |
-| Home buttons | The first two of Book a table, See the menu, See open roles and @solhanoi on Instagram whose page is public (red, then outline): now See open roles and @solhanoi on Instagram | Book a table, See the menu |
-| 404 buttons | The first two of Menu, Booking, Home and See open roles whose page is public: now Home and See open roles | Menu, Booking |
-| Home JSON-LD | `hasMenu` and `acceptsReservations` only while Menu and Booking are public | Both |
-| Sitemap | Only public pages: `/`, `/jobs/` and the open role pages | Every page |
-| `_redirects` | The hidden pages (with and without the slash, and anything under them) and every old address in `src/_redirects` that leads to one go to `/` with a **302** (browsers cache a 301, and these pages come back); the rest of `src/_redirects` (`/careers` → `/jobs/`) as it is | `src/_redirects` as it is |
-| Search | Indexable, as now | `noindex`: `X-Robots-Tag: noindex` in `_headers`, `Disallow: /` in `robots.txt` |
+| Home buttons | The first two of Book a table, See the menu, See open roles and @solhanoi on Instagram whose page is public (red, then outline): now Book a table and See the menu | Book a table, See the menu |
+| 404 buttons | The first two of Menu, Booking, Home and See open roles whose page is public: now Menu and Booking | Menu, Booking |
+| Home JSON-LD | `hasMenu` and `acceptsReservations` only while Menu and Booking are public (now both) | Both |
+| Sitemap | Only public pages (now all of them): `/`, About, the three menu pages, Booking, `/jobs/` and the six open role pages | The same pages, whatever `HIDDEN` says |
+| `_redirects` | While anything is hidden, its pages (with and without the slash, and anything under them) and every old address in `src/_redirects` that leads to one go to `/` with a **302** (browsers cache a 301, and these pages come back), and the rest of `src/_redirects` stays as it is. Now `src/_redirects` as it is | `src/_redirects` as it is |
+| Search | Indexable | `noindex`: `X-Robots-Tag: noindex` in `_headers`, `Disallow: /` in `robots.txt` |
 | Link check | Yes | No |
 
 `--public` builds the public site even on the `full-site` branch; `npm run
 deploy` uses it, so a full build can't be deployed by accident. With `HIDDEN`
-empty the public build is the whole site, the same as the full build without
-`noindex`. To put a page live, delete its key from `HIDDEN` (README.md, "Putting
-a page live").
+empty, as now, the public build is the whole site, the same as the full build
+without `noindex`. To take a page down, add its key to `HIDDEN`; to put it back,
+delete the key (README.md, "Taking a page down").
 
 ## The design files
 
@@ -72,8 +73,9 @@ descendant-span selectors skip `[data-l]` (the language spans) and
 switched on, the design-system tokens (`--surface-raised`, `--ink-on-brand`,
 `--ink-on-sun`, `--focus`) and a 2px focus ring with a 2px offset, and the
 footer column headings in EB Garamond SemiBold (600, the one extra weight in
-`FONT_PLAN`; `<strong>` text uses it too); the header comment in each file lists
-what changed. Don't restyle them otherwise;
+`FONT_PLAN`; `<strong>` text uses it too). The feedback of 6 Oct 2026 took the
+rules off the home facts row. The header comment in each file lists what
+changed. Don't restyle them otherwise;
 put anything the design doesn't cover in `design/site.css`.
 `design/printed-menu.js` is the delivered header script with the language code
 merged into this repo's markup.

@@ -83,6 +83,9 @@ New pages for the kitchen, behind the kitchen password and out of search: the do
 | all three | for screen readers, after each box’s label: grams · percent · degrees Celsius | — | gam · phần trăm · độ C |
 
 To check with the kitchen: the words the team actually uses for whole wheat (“nguyên cám”), rye (“lúa mạch đen”), hydration (“tỉ lệ nước”), preferment (“bột ủ trước”), waste (“hao hụt”) and mixer friction (“nhiệt từ máy trộn”), and whether “Bột pizza” is what they call the pizza flour.
+## Whole site public again, 6 Oct 2026
+
+The hiring round has closed, and sol.pizza shows every page again: About, Menu (Food, Wine, Bar) and Booking are back, with their Vietnamese as before 27 September (as on the full-site preview). No Vietnamese text is new or changed. The 27 Sep changes below are undone: the header tabs are “Giới thiệu · Thực đơn · Đặt bàn” again (no “Tuyển dụng” tab; it stays in the footer’s “Thêm” column), the home buttons are “Đặt bàn” and “Xem thực đơn”, and the 404 buttons “Thực đơn” and “Đặt bàn”, so “Trang chủ” no longer shows.
 
 ## Home tagline, 28 Sep 2026
 
