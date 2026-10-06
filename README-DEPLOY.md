@@ -24,9 +24,9 @@ Connected. Workers → sol-pizza → Settings → Builds:
 
 The build image has Node 24 and Python 3.13, which is all the build needs. Each
 build shows up as a "Workers Builds: sol-pizza" check on the commit in GitHub.
-`npm run build` builds the **public** site (the home page and the jobs section;
-see "Build modes" in `build/README.md`), except on the `full-site` branch below,
-and every build log starts with the mode it built.
+`npm run build` builds the **public** site (every page not in `HIDDEN`, which is
+empty: the whole site; see "Build modes" in `build/README.md`), except on the
+`full-site` branch below, and every build log starts with the mode it built.
 
 A push to any other branch runs a **preview build**: the same build, then
 `npx wrangler preview`, which puts that branch on its own Preview URL (posted on
@@ -39,8 +39,9 @@ Preview URLs are public unless Cloudflare Access protects them.
 
 ## full-site: the whole site on a Preview URL
 
-The pages that aren't public yet (`HIDDEN` in `build/gen.py`) stay reviewable at
-one stable link:
+One stable link always shows `main` built in full, with `noindex`. While
+`HIDDEN` (in `build/gen.py`) is empty it matches sol.pizza; a page taken down
+stays reviewable there:
 
 **https://full-site-sol-pizza.polarized-jar.workers.dev**
 
@@ -89,6 +90,9 @@ npx wrangler deployments list        # note the version id that was live before
 npx wrangler rollback <version-id>
 ```
 
-Don't roll back to a version deployed before the public/full split (the commit
-"Public site: home and jobs only; full site on full-site"): those versions serve
-the whole site, About, Menu and Booking included, with 301s into them.
+Don't roll back to a version deployed between the public/full split and the
+commit "Whole site public again: HIDDEN = []". Versions carry no message, so go
+by date: the first is `3d69d1d0…` (27 Sep 2026, 19:02 UTC). Those serve the
+temporary site, home and jobs only, with About, Menu and Booking sent to `/`
+with a 302. Versions from before the split serve the whole site as it was then,
+without the new home tagline.
