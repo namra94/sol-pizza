@@ -13,7 +13,9 @@ every page not in `HIDDEN`, which is empty, so the whole site.
    `assets.b64.json` if they're missing.
 3. **Pages.** Home, About, the three menu pages (from `menu-data.json`), Booking,
    Jobs and the opening-team role pages (from `jobs-data.json` and `jobs/*.md`),
-   the filled role pages and the privacy notice (re-wrapped from `src/`), 404.
+   the filled role pages and the privacy notice (re-wrapped from `src/`), the
+   kitchen's pages (`/dough/`, `/dough/log/`, `/dough/login/`: behind the kitchen
+   password, which `worker/index.js` checks; `noindex`), 404.
    The public build builds any page in `HIDDEN` but doesn't write it, so a
    mistake in one still stops every build, pull request previews included.
 4. **Support files.** `sitemap.xml` (including the six role pages), `robots.txt`,
@@ -26,8 +28,9 @@ every page not in `HIDDEN`, which is empty, so the whole site.
 6. **Link check** (public build). Every `href`, `src`, canonical and alternate
    link, `og:url`, `og:image`, JSON-LD address, CSS `url()`, sitemap and
    `robots.txt` address, font preload and redirect destination must be a file in
-   `dist/` or a redirect, and none may lead to a page in `HIDDEN` (nor may such
-   a page be in `dist/`). If one does, the build stops and lists it.
+   `dist/`, a redirect or an address the Worker answers (`WORKER_PATHS`: the
+   kitchen's `/api/`), and none may lead to a page in `HIDDEN` (nor may such a
+   page be in `dist/`). If one does, the build stops and lists it.
 
 The checks on the data run in both modes: the wine counts (`PROSE_WINE_COUNTS`)
 and the job descriptions against `jobs-data.json` (salaries, openings, dates).

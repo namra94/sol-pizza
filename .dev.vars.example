@@ -1,0 +1,5 @@
+# Secrets for `npx wrangler dev` on your own machine. Copy this file to .dev.vars
+# (git-ignored) to sign in to /dough/ locally. A local test value only: the real
+# kitchen password is set with `npx wrangler secret put DOUGH_PASSWORD` and is
+# never written in the repo.
+DOUGH_PASSWORD=local-dough-test

@@ -8,15 +8,31 @@
   // the same login also sees another account with an unused sol-pizza Worker.
   "account_id": "8c4ec4948dc4732b29398c10fcb2020b",
   "compatibility_date": "2026-09-22",
+  // The Worker's own code runs only for the kitchen (run_worker_first below): the
+  // password on /dough/ and the dough log's API. Every other address is a file in
+  // ./dist, served as it is, with _headers and _redirects.
+  "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "html_handling": "auto-trailing-slash"
+    "html_handling": "auto-trailing-slash",
+    "run_worker_first": ["/dough", "/dough/*", "/api/*"]
   },
+  // The dough log. The password is a secret, never in this file:
+  // npx wrangler secret put DOUGH_PASSWORD   (README-DEPLOY.md, "The kitchen")
+  "d1_databases": [
+    {
+      "binding": "DOUGH_DB",
+      "database_name": "sol-dough",
+      "database_id": "08e24c9b-74eb-4664-a2c5-f7ef3627ce45"
+    }
+  ],
   "observability": { "enabled": true },
   // Worker Previews: Workers Builds runs `npx wrangler preview` for every branch
-  // that isn't main, and that command needs this block. Empty: the site has no
-  // bindings, so a Preview needs no settings of its own. Production deploys
+  // that isn't main, and that command needs this block. Empty on purpose: a
+  // Preview gets no database and no kitchen password, so its /dough/ stays locked
+  // (it says so) and can't reach the real dough log. Production deploys
   // (`wrangler deploy`, on main) use only the settings above.
   "previews": {}
 }

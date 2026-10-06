@@ -96,3 +96,58 @@ by date: the first is `3d69d1d0…` (27 Sep 2026, 19:02 UTC). Those serve the
 temporary site, home and jobs only, with About, Menu and Booking sent to `/`
 with a 302. Versions from before the split serve the whole site as it was then,
 without the new home tagline.
+
+## The kitchen: password and dough log
+
+`/dough/` (the dough calculator and the dough log) is behind the kitchen
+password, and the log is kept in a D1 database. Both live in the Cloudflare
+account, not the repo: the Worker's own code (`worker/index.js`, which runs only
+for `/dough/*` and `/api/*`) reads the password from the secret `DOUGH_PASSWORD`
+and the log from the binding `DOUGH_DB` (`wrangler.jsonc`). Without the
+password, `/dough/` says signing in isn't set up and lets no one in.
+
+### Setting it up (done 6 Oct 2026)
+
+Both are in place: the database `sol-dough` (Polarized Jar, Eastern North
+America; its id is in `wrangler.jsonc` and isn't a secret) and the secret
+`DOUGH_PASSWORD` on the `sol-pizza` Worker. The Worker makes the log's tables
+itself the first time it's used. Were they ever lost, from this folder:
+
+```
+npx wrangler d1 create sol-dough           # then put the database_id it prints into wrangler.jsonc
+npx wrangler secret put DOUGH_PASSWORD     # type the kitchen password when asked
+```
+
+Use a passphrase the kitchen can type on a phone but nobody would guess: four
+or five unrelated words. After 10 wrong tries from one address, signing in from
+it waits 15 minutes.
+
+### Changing the password
+
+Run `npx wrangler secret put DOUGH_PASSWORD` again. Every phone is signed out
+and needs the new one. Do this when someone with the password leaves.
+
+### Previews and full-site
+
+Previews don't inherit production settings (`"previews": {}` in
+`wrangler.jsonc`), so a branch's Preview URL and full-site have no database and
+no password: their `/dough/` stays locked, and nothing on a Preview can touch the
+real log. To try the kitchen on a Preview, give that Preview its own password
+(`npx wrangler preview secret put DOUGH_PASSWORD --name <branch>`); without a
+database there, the calculator works and the log says it isn't set up.
+
+### On your own machine
+
+Copy `.dev.vars.example` to `.dev.vars` (git-ignored) and run `npm run build`
+then `npx wrangler dev`: it signs in with the test password in that file and
+keeps a local log in `.wrangler/` that never touches the real one. To clear a
+local lockout: `npx wrangler d1 execute sol-dough --local --command "DELETE FROM dough_login_failures"`.
+
+### The log's data
+
+The log holds each batch, the kitchen's readings, notes and the name typed
+under "Mixed by". To look at it outside the site:
+`npx wrangler d1 execute sol-dough --remote --command "SELECT day, made_by, balls, ball_g FROM dough_log ORDER BY day DESC LIMIT 20"`.
+D1's Time Travel can put the whole database back to an earlier minute (how far
+back depends on the Cloudflare plan): `npx wrangler d1 time-travel restore sol-dough --timestamp=<when>`.
+It rewinds everything logged since, so download the CSV first.

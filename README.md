@@ -24,6 +24,7 @@ again (below). The `full-site` branch mirrors `main` at
 | `/jobs/<slug>/` | The six opening-team roles: `host`, `server`, `bartender`, `pizzaiolo`, `line-cook`, `kitchen-porter` | Public |
 | `/jobs/<slug>` | The three filled roles, under "Recently filled": `restaurant-accountant`, `sous-chef`, `restaurant-supervisor` | Public |
 | `/privacy/` | Applicant privacy notice | Public |
+| `/dough/`, `/dough/log/` | The kitchen's dough calculator and dough log (below) | Behind the kitchen password (`/dough/login/`): no tab or footer link, `noindex`, not in the sitemap, no analytics |
 
 Also public: the 404 page, `sitemap.xml`, `robots.txt`, and the assets and share
 cards those pages use. The old addresses in `src/_redirects` (`/story`, `/visit`,
@@ -134,6 +135,44 @@ copy untouched: a "This role has been filled" note at the top, no apply button,
 `noindex`. Those three are in English only; Vietnamese readers see a one-line
 note.
 
+### The kitchen: dough calculator and dough log
+
+`/dough/` and `/dough/log/` are tools for the dough station, not pages for
+guests. They sit behind one shared **kitchen password**: staff open
+sol.pizza/dough/ on a phone, sign in once, and stay signed in on that phone for
+30 days. The password is a Cloudflare secret, never in the repo; setting it and
+changing it are in `README-DEPLOY.md`, "The kitchen". Changing it signs every
+phone out.
+
+- **The calculator** (`/dough/`): set the number of balls and their weight, and
+  the weights for the mix follow. The formula is in baker's percentages with
+  fresh yeast; the flour is a blend of pizza flour, whole wheat and rye (pizza
+  flour is the rest); a preferment (poolish or biga) is made with pizza flour.
+  The kitchen's temperature and air humidity are measured each time; the
+  temperature also works out, under Water temperature, how warm the water should
+  be and how much ice to use.
+- **Logging a batch**: at the end of the calculator, the day, who mixed it, the
+  dough's temperature after mixing and any notes. The batch, the flour, the
+  kitchen and the weights go in with it.
+- **The dough log** (`/dough/log/`): every batch, newest first under a heading
+  per day, with a delete button, and a download of the whole log as a CSV for a
+  spreadsheet. The log is kept in a Cloudflare D1 database, `sol-dough`.
+
+The calculator opens on the house spec, `DOUGH_SPEC` near `build_dough()` in
+`build/gen.py`: ball count and weight, waste, the formula, the flour blend, a
+preferment, and the temperatures for the water. **Today's numbers are a starting
+point, not Sol's spec**: set them with the Sous Chef, who owns the dough
+programme, and rebuild. `PREFERMENTS` holds what poolish and biga start at when
+picked. Anyone can change a number on the page for one batch; the address then
+carries whatever of the batch differs from the house spec (`/dough/?n=60&h=68`),
+so "Share this batch" sends it as a link (the share sheet on phones, a copied link
+elsewhere), and "Back to the house spec" clears it.
+
+The pages are written by `build/gen.py` like the rest; the arithmetic is in
+`build/design/dough.js`, the log page's script in `build/design/dough-log.js`, and
+the password and the log's API in `worker/index.js`, the Worker's own code, which
+runs only for `/dough/*` and `/api/*`.
+
 ---
 
 ## How the language switch works
@@ -187,7 +226,10 @@ build/menu-data.json    food, wine, bar
 build/jobs-data.json    the opening-team round and its six roles
 build/jobs/             the six job descriptions, English and Vietnamese (Markdown)
 build/design/           tokens.css, printed-menu.css (the design), site.css (repo
-                        additions), printed-menu.js (menu tabs, mobile nav, EN / VI)
+                        additions), printed-menu.js (menu tabs, mobile nav, EN / VI),
+                        dough.js and dough-log.js (the kitchen's calculator and log)
+worker/index.js         the Worker's own code, for the kitchen only: the password on
+                        /dough/ and the dough log's API (D1)
 build/assets/           logo, illustrations, sun pattern (SVG)
 build/og/               share cards: og-*.html sources, rendered by og.js
 build/assets.b64.json   the share-card PNGs and BN Arora, as text (see build/pack_assets.py)
@@ -217,6 +259,7 @@ From `Sol_Brand Standards_250619.pdf`, defined in `build/design/tokens.css`:
 
 ## Analytics
 
-GA4 (`G-SLBWDVH550`) and the Meta pixel (`856214124247013`) are on every page.
+GA4 (`G-SLBWDVH550`) and the Meta pixel (`856214124247013`) are on every page
+except the kitchen's (`/dough/`), whose visits are staff, not guests.
 `pixel.js` adds the careers events (ViewContent on `/jobs/`, Lead on a click to
 email jobs@sol.pizza). The applicant privacy notice describes both tools.

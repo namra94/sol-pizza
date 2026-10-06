@@ -276,9 +276,11 @@ fbq('track', 'PageView');
 <script defer src="/pixel.js"></script>""" % dict(ga=GA_ID, pix=FB_PIX)
 
 
-def head(path, title, desc, og, ogtype, extra, index, og_text=None, og_locale=('en_GB', 'vi_VN')):
+def head(path, title, desc, og, ogtype, extra, index, og_text=None, og_locale=('en_GB', 'vi_VN'),
+         analytics=True):
     """og_text: the share card's (title, description) when they differ from the English
-    title and description; og_locale: (the card's locale, the alternate)."""
+    title and description; og_locale: (the card's locale, the alternate). analytics:
+    GA4 and the Meta pixel (every page but the kitchen's dough calculator)."""
     (title_en, title_vi), (desc_en, desc_vi) = title, desc
     og_title, og_desc = og_text or (title_en, desc_en)
     url = SITE + path
@@ -328,7 +330,7 @@ def head(path, title, desc, og, ogtype, extra, index, og_text=None, og_locale=('
     ]
     if extra:
         lines.append(extra)
-    lines += [ANALYTICS, '</head>']
+    lines += ([ANALYTICS] if analytics else []) + ['</head>']
     return '\n'.join(lines) + '\n'
 
 
@@ -432,12 +434,12 @@ def footer():
 
 def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website',
          extra='', body_attrs='', index=True, out=None, verbatim=False,
-         og_text=None, og_locale=('en_GB', 'vi_VN')):
+         og_text=None, og_locale=('en_GB', 'vi_VN'), analytics=True):
     """Write one page. title and desc are (English, Vietnamese) pairs.
     verbatim: leave main's text exactly as it is (the privacy notice).
-    og_text, og_locale: see head(). A page that isn't public yet (HIDDEN) is built but
-    not written, so a mistake in it still stops the public build; returns None."""
-    doc = head(path, title, desc, og, ogtype, extra, index, og_text, og_locale)
+    og_text, og_locale, analytics: see head(). A page that isn't public yet (HIDDEN) is
+    built but not written, so a mistake in it still stops the public build; returns None."""
+    doc = head(path, title, desc, og, ogtype, extra, index, og_text, og_locale, analytics)
     doc += '<body class="%s"%s>\n%s\n' % (body_class, body_attrs, SUN_SPRITE)
     doc += nbsp('<a class="skip" href="#main">%s</a>\n' % t('Skip to content', 'Chuyển đến nội dung chính')
                 + header(cur))
@@ -1486,6 +1488,481 @@ def build_privacy():
 
 
 # ==========================================================================
+# THE KITCHEN  /dough/  /dough/log/  /dough/login/
+# Tools for the dough station, not pages for guests: behind the kitchen password
+# (worker/index.js), with no tab, footer link or sitemap entry, noindex, and no
+# analytics. Staff open sol.pizza/dough/ on a phone.
+#   /dough/        the calculator: set the balls and their weight, and the weights
+#                  for the mix follow, with the flour blend, a preferment (poolish or
+#                  biga), the kitchen's temperature and humidity and, when wanted,
+#                  the water temperature; then log the batch
+#   /dough/log/    every batch logged, newest first, and a CSV of it
+#   /dough/login/  the kitchen password
+# This writes the pages, every line in both languages, and the house spec the
+# calculator opens on. The arithmetic is in build/design/dough.js, the log page's
+# script in dough-log.js, and the log itself in D1, behind the Worker.
+# ==========================================================================
+# The house spec: what the calculator opens on and what "Back to the house spec"
+# goes back to. Baker's percentages: each ingredient as a percentage of all the
+# flour's weight; the yeast is fresh yeast. The blend gives whole wheat and rye,
+# and pizza flour is the rest. A shared link carries only what differs from these.
+# CONFIRM with the Sous Chef, who owns the dough programme: a starting point for
+# a cold-fermented dough for the wood oven, not Sol's spec yet.
+DOUGH_SPEC = {
+    'balls': 40, 'ball': 260, 'waste': 2,        # balls, grams each, % extra for the bowl and the bench
+    'hydration': 65, 'salt': 2.8, 'yeast': 0.6, 'oil': 0, 'sugar': 0,
+    'whole_wheat': 0, 'rye': 0,                  # % of the flour; pizza flour is the rest
+    'preferment': 'none',                        # none, or a key of PREFERMENTS
+    # Water temperature, °C: the dough you want after mixing, the flour, the
+    # preferment, the mixer's friction, and the water before any ice. The kitchen's
+    # temperature and humidity are measured each time, not part of the spec.
+    't_dough': 24, 't_flour': 26, 't_pf': 18, 't_friction': 12, 't_water': 28,
+}
+# What a preferment starts at when it's picked: its share of all the flour (%),
+# its hydration (%) and its fresh yeast (% of its own flour). It's made with pizza
+# flour; whole wheat and rye go in at the final mix.
+PREFERMENTS = {
+    'poolish': {'pf_flour': 30, 'pf_hydration': 100, 'pf_yeast': 0.3},
+    'biga':    {'pf_flour': 50, 'pf_hydration': 45, 'pf_yeast': 1},
+}
+assert DOUGH_SPEC['preferment'] in ['none'] + list(PREFERMENTS), \
+    'DOUGH_SPEC: preferment is none or one of %s' % ', '.join(PREFERMENTS)
+assert DOUGH_SPEC['whole_wheat'] + DOUGH_SPEC['rye'] <= 100, 'DOUGH_SPEC: whole wheat and rye come to over 100%'
+
+DOUGH_UNITS = {'g': t('grams', 'gam'), '%': t('percent', 'phần trăm'), '°C': t('degrees Celsius', 'độ C')}
+KITCHEN_EYEBROW = t('Kitchen', 'Bếp')
+FRESH_YEAST = t('Fresh yeast', 'Men tươi')
+PIZZA_FLOUR = t('Pizza flour', 'Bột pizza')
+WHOLE_WHEAT = t('Whole wheat flour', 'Bột mì nguyên cám')
+RYE = t('Rye flour', 'Bột lúa mạch đen')
+
+
+def dough_default(name):
+    """The value a box opens on: the house spec's; a preferment's boxes take the spec's
+    preferment (with none, the first one, hidden until one is picked), as dough.js does;
+    the kitchen's measurements and the log's boxes open empty."""
+    if name in DOUGH_SPEC:
+        return DOUGH_SPEC[name]
+    pf = PREFERMENTS.get(DOUGH_SPEC['preferment']) or next(iter(PREFERMENTS.values()))
+    return pf.get(name, '')
+
+
+def dough_box(fid, inner, text, unit='', attrs=''):
+    """A label in capitals over a white box, the unit at its right."""
+    return ('<div class="dough-field"%s><label class="label" for="%s">%s%s</label><div class="dough-box">%s%s</div></div>'
+            % (attrs, fid, text, '<span class="visually-hidden">, %s</span>' % DOUGH_UNITS[unit] if unit else '',
+               inner, '<span class="dough-unit" aria-hidden="true">%s</span>' % unit if unit else ''))
+
+
+def dough_field(name, text, unit, lo, hi, integer=False, hint=None, attrs='', optional=False):
+    """One number. A text box with a number keypad rather than type="number", so 2,8 and
+    2.8 both work whatever the phone's language; dough.js reads it and checks it against
+    data-min, data-max and data-int. optional: may stay empty (the kitchen's measurements
+    and the log's), until the log needs it. hint: the id of the line that explains it."""
+    fid = 'd-' + name.replace('_', '-')
+    value = dough_default(name)
+    return dough_box(fid, '<input id="%s" name="%s" type="text" inputmode="%s" value="%s" autocomplete="off" '
+                          'spellcheck="false" data-min="%g" data-max="%g"%s%s%s>'
+                     % (fid, name, 'numeric' if integer else 'decimal', '' if value == '' else '%g' % value, lo, hi,
+                        ' data-int' if integer else '', ' data-optional' if optional else '',
+                        ' aria-describedby="%s"' % hint if hint else ''), text, unit, attrs)
+
+
+def dough_choice(name, options):
+    """Radio buttons drawn as one segmented box; the house spec's option is checked."""
+    return '<div class="dough-seg">%s</div>' % ''.join(
+        '<label><input type="radio" name="%s" value="%s"%s><span>%s</span></label>'
+        % (name, value, ' checked' if DOUGH_SPEC[name] == value else '', text) for value, text in options)
+
+
+def dough_nav(cur):
+    """Calculator · Dough log · Sign out, under the page title."""
+    links = [('calc', '/dough/', t('Calculator', 'Tính bột')), ('log', '/dough/log/', t('Dough log', 'Nhật ký bột'))]
+    return ('<nav class="dough-nav" %s><ul>%s<li><form method="post" action="/api/dough/logout">'
+            '<button type="submit">%s</button></form></li></ul></nav>'
+            % (label('Kitchen', 'Bếp'),
+               ''.join('<li><a href="%s"%s>%s</a></li>' % (href, ' aria-current="page"' if key == cur else '', name)
+                       for key, href, name in links),
+               t('Sign out', 'Đăng xuất')))
+
+
+def kitchen_page(path, data_page, title, desc, main, extra=''):
+    """A kitchen page: behind the password, out of search, no analytics."""
+    return page(path, 'page-kitchen page-%s' % data_page, title, desc, main, index=False, analytics=False,
+                body_attrs=' data-page="%s"' % data_page,
+                extra='<meta name="robots" content="noindex, nofollow">' + ('\n' + extra if extra else ''))
+
+
+def build_dough():
+    def out(key):
+        return '<span data-out="%s">—</span>' % key
+
+    def row(key, name, cond=None):
+        return ('<tr%s><th scope="row">%s</th><td>%s&nbsp;g</td></tr>'
+                % (' data-if="%s" hidden' % cond if cond else '', name, out(key)))
+
+    def pf_names(lower=False):
+        return ''.join('<span data-if="pf-%s" hidden>%s</span>' % (k, k if lower else k.capitalize())
+                       for k in PREFERMENTS)
+
+    def warn(key, text):
+        return '<p class="dough-warn" data-if="%s" hidden>%s</p>' % (key, text)
+
+    def status(key, text, cls='dough-status'):
+        return '<p class="%s" data-if="%s" hidden>%s</p>' % (cls, key, text)
+
+    main = """<main id="main" class="wrap">
+{title}
+{nav}
+<noscript><aside class="note-box"><p>{nojs}</p></aside></noscript>
+<form class="dough" id="dough" autocomplete="off" novalidate>
+<fieldset class="dough-set"><legend>{h_batch}</legend>
+  <div class="dough-fields">{balls}{ball}{waste}</div>
+  <p class="dough-hint" id="d-waste-hint">{waste_hint}</p>
+</fieldset>
+<section class="dough-out" aria-labelledby="dough-out-l">
+  <p class="label" id="dough-out-l">{weigh}</p>
+  <h2 class="dough-sum">{o_balls} × {o_ball}&nbsp;g</h2>
+  <p class="dough-sub">{sub}</p>
+  <table class="dough-table">
+    <tbody data-if="pf" hidden><tr class="dough-group"><th colspan="2" scope="colgroup">{pf_head}</th></tr>{pf_rows}</tbody>
+    <tbody><tr class="dough-group" data-if="pf" hidden><th colspan="2" scope="colgroup">{final}</th></tr>{rows}</tbody>
+    <tfoot><tr><th scope="row">{total}</th><td>{o_total}&nbsp;g</td></tr></tfoot>
+  </table>
+  {w_invalid}{w_blend}{w_pf_pizza}{w_pf}
+  <div class="dough-water" data-if="temp" hidden>
+    <p class="label">{h_temp}</p>
+    <p class="dough-water-main" data-if="ice" hidden>{ice}</p>
+    <p class="dough-water-main" data-if="no-ice" hidden>{no_ice}</p>
+    <p class="dough-water-note" data-if="water" hidden>{water_note}</p>
+    {w_kitchen}{w_ice}{w_hot}{w_dry}
+  </div>
+  <div class="dough-actions"><button class="btn btn-red btn-sm" type="button" data-share><span data-if="not-copied">{share}</span><span data-if="copied" hidden>{copied}</span></button><button class="btn btn-outline btn-sm" type="button" data-reset>{reset}</button></div>
+  <p class="dough-note">{note}</p>
+  <a class="link-sc dough-to-log" href="#log">{to_log}</a>
+</section>
+<fieldset class="dough-set"><legend>{h_formula}</legend>
+  <p class="dough-hint">{bakers}</p>
+  <div class="dough-fields">{hydration}{salt}{yeast}{oil}{sugar}</div>
+  <fieldset class="dough-blend"><legend class="label">{h_blend}</legend>
+    <div class="dough-fields">{pizza}{whole_wheat}{rye}</div>
+    <p class="dough-hint" id="d-blend-hint">{blend_hint}</p>
+  </fieldset>
+</fieldset>
+<fieldset class="dough-set"><legend>{h_pf}</legend>
+  {preferment}
+  <div class="dough-fields" data-if="pf" hidden>{pf_flour}{pf_hydration}{pf_yeast}</div>
+  <p class="dough-hint" id="d-pf-hint" data-if="pf" hidden>{pf_hint}</p>
+</fieldset>
+<fieldset class="dough-set"><legend>{h_kitchen}</legend>
+  <div class="dough-fields">{kitchen_c}{humidity}</div>
+  <p class="dough-hint" id="d-kitchen-hint">{kitchen_hint}</p>
+</fieldset>
+<details class="dough-set dough-temp"><summary>{h_temp}{caret}</summary>
+  <p class="dough-hint">{temp_hint}</p>
+  <div class="dough-fields">{t_dough}{t_flour}{t_pf}{t_friction}{t_water}</div>
+  <p class="dough-hint" id="d-friction-hint">{friction_hint}</p>
+  <p class="dough-hint" id="d-water-hint">{water_hint}</p>
+</details>
+<fieldset class="dough-set dough-log" id="log"><legend>{h_log}</legend>
+  <p class="dough-hint">{log_hint}</p>
+  <div class="dough-fields dough-fields-2">{day}{made_by}{dough_c}</div>
+  <div class="dough-field dough-notes"><label class="label" for="d-notes">{l_notes}</label><textarea id="d-notes" name="notes" rows="3" maxlength="1000"></textarea></div>
+  {w_log_kitchen}{w_log_who}{w_log_check}
+  <div class="dough-actions"><button class="btn btn-red" type="button" data-log>{log_btn}</button></div>
+  <div role="status">{s_saving}{s_saved}{s_failed}{s_signed_out}{s_off}</div>
+</fieldset>
+</form>
+<script type="application/json" id="dough-spec">{spec}</script>
+</main>
+""".format(
+        title=page_title(KITCHEN_EYEBROW, t('Dough calculator', 'Tính bột pizza'),
+                         t('Set the number of balls and their weight, and the weights for the mix follow.',
+                           'Nhập số viên bột và trọng lượng mỗi viên, lượng nguyên liệu cần trộn sẽ tự tính.')),
+        nav=dough_nav('calc'),
+        nojs=t('The calculator needs JavaScript. Turn it on in the browser’s settings.',
+               'Công cụ này cần JavaScript. Hãy bật JavaScript trong cài đặt trình duyệt.'),
+        h_batch=t('The batch', 'Mẻ bột'),
+        balls=dough_field('balls', t('Dough balls', 'Số viên bột'), None, 1, 2000, integer=True),
+        ball=dough_field('ball', t('Each ball', 'Mỗi viên'), 'g', 50, 2000),
+        waste=dough_field('waste', t('Waste', 'Hao hụt'), '%', 0, 50, hint='d-waste-hint'),
+        waste_hint=t('Waste: extra dough for what stays in the mixer bowl and on the bench.',
+                     'Hao hụt: phần bột làm thêm cho lượng dính lại trong cối trộn và trên bàn.'),
+        weigh=t('Weigh out', 'Cân nguyên liệu'),
+        o_balls=out('balls'), o_ball=out('ball'),
+        sub=t('%s kg of dough<span data-if="waste">, with %s%% for waste</span>' % (out('dough_kg'), out('waste')),
+              '%s kg bột<span data-if="waste">, đã gồm %s%% hao hụt</span>' % (out('dough_kg'), out('waste'))),
+        pf_head=pf_names() + t(' · mix first', ' · trộn trước'),
+        pf_rows=row('pf_flour', PIZZA_FLOUR) + row('pf_water', t('Water', 'Nước')) + row('pf_yeast', FRESH_YEAST),
+        final=t('Final mix', 'Trộn chính'),
+        rows=''.join([row('pizza', PIZZA_FLOUR), row('ww', WHOLE_WHEAT, 'ww'), row('rye', RYE, 'rye'),
+                      row('water', t('Water', 'Nước')),
+                      row('pf', t('All the %s' % pf_names(True), 'Toàn bộ %s' % pf_names(True)), 'pf'),
+                      row('salt', t('Salt', 'Muối')), row('yeast', FRESH_YEAST),
+                      row('oil', t('Oil', 'Dầu'), 'oil'), row('sugar', t('Sugar', 'Đường'), 'sugar')]),
+        total=t('Total', 'Tổng'), o_total=out('dough_g'),
+        w_invalid=warn('warn-invalid', t('Check the marked boxes.', 'Kiểm tra lại các ô được đánh dấu.')),
+        w_blend=warn('warn-blend', t('Whole wheat and rye come to more than all the flour.',
+                                     'Bột nguyên cám và bột lúa mạch đen đang nhiều hơn tổng lượng bột mì.')),
+        w_pf_pizza=warn('warn-pf-pizza', t('The preferment needs more pizza flour than the blend has. Lower its '
+                                           'share of the flour, or the whole wheat and rye.',
+                                           'Bột ủ cần nhiều bột pizza hơn lượng có trong hỗn hợp. Hãy giảm phần bột '
+                                           'mì của bột ủ, hoặc giảm bột nguyên cám và lúa mạch đen.')),
+        w_pf=warn('warn-pf', t('The preferment holds more water than the whole dough. Lower its hydration or '
+                               'its share of the flour.',
+                               'Bột ủ đang chứa nhiều nước hơn cả khối bột. Hãy giảm tỉ lệ nước hoặc phần bột '
+                               'mì của bột ủ.')),
+        h_temp=t('Water temperature', 'Nhiệt độ nước'),
+        ice=t('%s&nbsp;g water + %s&nbsp;g ice' % (out('w_tap'), out('ice')),
+              '%s&nbsp;g nước + %s&nbsp;g đá' % (out('w_tap'), out('ice'))),
+        no_ice=t('%s&nbsp;g water at %s&nbsp;°C' % (out('w_final'), out('tw')),
+                 '%s&nbsp;g nước ở %s&nbsp;°C' % (out('w_final'), out('tw'))),
+        water_note=t('For dough at %s&nbsp;°C the water works out at %s&nbsp;°C; yours is %s&nbsp;°C.'
+                     % (out('t_dough'), out('tw'), out('t_water')),
+                     'Để bột đạt %s&nbsp;°C, nước cần ở %s&nbsp;°C; nước của bạn đang ở %s&nbsp;°C.'
+                     % (out('t_dough'), out('tw'), out('t_water'))),
+        w_kitchen=status('need-kitchen', t('Measure the kitchen’s temperature to work out the water.',
+                                           'Hãy đo nhiệt độ bếp để tính nhiệt độ nước.'), 'dough-water-note'),
+        w_ice=warn('warn-ice', t('Ice alone can’t cool it that far: chill the flour first, or aim a degree or '
+                                 'two warmer.',
+                                 'Chỉ dùng đá thì không đủ lạnh: hãy làm lạnh bột mì trước, hoặc chọn nhiệt độ '
+                                 'bột cao hơn một, hai độ.')),
+        w_hot=warn('warn-hot', t('Water above 40&nbsp;°C can harm the yeast: use it cooler and let the dough '
+                                 'warm up after mixing.',
+                                 'Nước trên 40&nbsp;°C có thể làm hỏng men: hãy dùng nước nguội hơn và để bột '
+                                 'ấm lên sau khi trộn.')),
+        w_dry=warn('warn-dry', t('All the water is in the preferment, so there’s none to set at the final mix.',
+                                 'Toàn bộ nước đã nằm trong bột ủ, nên không có nước để điều chỉnh ở lần '
+                                 'trộn chính.')),
+        share=t('Share this batch', 'Chia sẻ mẻ bột này'),
+        copied=t('Link copied', 'Đã sao chép liên kết'),
+        reset=t('Back to the house spec', 'Về công thức chuẩn'),
+        note=t('The page opens on the house spec. Share sends the batch as it is now, as a link.',
+               'Trang luôn mở với công thức chuẩn của bếp. Nút Chia sẻ gửi mẻ bột hiện tại dưới dạng '
+               'liên kết.'),
+        to_log=t('Log this batch', 'Ghi nhật ký mẻ này'),
+        h_formula=t('The formula', 'Công thức'),
+        bakers=t('Baker’s percentages: each ingredient as a percentage of all the flour’s weight.',
+                 'Tỉ lệ theo bột mì (baker’s percentage): mỗi nguyên liệu tính bằng phần trăm so với '
+                 'tổng trọng lượng bột mì.'),
+        hydration=dough_field('hydration', t('Hydration', 'Tỉ lệ nước'), '%', 40, 120),
+        salt=dough_field('salt', t('Salt', 'Muối'), '%', 0, 10),
+        yeast=dough_field('yeast', FRESH_YEAST, '%', 0, 10),
+        oil=dough_field('oil', t('Oil', 'Dầu'), '%', 0, 30),
+        sugar=dough_field('sugar', t('Sugar', 'Đường'), '%', 0, 30),
+        h_blend=t('The flour', 'Bột mì'),
+        pizza=dough_box('d-pizza', '<output id="d-pizza" for="d-whole-wheat d-rye" data-out="pizza_pct">%g</output>'
+                        % (100 - DOUGH_SPEC['whole_wheat'] - DOUGH_SPEC['rye']), PIZZA_FLOUR, '%',
+                        ' data-readout'),
+        whole_wheat=dough_field('whole_wheat', t('Whole wheat', 'Nguyên cám'), '%', 0, 100, hint='d-blend-hint'),
+        rye=dough_field('rye', t('Rye', 'Lúa mạch đen'), '%', 0, 100, hint='d-blend-hint'),
+        blend_hint=t('Pizza flour is the rest. A preferment is made with pizza flour; whole wheat and rye go in '
+                     'at the final mix.',
+                     'Bột pizza là phần còn lại. Bột ủ làm bằng bột pizza; bột nguyên cám và lúa mạch đen cho vào '
+                     'ở lần trộn chính.'),
+        h_pf=t('Preferment', 'Bột ủ trước'),
+        preferment=dough_choice('preferment', [('none', t('None', 'Không'))]
+                                + [(k, k.capitalize()) for k in PREFERMENTS]),
+        pf_flour=dough_field('pf_flour', t('Share of the flour', 'Phần bột mì'), '%', 1, 100, hint='d-pf-hint'),
+        pf_hydration=dough_field('pf_hydration', t('Its hydration', 'Tỉ lệ nước'), '%', 40, 150),
+        pf_yeast=dough_field('pf_yeast', t('Its yeast', 'Men tươi'), '%', 0, 10, hint='d-pf-hint'),
+        pf_hint=t('Share of the flour: how much of all the flour goes into the preferment. Its fresh yeast is a '
+                  'percentage of its own flour. The salt and the rest go in at the final mix.',
+                  'Phần bột mì: bao nhiêu phần trăm tổng lượng bột mì dùng cho bột ủ. Men tươi của bột ủ tính '
+                  'theo phần trăm bột mì của chính nó. Muối và phần còn lại cho vào ở lần trộn chính.'),
+        h_kitchen=t('The kitchen', 'Bếp'),
+        kitchen_c=dough_field('kitchen_c', t('Temperature', 'Nhiệt độ'), '°C', -10, 60, optional=True,
+                              hint='d-kitchen-hint'),
+        humidity=dough_field('humidity', t('Air humidity', 'Độ ẩm không khí'), '%', 0, 100, optional=True,
+                             hint='d-kitchen-hint'),
+        kitchen_hint=t('Measure them when you mix. Both go in the log, and the temperature works out the water.',
+                       'Đo khi bắt đầu trộn. Cả hai được ghi vào nhật ký, và nhiệt độ bếp dùng để tính nhiệt '
+                       'độ nước.'),
+        temp_hint=t('Measure the flour and your water too, and this works out how warm the water should be, '
+                    'and how much ice, for the dough you want.',
+                    'Đo thêm nhiệt độ bột mì và nước, công cụ sẽ tính nước cần ấm hay lạnh bao nhiêu, và cần '
+                    'bao nhiêu đá, để bột đạt nhiệt độ mong muốn.'),
+        t_dough=dough_field('t_dough', t('Dough to aim for', 'Bột cần đạt'), '°C', 10, 40),
+        t_flour=dough_field('t_flour', t('Flour', 'Bột mì'), '°C', -20, 50),
+        t_pf=dough_field('t_pf', t('Preferment', 'Bột ủ'), '°C', -5, 50, attrs=' data-if="pf" hidden'),
+        t_friction=dough_field('t_friction', t('Mixer friction', 'Nhiệt từ máy trộn'), '°C', 0, 40,
+                               hint='d-friction-hint'),
+        t_water=dough_field('t_water', t('Your water', 'Nước của bạn'), '°C', 0, 60, hint='d-water-hint'),
+        friction_hint=t('Mixer friction: how much the mixer warms the dough. To measure it, after a mix: 3 × '
+                        'the dough’s temperature, minus the flour, the kitchen and the water (with a preferment, '
+                        '4 × and minus the preferment too).',
+                        'Nhiệt từ máy trộn: máy trộn làm bột ấm thêm bao nhiêu độ. Cách đo, sau một mẻ trộn: '
+                        '3 × nhiệt độ bột, trừ nhiệt độ bột mì, bếp và nước (nếu có bột ủ: 4 × và trừ thêm '
+                        'nhiệt độ bột ủ).'),
+        water_hint=t('Your water: as it comes, from the tap or the fridge, before any ice.',
+                     'Nước của bạn: nhiệt độ nước đang có, từ vòi hoặc tủ lạnh, trước khi cho đá.'),
+        caret=CARET,
+        h_log=t('Log this batch', 'Ghi nhật ký mẻ này'),
+        log_hint=t('Once it’s mixed. The batch, the flour, the kitchen and the weights above go in with it.',
+                   'Sau khi trộn xong. Mẻ bột, bột mì, thông số bếp và lượng nguyên liệu ở trên sẽ được ghi '
+                   'cùng.'),
+        day=dough_box('d-day', '<input id="d-day" name="day" type="date">', t('Day', 'Ngày')),
+        made_by=dough_box('d-made-by', '<input id="d-made-by" name="made_by" type="text" maxlength="60" '
+                          'autocomplete="off" spellcheck="false">', t('Mixed by', 'Người trộn')),
+        dough_c=dough_field('dough_c', t('Dough after mixing', 'Bột sau khi trộn'), '°C', -10, 60, optional=True),
+        l_notes=t('Notes', 'Ghi chú'),
+        w_log_kitchen=warn('log-kitchen', t('Measure the kitchen first: its temperature and air humidity go in '
+                                            'the log.',
+                                            'Hãy đo bếp trước: nhiệt độ và độ ẩm không khí sẽ được ghi vào '
+                                            'nhật ký.')),
+        w_log_who=warn('log-who', t('Add the day and who mixed it.', 'Hãy ghi ngày và người trộn.')),
+        w_log_check=warn('log-check', t('Fix what’s marked above first.',
+                                        'Hãy sửa các mục được đánh dấu ở trên trước.')),
+        log_btn=t('Log this batch', 'Ghi vào nhật ký'),
+        s_saving=status('log-saving', t('Saving…', 'Đang lưu…')),
+        s_saved=status('log-saved', t('Logged. <a href="/dough/log/">See the dough log</a>',
+                                      'Đã ghi. <a href="/dough/log/">Xem nhật ký bột</a>')),
+        s_failed=status('log-failed', t('Couldn’t save it. Check the connection and try again.',
+                                        'Chưa lưu được. Hãy kiểm tra kết nối và thử lại.'), 'dough-warn'),
+        s_signed_out=status('log-signed-out',
+                            t('You’ve been signed out. <a href="/dough/login/" target="_blank">Sign in</a> in a '
+                              'new tab, then log it again here.',
+                              'Bạn đã bị đăng xuất. Hãy <a href="/dough/login/" target="_blank">đăng nhập</a> ở '
+                              'một thẻ mới, rồi ghi lại ở đây.'), 'dough-warn'),
+        s_off=status('log-off', t('The log isn’t set up on this copy of the site.',
+                                  'Nhật ký chưa được thiết lập trên bản này của trang.'), 'dough-warn'),
+        spec=json.dumps({'spec': DOUGH_SPEC, 'preferments': PREFERMENTS},
+                        ensure_ascii=False).replace('</', '<\\/'),
+    )
+    return kitchen_page('/dough/', 'dough', ('Dough calculator — Sol', 'Tính bột pizza — Sol'),
+                        ('The dough calculator for Sol’s kitchen.', 'Công cụ tính bột pizza cho bếp của Sol.'),
+                        main, extra='<script src="/assets/dough.js" defer></script>')
+
+
+def build_dough_log():
+    """/dough/log/: dough-log.js fetches the log and fills a copy of the entry template
+    for each batch, under a heading for each day."""
+    def fact(name, value, cond=None):
+        return '<div%s><dt>%s</dt><dd>%s</dd></div>' % (' data-if="%s"' % cond if cond else '', name, value)
+
+    def slot(key):
+        return '<span data-slot="%s"></span>' % key
+
+    def part(cond, en, vi):
+        """A piece of a line that shows only when cond holds, in both languages."""
+        return '<span data-if="%s"> · %s</span>' % (cond, t(en, vi))
+
+    entry = ('<template id="log-entry"><article class="log-entry">'
+             '<header class="log-head"><p class="log-batch">{balls} × {ball}&nbsp;g · {kg}&nbsp;kg</p>'
+             '<p class="log-meta">{by}</p></header><dl class="log-facts">{facts}</dl>'
+             '<button class="log-delete" type="button" data-delete data-confirm-en="{c_en}" data-confirm-vi="{c_vi}">'
+             '{delete}</button></article></template>').format(
+        balls=slot('balls'), ball=slot('ball'), kg=slot('dough_kg'),
+        by=t('%s, logged at %s' % (slot('made_by'), slot('time')), '%s, ghi lúc %s' % (slot('made_by'), slot('time'))),
+        facts=''.join([
+            fact(t('Flour', 'Bột mì'),
+                 t('%s%% pizza flour' % slot('pizza_pct'), '%s%% bột pizza' % slot('pizza_pct'))
+                 + part('ww', '%s%% whole wheat' % slot('ww_pct'), '%s%% nguyên cám' % slot('ww_pct'))
+                 + part('rye', '%s%% rye' % slot('rye_pct'), '%s%% lúa mạch đen' % slot('rye_pct'))),
+            fact(t('Formula', 'Công thức'),
+                 t('Hydration %s%% · salt %s%% · fresh yeast %s%%' % (slot('hydration'), slot('salt'), slot('yeast')),
+                   'Nước %s%% · muối %s%% · men tươi %s%%' % (slot('hydration'), slot('salt'), slot('yeast')))
+                 + part('oil', 'oil %s%%' % slot('oil'), 'dầu %s%%' % slot('oil'))
+                 + part('sugar', 'sugar %s%%' % slot('sugar'), 'đường %s%%' % slot('sugar'))),
+            fact(t('Preferment', 'Bột ủ trước'),
+                 slot('pf_name') + t(': %s%% of the flour, %s%% hydration, %s%% fresh yeast'
+                                     % (slot('pf_flour'), slot('pf_hydration'), slot('pf_yeast')),
+                                     ': %s%% bột mì, %s%% nước, %s%% men tươi'
+                                     % (slot('pf_flour'), slot('pf_hydration'), slot('pf_yeast'))), 'pf'),
+            fact(t('Kitchen', 'Bếp'),
+                 t('%s&nbsp;°C · air humidity %s%%' % (slot('kitchen_c'), slot('humidity')),
+                   '%s&nbsp;°C · độ ẩm không khí %s%%' % (slot('kitchen_c'), slot('humidity')))),
+            fact(t('Water', 'Nước'),
+                 t('%s&nbsp;°C<span data-if="ice">, with %s&nbsp;g ice</span>' % (slot('water_c'), slot('ice')),
+                   '%s&nbsp;°C<span data-if="ice">, có %s&nbsp;g đá</span>' % (slot('water_c'), slot('ice'))),
+                 'water'),
+            fact(t('Dough after mixing', 'Bột sau khi trộn'),
+                 t('%s&nbsp;°C<span data-if="target"> (aiming for %s&nbsp;°C)</span>' % (slot('dough_c'), slot('t_dough')),
+                   '%s&nbsp;°C<span data-if="target"> (mục tiêu %s&nbsp;°C)</span>' % (slot('dough_c'), slot('t_dough'))),
+                 'dough_c'),
+            fact(t('Weighed out', 'Đã cân'),
+                 t('Pizza flour %s&nbsp;g' % slot('pizza_g'), 'Bột pizza %s&nbsp;g' % slot('pizza_g'))
+                 + part('ww', 'whole wheat %s&nbsp;g' % slot('ww_g'), 'nguyên cám %s&nbsp;g' % slot('ww_g'))
+                 + part('rye', 'rye %s&nbsp;g' % slot('rye_g'), 'lúa mạch đen %s&nbsp;g' % slot('rye_g'))
+                 + ' · ' + t('water %s&nbsp;g · salt %s&nbsp;g · fresh yeast %s&nbsp;g'
+                             % (slot('water_g'), slot('salt_g'), slot('yeast_g')),
+                             'nước %s&nbsp;g · muối %s&nbsp;g · men tươi %s&nbsp;g'
+                             % (slot('water_g'), slot('salt_g'), slot('yeast_g')))
+                 + part('oil', 'oil %s&nbsp;g' % slot('oil_g'), 'dầu %s&nbsp;g' % slot('oil_g'))
+                 + part('sugar', 'sugar %s&nbsp;g' % slot('sugar_g'), 'đường %s&nbsp;g' % slot('sugar_g'))),
+            fact(t('Notes', 'Ghi chú'), '<span class="log-notes" data-slot="notes"></span>', 'notes'),
+        ]),
+        c_en='Delete this batch from the log? This can’t be undone.',
+        c_vi='Xoá mẻ này khỏi nhật ký? Không thể hoàn tác.',
+        delete=t('Delete', 'Xoá'))
+
+    def state(key, text, cls='dough-status'):
+        return '<p class="%s" data-state="%s" hidden>%s</p>' % (cls, key, text)
+
+    main = '\n'.join([
+        '<main id="main" class="wrap">',
+        page_title(KITCHEN_EYEBROW, t('Dough log', 'Nhật ký bột'),
+                   t('Every batch logged from the calculator, newest first.',
+                     'Mọi mẻ bột đã ghi từ công cụ tính bột, mới nhất ở trên.')),
+        dough_nav('log'),
+        '<noscript><aside class="note-box"><p>%s</p></aside></noscript>'
+        % t('The log needs JavaScript. Turn it on in the browser’s settings.',
+            'Nhật ký cần JavaScript. Hãy bật JavaScript trong cài đặt trình duyệt.'),
+        '<p class="log-tools"><a class="link-sc" href="/api/dough/log.csv">%s</a></p>'
+        % t('Download it as a spreadsheet (CSV)', 'Tải về dạng bảng tính (CSV)'),
+        '<div class="log-states" role="status">%s</div>' % ''.join([
+            state('loading', t('Loading…', 'Đang tải…')),
+            state('empty', t('Nothing logged yet. Log a batch from the <a href="/dough/">calculator</a>.',
+                             'Chưa có gì trong nhật ký. Hãy ghi một mẻ từ <a href="/dough/">công cụ tính bột</a>.')),
+            state('failed', t('Couldn’t load the log. Check the connection and reload the page.',
+                              'Không tải được nhật ký. Hãy kiểm tra kết nối và tải lại trang.'), 'dough-warn'),
+            state('delete-failed', t('Couldn’t delete it. Check the connection and try again.',
+                                     'Chưa xoá được. Hãy kiểm tra kết nối và thử lại.'), 'dough-warn'),
+            state('signed-out', t('You’ve been signed out. <a href="/dough/login/?next=/dough/log/">Sign in again</a>.',
+                                  'Bạn đã bị đăng xuất. <a href="/dough/login/?next=/dough/log/">Đăng nhập lại</a>.'),
+                  'dough-warn'),
+            state('off', t('The log isn’t set up on this copy of the site.',
+                           'Nhật ký chưa được thiết lập trên bản này của trang.'), 'dough-warn'),
+        ]),
+        '<div class="log-list" id="log-list"></div>',
+        '<div class="actions"><button class="btn btn-outline" type="button" data-more hidden>%s</button></div>'
+        % t('Show older batches', 'Xem các mẻ cũ hơn'),
+        entry,
+        '</main>', ''])
+    return kitchen_page('/dough/log/', 'dough-log', ('Dough log — Sol', 'Nhật ký bột — Sol'),
+                        ('Every batch of dough logged in Sol’s kitchen.', 'Nhật ký các mẻ bột của bếp Sol.'),
+                        main, extra='<script src="/assets/dough-log.js" defer></script>')
+
+
+def build_dough_login():
+    """/dough/login/: the Worker shows the line for a wrong password, too many tries or no
+    password set (data-if, unhidden by the Worker), and fills in where to go next."""
+    def warn(key, text):
+        return '<p class="dough-warn" data-if="%s" hidden>%s</p>' % (key, text)
+
+    main = ('<main id="main" class="wrap">\n%s\n'
+            '<form class="dough-login" method="post" action="/api/dough/login">'
+            '<input type="hidden" name="next" value="/dough/">%s%s%s%s'
+            '<div class="actions"><button class="btn btn-red" type="submit">%s</button></div>'
+            '<p class="dough-hint">%s</p></form>\n</main>\n') % (
+        page_title(KITCHEN_EYEBROW, t('Sign in', 'Đăng nhập'),
+                   t('The dough calculator and the dough log are for Sol’s kitchen. Ask the Sous Chef for the '
+                     'password.',
+                     'Công cụ tính bột và nhật ký bột dành cho bếp của Sol. Hãy hỏi Bếp phó để biết mật khẩu.')),
+        dough_box('d-password', '<input id="d-password" name="password" type="password" '
+                                'autocomplete="current-password" required>', t('Kitchen password', 'Mật khẩu bếp')),
+        warn('wrong', t('That isn’t the password. Try again.', 'Mật khẩu chưa đúng. Hãy thử lại.')),
+        warn('wait', t('Too many tries. Wait 15 minutes, then try again.',
+                       'Bạn đã thử quá nhiều lần. Hãy đợi 15 phút rồi thử lại.')),
+        warn('off', t('Signing in isn’t set up on this copy of the site.',
+                      'Chức năng đăng nhập chưa được thiết lập trên bản này của trang.')),
+        t('Sign in', 'Đăng nhập'),
+        t('You stay signed in on this phone for 30 days.', 'Bạn sẽ được giữ đăng nhập trên điện thoại này trong 30 ngày.'))
+    return kitchen_page('/dough/login/', 'dough-login', ('Sign in — Sol kitchen', 'Đăng nhập — Bếp Sol'),
+                        ('Sign in to Sol’s kitchen tools.', 'Đăng nhập vào công cụ của bếp Sol.'), main)
+
+
+# ==========================================================================
 # 404 and support files
 # ==========================================================================
 def build_404():
@@ -1628,7 +2105,7 @@ def copy_existing():
         shutil.copy2(os.path.join(HERE, 'og', 'png', f), os.path.join(DIST, f))
     assets = os.path.join(DIST, 'assets')
     os.makedirs(assets, exist_ok=True)
-    for f in ('tokens.css', 'printed-menu.css', 'site.css', 'printed-menu.js'):
+    for f in ('tokens.css', 'printed-menu.css', 'site.css', 'printed-menu.js', 'dough.js', 'dough-log.js'):
         shutil.copy2(os.path.join(DESIGN, f), os.path.join(assets, f))
     for f in os.listdir(ASSETS):
         if f.endswith('.svg') and f != 'suns-sprite.svg':             # the sprite is inlined
@@ -1803,9 +2280,17 @@ def _site_path(url, base):
     return (unquote(parts.path) or '/') if parts.netloc == 'sol.pizza' else None
 
 
+# Addresses the Worker's own code answers (worker/index.js), not files in dist/: the
+# kitchen's API (the dough log and its CSV, signing in and out).
+WORKER_PATHS = ('/api/',)
+
+
 def _served(path, rules):
-    """True if the sol-pizza Worker answers this path with a redirect from dist/_redirects
-    or a file from dist/ (html_handling auto-trailing-slash), not the 404 page."""
+    """True if the sol-pizza Worker answers this path with a redirect from dist/_redirects,
+    a file from dist/ (html_handling auto-trailing-slash) or its own code (WORKER_PATHS),
+    not the 404 page."""
+    if path.startswith(WORKER_PATHS):
+        return True
     for source, _, _ in rules:
         if path == source or (source.endswith('*') and path.startswith(source[:-1])):
             return True
@@ -1933,7 +2418,7 @@ if __name__ == '__main__':
     copy_existing()
     # Every page is built in both modes; page() doesn't write the ones not public yet.
     for fn in (build_home, build_about, build_food, build_wine, build_bar, build_booking,
-               build_privacy, build_404):
+               build_privacy, build_dough, build_dough_log, build_dough_login, build_404):
         out = fn()
         if out:
             print('wrote', os.path.relpath(out, ROOT))

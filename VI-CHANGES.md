@@ -7,6 +7,82 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## The kitchen: dough calculator and dough log, 6 Oct 2026
+
+New pages for the kitchen, behind the kitchen password and out of search: the dough calculator (`/dough/`), the dough log (`/dough/log/`) and the sign-in page (`/dough/login/`). Every line is new. Numbers follow the language: 6,301 g and 2.8 in English, 6.301 g and 2,8 in Vietnamese; the log’s day headings are written by the browser (“Thứ Ba, 6 tháng 10, 2026”). Poolish and biga stay as written.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /dough/ | eyebrow on the kitchen pages: Kitchen | — | Bếp |
+| /dough/ | heading and page title: Dough calculator; Dough calculator — Sol | — | Tính bột pizza; Tính bột pizza — Sol |
+| /dough/ | lead: Set the number of balls and their weight, and the weights for the mix follow. | — | Nhập số viên bột và trọng lượng mỗi viên, lượng nguyên liệu cần trộn sẽ tự tính. |
+| /dough/ | meta description: The dough calculator for Sol’s kitchen. | — | Công cụ tính bột pizza cho bếp của Sol. |
+| /dough/ | kitchen menu: Calculator · Dough log · Sign out | — | Tính bột · Nhật ký bột · Đăng xuất |
+| /dough/ | without JavaScript: The calculator needs JavaScript. Turn it on in the browser’s settings. | — | Công cụ này cần JavaScript. Hãy bật JavaScript trong cài đặt trình duyệt. |
+| /dough/ | The batch · Dough balls · Each ball · Waste | — | Mẻ bột · Số viên bột · Mỗi viên · Hao hụt |
+| /dough/ | Waste: extra dough for what stays in the mixer bowl and on the bench. | — | Hao hụt: phần bột làm thêm cho lượng dính lại trong cối trộn và trên bàn. |
+| /dough/ | The formula · Hydration · Salt · Fresh yeast · Oil · Sugar | — | Công thức · Tỉ lệ nước · Muối · Men tươi · Dầu · Đường |
+| /dough/ | Baker’s percentages: each ingredient as a percentage of all the flour’s weight. | — | Tỉ lệ theo bột mì (baker’s percentage): mỗi nguyên liệu tính bằng phần trăm so với tổng trọng lượng bột mì. |
+| /dough/ | The flour · Pizza flour · Whole wheat · Rye | — | Bột mì · Bột pizza · Nguyên cám · Lúa mạch đen |
+| /dough/ | Pizza flour is the rest. A preferment is made with pizza flour; whole wheat and rye go in at the final mix. | — | Bột pizza là phần còn lại. Bột ủ làm bằng bột pizza; bột nguyên cám và lúa mạch đen cho vào ở lần trộn chính. |
+| /dough/ | Preferment: None · Poolish · Biga | — | Bột ủ trước: Không · Poolish · Biga |
+| /dough/ | Share of the flour · Its hydration · Its yeast | — | Phần bột mì · Tỉ lệ nước · Men tươi |
+| /dough/ | Share of the flour: how much of all the flour goes into the preferment. Its fresh yeast is a percentage of its own flour. The salt and the rest go in at the final mix. | — | Phần bột mì: bao nhiêu phần trăm tổng lượng bột mì dùng cho bột ủ. Men tươi của bột ủ tính theo phần trăm bột mì của chính nó. Muối và phần còn lại cho vào ở lần trộn chính. |
+| /dough/ | The kitchen · Temperature · Air humidity | — | Bếp · Nhiệt độ · Độ ẩm không khí |
+| /dough/ | Measure them when you mix. Both go in the log, and the temperature works out the water. | — | Đo khi bắt đầu trộn. Cả hai được ghi vào nhật ký, và nhiệt độ bếp dùng để tính nhiệt độ nước. |
+| /dough/ | Water temperature | — | Nhiệt độ nước |
+| /dough/ | Measure the flour and your water too, and this works out how warm the water should be, and how much ice, for the dough you want. | — | Đo thêm nhiệt độ bột mì và nước, công cụ sẽ tính nước cần ấm hay lạnh bao nhiêu, và cần bao nhiêu đá, để bột đạt nhiệt độ mong muốn. |
+| /dough/ | Dough to aim for · Flour · Preferment · Mixer friction · Your water | — | Bột cần đạt · Bột mì · Bột ủ · Nhiệt từ máy trộn · Nước của bạn |
+| /dough/ | Mixer friction: how much the mixer warms the dough. To measure it, after a mix: 3 × the dough’s temperature, minus the flour, the kitchen and the water (with a preferment, 4 × and minus the preferment too). | — | Nhiệt từ máy trộn: máy trộn làm bột ấm thêm bao nhiêu độ. Cách đo, sau một mẻ trộn: 3 × nhiệt độ bột, trừ nhiệt độ bột mì, bếp và nước (nếu có bột ủ: 4 × và trừ thêm nhiệt độ bột ủ). |
+| /dough/ | Your water: as it comes, from the tap or the fridge, before any ice. | — | Nước của bạn: nhiệt độ nước đang có, từ vòi hoặc tủ lạnh, trước khi cho đá. |
+| /dough/ | results: Weigh out · 60 × 260 g · 15.9 kg of dough, with 2% for waste | — | Cân nguyên liệu · 60 × 260 g · 15,9 kg bột, đã gồm 2% hao hụt |
+| /dough/ | results: Poolish · mix first · Final mix · All the poolish | — | Poolish · trộn trước · Trộn chính · Toàn bộ poolish |
+| /dough/ | results: Pizza flour · Whole wheat flour · Rye flour · Water · Salt · Fresh yeast · Oil · Sugar · Total | — | Bột pizza · Bột mì nguyên cám · Bột lúa mạch đen · Nước · Muối · Men tươi · Dầu · Đường · Tổng |
+| /dough/ | results: 2,785 g water + 520 g ice · 3,314 g water at 30 °C | — | 2.785 g nước + 520 g đá · 3.314 g nước ở 30 °C |
+| /dough/ | results: For dough at 24 °C the water works out at 11 °C; yours is 28 °C. | — | Để bột đạt 24 °C, nước cần ở 11 °C; nước của bạn đang ở 28 °C. |
+| /dough/ | results: Measure the kitchen’s temperature to work out the water. | — | Hãy đo nhiệt độ bếp để tính nhiệt độ nước. |
+| /dough/ | Check the marked boxes. | — | Kiểm tra lại các ô được đánh dấu. |
+| /dough/ | Whole wheat and rye come to more than all the flour. | — | Bột nguyên cám và bột lúa mạch đen đang nhiều hơn tổng lượng bột mì. |
+| /dough/ | The preferment needs more pizza flour than the blend has. Lower its share of the flour, or the whole wheat and rye. | — | Bột ủ cần nhiều bột pizza hơn lượng có trong hỗn hợp. Hãy giảm phần bột mì của bột ủ, hoặc giảm bột nguyên cám và lúa mạch đen. |
+| /dough/ | The preferment holds more water than the whole dough. Lower its hydration or its share of the flour. | — | Bột ủ đang chứa nhiều nước hơn cả khối bột. Hãy giảm tỉ lệ nước hoặc phần bột mì của bột ủ. |
+| /dough/ | Ice alone can’t cool it that far: chill the flour first, or aim a degree or two warmer. | — | Chỉ dùng đá thì không đủ lạnh: hãy làm lạnh bột mì trước, hoặc chọn nhiệt độ bột cao hơn một, hai độ. |
+| /dough/ | Water above 40 °C can harm the yeast: use it cooler and let the dough warm up after mixing. | — | Nước trên 40 °C có thể làm hỏng men: hãy dùng nước nguội hơn và để bột ấm lên sau khi trộn. |
+| /dough/ | All the water is in the preferment, so there’s none to set at the final mix. | — | Toàn bộ nước đã nằm trong bột ủ, nên không có nước để điều chỉnh ở lần trộn chính. |
+| /dough/ | buttons: Share this batch · Link copied · Back to the house spec · Log this batch | — | Chia sẻ mẻ bột này · Đã sao chép liên kết · Về công thức chuẩn · Ghi nhật ký mẻ này |
+| /dough/ | The page opens on the house spec. Share sends the batch as it is now, as a link. | — | Trang luôn mở với công thức chuẩn của bếp. Nút Chia sẻ gửi mẻ bột hiện tại dưới dạng liên kết. |
+| /dough/ | Log this batch · Once it’s mixed. The batch, the flour, the kitchen and the weights above go in with it. | — | Ghi nhật ký mẻ này · Sau khi trộn xong. Mẻ bột, bột mì, thông số bếp và lượng nguyên liệu ở trên sẽ được ghi cùng. |
+| /dough/ | Day · Mixed by · Dough after mixing · Notes · button: Log this batch | — | Ngày · Người trộn · Bột sau khi trộn · Ghi chú · Ghi vào nhật ký |
+| /dough/ | Measure the kitchen first: its temperature and air humidity go in the log. | — | Hãy đo bếp trước: nhiệt độ và độ ẩm không khí sẽ được ghi vào nhật ký. |
+| /dough/ | Add the day and who mixed it. · Fix what’s marked above first. | — | Hãy ghi ngày và người trộn. · Hãy sửa các mục được đánh dấu ở trên trước. |
+| /dough/ | Saving… · Logged. See the dough log | — | Đang lưu… · Đã ghi. Xem nhật ký bột |
+| /dough/ | Couldn’t save it. Check the connection and try again. | — | Chưa lưu được. Hãy kiểm tra kết nối và thử lại. |
+| /dough/ | You’ve been signed out. Sign in in a new tab, then log it again here. | — | Bạn đã bị đăng xuất. Hãy đăng nhập ở một thẻ mới, rồi ghi lại ở đây. |
+| /dough/ | The log isn’t set up on this copy of the site. | — | Nhật ký chưa được thiết lập trên bản này của trang. |
+| /dough/log/ | heading and page title: Dough log; Dough log — Sol | — | Nhật ký bột; Nhật ký bột — Sol |
+| /dough/log/ | lead: Every batch logged from the calculator, newest first. | — | Mọi mẻ bột đã ghi từ công cụ tính bột, mới nhất ở trên. |
+| /dough/log/ | meta description: Every batch of dough logged in Sol’s kitchen. | — | Nhật ký các mẻ bột của bếp Sol. |
+| /dough/log/ | Download it as a spreadsheet (CSV) | — | Tải về dạng bảng tính (CSV) |
+| /dough/log/ | Loading… · Nothing logged yet. Log a batch from the calculator. | — | Đang tải… · Chưa có gì trong nhật ký. Hãy ghi một mẻ từ công cụ tính bột. |
+| /dough/log/ | Couldn’t load the log. Check the connection and reload the page. · Couldn’t delete it. Check the connection and try again. | — | Không tải được nhật ký. Hãy kiểm tra kết nối và tải lại trang. · Chưa xoá được. Hãy kiểm tra kết nối và thử lại. |
+| /dough/log/ | You’ve been signed out. Sign in again. | — | Bạn đã bị đăng xuất. Đăng nhập lại. |
+| /dough/log/ | each batch: Test cook, logged at 12:28 | — | Test cook, ghi lúc 12:28 |
+| /dough/log/ | each batch: Flour · Formula · Preferment · Kitchen · Water · Dough after mixing · Weighed out · Notes | — | Bột mì · Công thức · Bột ủ trước · Bếp · Nước · Bột sau khi trộn · Đã cân · Ghi chú |
+| /dough/log/ | each batch: 85% pizza flour · 10% whole wheat · 5% rye | — | 85% bột pizza · 10% nguyên cám · 5% lúa mạch đen |
+| /dough/log/ | each batch: Hydration 65% · salt 2.8% · fresh yeast 0.6% · oil · sugar | — | Nước 65% · muối 2,8% · men tươi 0,6% · dầu · đường |
+| /dough/log/ | each batch: Poolish: 30% of the flour, 100% hydration, 0.3% fresh yeast | — | Poolish: 30% bột mì, 100% nước, 0,3% men tươi |
+| /dough/log/ | each batch: 29 °C · air humidity 78% · 11 °C, with 520 g ice · 24.5 °C (aiming for 24 °C) | — | 29 °C · độ ẩm không khí 78% · 11 °C, có 520 g đá · 24,5 °C (mục tiêu 24 °C) |
+| /dough/log/ | each batch: Delete · Delete this batch from the log? This can’t be undone. · Show older batches | — | Xoá · Xoá mẻ này khỏi nhật ký? Không thể hoàn tác. · Xem các mẻ cũ hơn |
+| /dough/login/ | heading: Sign in; page title: Sign in — Sol kitchen | — | Đăng nhập; Đăng nhập — Bếp Sol |
+| /dough/login/ | The dough calculator and the dough log are for Sol’s kitchen. Ask the Sous Chef for the password. | — | Công cụ tính bột và nhật ký bột dành cho bếp của Sol. Hãy hỏi Bếp phó để biết mật khẩu. |
+| /dough/login/ | meta description: Sign in to Sol’s kitchen tools. | — | Đăng nhập vào công cụ của bếp Sol. |
+| /dough/login/ | Kitchen password · button: Sign in | — | Mật khẩu bếp · Đăng nhập |
+| /dough/login/ | That isn’t the password. Try again. | — | Mật khẩu chưa đúng. Hãy thử lại. |
+| /dough/login/ | Too many tries. Wait 15 minutes, then try again. | — | Bạn đã thử quá nhiều lần. Hãy đợi 15 phút rồi thử lại. |
+| /dough/login/ | Signing in isn’t set up on this copy of the site. | — | Chức năng đăng nhập chưa được thiết lập trên bản này của trang. |
+| /dough/login/ | You stay signed in on this phone for 30 days. | — | Bạn sẽ được giữ đăng nhập trên điện thoại này trong 30 ngày. |
+| all three | for screen readers, after each box’s label: grams · percent · degrees Celsius | — | gam · phần trăm · độ C |
+
+To check with the kitchen: the words the team actually uses for whole wheat (“nguyên cám”), rye (“lúa mạch đen”), hydration (“tỉ lệ nước”), preferment (“bột ủ trước”), waste (“hao hụt”) and mixer friction (“nhiệt từ máy trộn”), and whether “Bột pizza” is what they call the pizza flour.
 ## Whole site public again, 6 Oct 2026
 
 The hiring round has closed, and sol.pizza shows every page again: About, Menu (Food, Wine, Bar) and Booking are back, with their Vietnamese as before 27 September (as on the full-site preview). No Vietnamese text is new or changed. The 27 Sep changes below are undone: the header tabs are “Giới thiệu · Thực đơn · Đặt bàn” again (no “Tuyển dụng” tab; it stays in the footer’s “Thêm” column), the home buttons are “Đặt bàn” and “Xem thực đơn”, and the 404 buttons “Thực đơn” and “Đặt bàn”, so “Trang chủ” no longer shows.
