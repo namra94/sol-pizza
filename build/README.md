@@ -70,8 +70,9 @@ descendant-span selectors skip `[data-l]` (the language spans) and
 switched on, the design-system tokens (`--surface-raised`, `--ink-on-brand`,
 `--ink-on-sun`, `--focus`) and a 2px focus ring with a 2px offset, and the
 footer column headings in EB Garamond SemiBold (600, the one extra weight in
-`FONT_PLAN`; `<strong>` text uses it too); the header comment in each file lists
-what changed. Don't restyle them otherwise;
+`FONT_PLAN`; `<strong>` text uses it too). The feedback of 6 Oct 2026 took the
+rules off the home facts row. The header comment in each file lists what
+changed. Don't restyle them otherwise;
 put anything the design doesn't cover in `design/site.css`.
 `design/printed-menu.js` is the delivered header script with the language code
 merged into this repo's markup.
