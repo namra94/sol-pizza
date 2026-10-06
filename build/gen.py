@@ -34,18 +34,18 @@ FB_PIX = '856214124247013'
 TODAY  = date.today().isoformat()
 
 # --------------------------------------------------------------------------
-# NOT YET PUBLIC: EDIT THIS to put a page live
-#   Until the rest of the site is ready, sol.pizza is the home page and the jobs
-#   section (/jobs/, the role pages, /privacy/). The pages under these header
-#   tabs (keys as in NAV_TABS) stay in the repo and on the full-site preview, but
-#   the public build leaves them out: no page in dist/, no share card, tab, footer
-#   link, home or 404 button, sitemap entry or structured data, and their
-#   addresses (and the old ones in src/_redirects that lead to them) go to the
+# NOT PUBLIC: EDIT THIS to take a page down
+#   Empty: every page is public and sol.pizza is the whole site. To take a page
+#   down, add its header tab's key ('about', 'menu' or 'booking', as in NAV_TABS;
+#   'menu' takes Food, Wine and Bar). It stays in the repo and on the full-site
+#   preview, but the public build leaves it out: no page in dist/, no share card,
+#   tab, footer link, home or 404 button, sitemap entry or structured data, and
+#   its addresses (and the old ones in src/_redirects that lead to it) go to the
 #   home page with a 302. While any page is hidden the header has a Work with us
-#   tab. To put a page live, delete its key and push to main; an empty list is
-#   the whole site.
+#   tab. To put it back, delete the key. Either way, open a pull request, check
+#   its Preview URL and merge.
 # --------------------------------------------------------------------------
-HIDDEN = ['about', 'menu', 'booking']
+HIDDEN = []
 
 # Build mode. Public, the default: npm run build, and Workers Builds on main and
 # on every other branch (pull request previews). Full, the whole site whatever

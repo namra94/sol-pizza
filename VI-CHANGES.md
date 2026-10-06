@@ -7,6 +7,10 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Whole site public again, 6 Oct 2026
+
+The hiring round has closed, and sol.pizza shows every page again: About, Menu (Food, Wine, Bar) and Booking are back, with their Vietnamese as before 27 September (as on the full-site preview). No Vietnamese text is new or changed. The 27 Sep changes below are undone: the header tabs are “Giới thiệu · Thực đơn · Đặt bàn” again (no “Tuyển dụng” tab; it stays in the footer’s “Thêm” column), the home buttons are “Đặt bàn” and “Xem thực đơn”, and the 404 buttons “Thực đơn” and “Đặt bàn”, so “Trang chủ” no longer shows.
+
 ## Home tagline, 28 Sep 2026
 
 The hand-written line under the home page heading changed (both the public site and the full site).
