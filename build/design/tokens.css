@@ -34,7 +34,7 @@
 
   /* roles (names and values from Sol's design system) */
   --surface: var(--cream);
-  --surface-raised: #ffffff;  /* panels on the page: the three boxes on /about/ */
+  --surface-raised: #ffffff;  /* panels on the page; unused since 6 Oct 2026 (the /about/ boxes are on cream) */
   --ink: var(--wood);
   --ink-muted: #6b4448;   /* 6.9:1 on cream */
   --ink-brand: var(--sol-red);

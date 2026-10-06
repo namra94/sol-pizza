@@ -14,7 +14,8 @@
    offset; the buttons take the --ink-on-* tokens; .hand takes --hand (Plunct
    on English pages); the three boxes have no illustrations (.trio-art is
    gone); .book-contact dt joins the labels rule; the footer column headings
-   are EB Garamond SemiBold (600), the one 600 weight on the site. */
+   are EB Garamond SemiBold (600), the one 600 weight on the site.
+   Website feedback (6 Oct 2026): the home facts row (.facts) has no rules. */
 
 /* ------------------------------------------------------------------ base */
 *, *::before, *::after { box-sizing: border-box; }
@@ -233,11 +234,8 @@ html.sheet-open { overflow: hidden; }
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   margin-top: 72px;
-  border-top: 1px solid var(--line-brand);
-  border-bottom: 1px solid var(--line-brand);
 }
-.facts > div { padding: 26px 16px 28px; text-align: center; border-left: 1px solid var(--line-brand); }
-.facts > div:first-child { border-left: 0; }
+.facts > div { padding: 26px 16px 28px; text-align: center; }
 .facts dt { color: var(--sol-red); }
 .facts dd { margin-top: 8px; line-height: 1.5; }
 
@@ -454,8 +452,6 @@ html.sheet-open { overflow: hidden; }
 
 @media (max-width: 900px) {
   .facts { grid-template-columns: repeat(2, 1fr); }
-  .facts > div:nth-child(3) { border-left: 0; }
-  .facts > div:nth-child(n+3) { border-top: 1px solid var(--line-brand); }
   .split { grid-template-columns: 1fr; gap: 20px; text-align: center; }
   .split-body { max-width: 640px; margin: 0 auto; }
   .trio { grid-template-columns: 1fr; }
