@@ -166,9 +166,16 @@ Minh`, `Newsletter`):
 ### 11. Search
 
 - [ ] Google Search Console: add `sol.pizza` as a **Domain** property and verify it
-      with the TXT record it gives (Cloudflare → DNS → Add record), or send the
-      HTML-tag code for the site's verification slot. Then **Sitemaps** → submit
-      `https://sol.pizza/sitemap.xml` (both languages are in it).
+      with the TXT record it gives (Cloudflare → DNS → Add record): that covers every
+      address. (Or a **URL prefix** property verified with the HTML tag: its code goes in
+      `GOOGLE_VERIFICATION` in `build/gen.py`; merge, wait for sol.pizza to show it, then
+      press **Verify**.) Then **Sitemaps** → submit `https://sol.pizza/sitemap.xml` (both
+      languages are in it).
+- [ ] The structured data, once: https://validator.schema.org on `https://sol.pizza/`
+      (the restaurant), `/menu/` (the menu) and `/events/`: no errors. Google's Rich
+      Results Test (https://search.google.com/test/rich-results) shows only what Google
+      turns into results: the breadcrumbs on any page below the home page, and an Eclipse
+      edition on its own page once it has its details (Google has no result for menus).
 - [ ] Bing Webmaster Tools: **Import from Google Search Console**.
 
 ### 12. Analytics

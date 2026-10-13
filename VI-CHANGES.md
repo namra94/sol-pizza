@@ -7,6 +7,10 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Search: structured data, 13 Oct 2026
+
+Nothing new to read on the pages. What search engines read changes: the restaurant's details, the menus, the Eclipse editions and each page's breadcrumb now come in the page's language. The Vietnamese is the site's own: the address as on the pages (Số 7, Ngõ 88 Quảng An, Tây Hồ, Hà Nội), the home page's description, the menus' section names and descriptions, the page titles (for the breadcrumbs), and each Eclipse edition's own summary once it has one. The menus' names in it: Sol: Món ăn · Sol: Vang · Sol: Quầy bar; a wine's two prices: ly · chai. How guests pay, once it's set, comes from the Vietnamese half of `PAYMENT_ACCEPTED` in `build/gen.py`, which also answers “Thanh toán” on /vi/visit-us/: please read it then.
+
 ## Photographs, 13 Oct 2026
 
 The photos come with their own alt text, in English and Vietnamese, written in `build/media.json` as each one is added: please read each photo's `alt_vi` when it arrives. The site's own new lines:
