@@ -1,6 +1,7 @@
 {
-  "note": "Menu content for /menu/, /menu/wine/ and /menu/bar/. Names are kept as the kitchen and bar write them. Prices are intentionally absent until they are set.",
+  "note": "Menu content for /menu/, /menu/wine/ and /menu/bar/. Names are kept as the kitchen and bar write them. Prices, once set: \"price\" on each dish and drink, \"glass\" and \"bottle\" on each wine, whole numbers in đồng (185000); a page's \"A first draft\" note goes once every item on it has one. \"updated\": the day the menu last changed, YYYY-MM-DD, shown at the foot of each menu page.",
   "note_vi": "Every *_vi field is the Vietnamese twin of the field above it. Dish, wine and drink names stay as written in both languages.",
+  "updated": null,
   "food": {
     "sections": [
       {
@@ -215,6 +216,10 @@
     "tag_meaning": {
       "Veg": "vegetarian",
       "Spicy": "spicy"
+    },
+    "tag_meaning_vi": {
+      "Veg": "chay",
+      "Spicy": "cay"
     },
     "tag_labels_vi": {
       "Veg": "Chay",

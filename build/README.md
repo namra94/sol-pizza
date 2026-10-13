@@ -14,11 +14,14 @@ section still waiting for content, with `noindex`; see "Build modes" below. Eith
    `og/html/` (for `npm run og`), and stops if a card's words have changed since its
    PNG was rendered, or the PNG isn't the one packed after (`og/cards.json`; "Share
    cards" below).
-3. **Pages.** Home, About, the three menu pages (from `menu-data.json`), Visit,
-   Booking, Jobs and the opening-team role pages (from `jobs-data.json` and
+3. **Pages.** Home, About, the three menu pages (from `menu-data.json`), Events and
+   each Eclipse edition (from `events-data.json`), Private dining, Visit, Booking,
+   Press, Gift cards, Jobs and the opening-team role pages (from `jobs-data.json` and
    `jobs/*.md`), the filled role pages and the applicant privacy notice (re-wrapped
-   from `src/`), the cookie notice, 404, and in the full build the components page
-   (`/styleguide/`). Each guest page is assembled with every line in both languages and
+   from `src/`), the cookie notice, the guest privacy notice and the accessibility
+   statement, 404, and in the full build the components page (`/styleguide/`). Pages
+   in `WAITING` (gift cards, an edition without its details, the legal drafts) are
+   built in both modes but written only in the full build. Each guest page is assembled with every line in both languages and
    written twice: English at `/…`, Vietnamese at `/vi/…` (`write_pages()`,
    `localise()`). The kitchen's pages (`/dough/`, `/dough/log/`, `/dough/login/`:
    behind the kitchen password, which `worker/index.js` checks; `noindex`) are written

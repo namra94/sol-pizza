@@ -14,19 +14,25 @@ come" and `README-DEPLOY.md`).
 
 | Route (English; Vietnamese under `/vi/`) | Page | On sol.pizza |
 | --- | --- | --- |
-| `/` | Home: the hero and the facts row | Public (buttons: Book a table, See the menu) |
+| `/` | Home: the hero (Book a table, See the menu), the opening date or today's hours, three ways in (Menu, Private dining, Events), the story, the next Eclipse, the newsletter, a visit block | Public (press quotes wait for real ones) |
 | `/about/` | About: the restaurant introduction and our story (the old `/story/` redirects here) | Public |
 | `/menu/` | Menu: Food | Public |
 | `/menu/wine/` | Menu: Wine (the old `/wine/` redirects here) | Public |
 | `/menu/bar/` | Menu: Bar | Public |
+| `/events/` | Events: Eclipse, Sol's popup series, coming up and past (from `build/events-data.json`) | Public |
+| `/events/<slug>/` | An Eclipse edition: what it is, when, the chefs, the menu, the price, how to book | Waits for its details (`summary_en`, `summary_vi`) |
 | `/private-dining/` | Private dining: groups of seven or more and private events, the enquiry form (the spaces, set menus and minimum spend wait for their figures) | Public |
 | `/visit-us/` | Visit: hours, address, contact, good to know (not `/visit/`: browsers remember its old redirect to `/booking/`) | Public |
 | `/booking/` | Booking: the booking box at `/booking/#book`, where every Book button leads (the old `/visit/`, `/book` and `/reservations` redirect here) | Public |
+| `/press/` | Press: the facts, the logo to download, photographs (waiting) and who to ask | Public |
+| `/gift-cards/` | Gift cards: values, how long a card lasts, how to buy | Waits for its facts (`WAITING`) |
 | `/jobs/` | Work with us: the opening-team cards, plus the role pages under `/jobs/` | Public |
 | `/jobs/<slug>/` | The six opening-team roles: `host`, `server`, `bartender`, `pizzaiolo`, `line-cook`, `kitchen-porter` | Public |
 | `/jobs/<slug>` | The three filled roles, under "Recently filled": `restaurant-accountant`, `sous-chef`, `restaurant-supervisor`. Their descriptions are in English only: the Vietnamese pages say so, in Vietnamese, above the English text | Public, `noindex` |
 | `/privacy/` | Applicant privacy notice (the address in the job descriptions and ads; `/privacy/#vi` opens `/vi/privacy/`) | Public, `noindex` |
 | `/privacy/cookies/` | Cookie notice: what the site keeps in the browser, and the choice | Public, `noindex` |
+| `/privacy/guests/` | Guest privacy notice: bookings, enquiries, the newsletter, rights | Draft, waits for the lawyer (`WAITING`), then `noindex` |
+| `/accessibility/` | Accessibility statement: the site and the restaurant | Draft, waits for the lawyer (`WAITING`) |
 | `/styleguide/` | The parts pages are built from (after-dark sections, image bands, galleries, cards, quotes) | Full build only, never on sol.pizza |
 | `/dough/`, `/dough/log/` | The kitchen's dough calculator and dough log (below) | Behind the kitchen password (`/dough/login/`): no tab or footer link, `noindex`, not in the sitemap, no analytics, no `/vi/` copy |
 
@@ -37,14 +43,16 @@ use. The old addresses in `src/_redirects` (`/story`, `/visit`, `/wine`, `/wines
 pages with a 301, and keep any `?lang=vi`, which then opens the Vietnamese page.
 
 The header: the logo at the top; under it a bar that stays at the top of the window as the
-page scrolls, with Menu · About · Private dining · Visit (and Events once its page
-exists: `BUILT` in `build/gen.py`), EN · VI and the red **Book** button, which goes to the
+page scrolls, with Menu · About · Events · Private dining · Visit (`NAV_TABS` and `BUILT`
+in `build/gen.py`), EN · VI and the red **Book** button, which goes to the
 booking page in the same language. On phones and tablets (below 1024px wide): a slim bar
 with EN · VI, the logo and the menu button, and at the foot of the window a bar with Book
 and Directions (and, once online booking is live, Call on English pages and Zalo on
 Vietnamese ones), hidden on the booking page and the role pages. Menu keeps its Food /
-Wine / Bar tabs. The footer has the newsletter sign-up, and lists the pages, Work with
-us, Privacy, Cookies and **Cookie settings**.
+Wine / Bar tabs. The footer has the newsletter sign-up (on the home page it's in the
+page instead), Instagram and any other address in `SOCIAL`, and lists the pages, Press,
+Work with us, Privacy, Cookies and **Cookie settings**; its last line is the company, with
+its tax code once `TAX_CODE` is set.
 
 ### Taking a page down
 
@@ -123,18 +131,45 @@ themselves, without a rebuild; a guest who closes it doesn't see it again. The f
 ### Content still to come
 
 A section that needs something we don't have yet (prices, photos, the team, the
-booking terms…) is built, but kept off sol.pizza: `gate()` in `build/gen.py`. The full
-build (full-site, and the `full/…` preview of each pull request) shows it with a yellow
+booking terms…) is built, but kept off sol.pizza: `gate()` in `build/gen.py`. A whole
+page that does (gift cards, an Eclipse edition without its details, the legal drafts
+waiting for the lawyer) is in `WAITING`: built every time, written only in the full
+build, and linked from nowhere public; delete its line to publish it. The full build
+(full-site, and the `full/…` preview of each pull request) shows both with a yellow
 **Content needed** label. Everything waiting is listed in `CONTENT-NEEDED.md`, with
 where it goes and who has it; the build stops if a gated section isn't listed there.
+
+Visit's questions (`VISIT_FAQ`: parking, access, paying, corkage, dress, dogs,
+smoking, big groups) work the same way: write the answer as `t('English', 'Tiếng
+Việt')` in place of `None`, and it goes live.
+
+### Events
+
+Eclipse, Sol's popup series, lives in `build/events-data.json`: one entry per edition,
+with its nights, and once we have them its line, times, chefs, menu, price and how to
+book (the file explains each field). `/events/` lists the editions coming up, then the
+past ones; the home page shows the next one, after dark. An edition counts as coming up
+until 23:59 on its last night, Hanoi time, and the browser moves it to Past then, so
+nothing waits for a rebuild (an edition that runs past midnight, `18:00–01:00`, ends at
+its closing time). Its own page, `/events/<slug>/`, goes live once its line (`summary_en`,
+`summary_vi`) is in; until then it's listed with its dates. A new edition is just a new
+entry: nothing else to change.
 
 ### The menu
 
 Food, wine and bar live in `build/menu-data.json`. Each English field has a
 `_vi` twin below it. Dish, wine and drink names stay as written in both
 languages; only descriptions, section names and place names are translated.
-There are no prices yet: when they're set, add them to the data and to the
-item template in `build_food()` / `build_wine()` / `build_bar()`.
+
+Prices, once set, go in the data: `"price"` on each dish and drink, `"glass"` and
+`"bottle"` on each wine, whole numbers in đồng (`185000`). They show as `185,000` on
+English pages and `185.000` on Vietnamese ones, with "Prices in Vietnamese đồng (VND)"
+once under the title; a page's "A first draft" note goes when every item on it has its
+price. `"updated"` (`YYYY-MM-DD`) puts "Menu updated …" at the foot of each menu page.
+The Food page explains its marks (Veg: vegetarian); add a mark only once the kitchen
+confirms it, with its Vietnamese name (`tag_labels_vi`) and its meaning in both languages
+(`tag_meaning`, `tag_meaning_vi`).
+The menus print cleanly: no bars, banners or buttons on paper.
 
 The wine and bar pages end with the line on alcohol (`drinks` in the data: "We don't
 serve alcohol to anyone under 18…"). The count lines on the wine page ("3 wines, 2 by
@@ -346,7 +381,8 @@ section. Small labels are the serif in capitals.
 ```
 build/gen.py            the generator: every page in both languages, the shell, the share
                         cards' words, redirects, sitemap, and the build's checks
-build/menu-data.json    food, wine, bar
+build/menu-data.json    food, wine, bar (and their prices, once set)
+build/events-data.json  Eclipse: each edition, its nights and details
 build/jobs-data.json    the opening-team round and its six roles
 build/jobs/             the six job descriptions, English and Vietnamese (Markdown)
 build/announcements.json  the line across the top of every page, with its dates
