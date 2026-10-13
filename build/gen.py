@@ -170,6 +170,21 @@ REGISTERED_ADDRESS = None
 # Who answers the press, on /press/ (CONTENT-NEEDED.md): ('Name', 'email'). Until then
 # the page gives hello@sol.pizza.
 PRESS_CONTACT = None
+# The map pin (CONTENT-NEEDED.md): (latitude, longitude) of the door on Quang An, for the
+# structured data search engines read. None until it's confirmed on the map.
+GEO = None
+# How guests can pay (CONTENT-NEEDED.md, "Payment methods"): ('English', 'Tiếng Việt'),
+# e.g. ('Cash, Visa, Mastercard, bank transfer and MoMo', 'Tiền mặt, Visa, Mastercard,
+# chuyển khoản và MoMo'). Visit's "Paying" answer and the structured data. Empty until
+# we know.
+PAYMENT_ACCEPTED = ('', '')
+# Google Search Console's HTML-tag code, if the site is verified that way rather than by
+# DNS (LAUNCH-CHECKLIST.md): the content="…" value. Empty: no tag.
+GOOGLE_VERIFICATION = ''
+assert GEO is None or (len(GEO) == 2 and 20.9 < GEO[0] < 21.2 and 105.7 < GEO[1] < 106), \
+    'GEO: (latitude, longitude) in Hanoi, e.g. (21.06, 105.82)'
+assert len(PAYMENT_ACCEPTED) == 2 and bool(PAYMENT_ACCEPTED[0]) == bool(PAYMENT_ACCEPTED[1]), \
+    'PAYMENT_ACCEPTED: (\'English\', \'Tiếng Việt\'), both or neither'
 
 # --------------------------------------------------------------------------
 # opening and hours: EDIT THESE
@@ -475,7 +490,7 @@ def buttons(options):
 
 
 # --------------------------------------------------------------------------
-# events: build/events-data.json (Eclipse, Sol's popup series)
+# events: build/events-data.json (Eclipse, Sol's pop-up series)
 # --------------------------------------------------------------------------
 EVENTS_DATA = json.loads(read(os.path.join(HERE, 'events-data.json')))
 EV_SERIES = t('Eclipse is Sol’s pop-up series.', 'Eclipse là chuỗi sự kiện pop-up của Sol.')
@@ -910,10 +925,30 @@ def head(rec, lang):
         '<meta name="theme-color" content="#f9e9d3">',
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">',
     ]
-    if rec['extra']:
-        lines.append(rec['extra'])
+    if path == '/' and GOOGLE_VERIFICATION:
+        lines.append('<meta name="google-site-verification" content="%s">' % esc_attr(GOOGLE_VERIFICATION))
+    lines += [x(lang) if callable(x) else x for x in rec['extra'] if x]
+    if rec['index'] and path != '/':
+        lines.append(breadcrumbs(path, lang))
     lines.append('</head>')
     return '\n'.join(lines) + '\n'
+
+
+def breadcrumbs(path, lang):
+    """BreadcrumbList for a page below the home page: Sol › Menu › Wine, each step a page
+    of this build, named as its title is (before the " — ")."""
+    titles = {r['path']: r['title'] for r in PAGES if not r['kitchen'] and not r['hidden']}
+    i = LANGS.index(lang)
+    steps, parts = [('/', 'Sol')], [x for x in path.strip('/').split('/') if x]
+    for n in range(1, len(parts) + 1):
+        p = '/' + '/'.join(parts[:n]) + ('/' if n < len(parts) or path.endswith('/') else '')
+        if p in titles:
+            steps.append((p, re.sub(r'<[^>]+>', '', titles[p][i]).split(' — ')[0]))
+    if len(steps) < 2:
+        return ''
+    return ld({'@context': 'https://schema.org', '@type': 'BreadcrumbList', 'itemListElement': [
+        {'@type': 'ListItem', 'position': n + 1, 'name': _html.unescape(name), 'item': SITE + lang_path(p, lang)}
+        for n, (p, name) in enumerate(steps)]})
 
 
 # --------------------------------------------------------------------------
@@ -1236,6 +1271,8 @@ def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website
     for words in title + desc:              # they go into attributes (content="…") as they are
         assert '"' not in words and '<' not in words, '%s: a title or description with " or <: %s' % (path, words)
     body += '</body>\n</html>\n'
+    # extra: <head> lines, as a string, a function of the language, or a list of either
+    extra = extra if isinstance(extra, list) else [extra]
     rec = dict(path=path, kitchen=False, title=title, desc=desc, og=og, ogtype=ogtype, extra=extra,
                index=index, og_text=og_text, body=body, hidden=hidden(path))
     PAGES.append(rec)
@@ -1521,7 +1558,63 @@ if not live('menu'):
     del RESTAURANT['hasMenu']
 if not live('booking'):
     del RESTAURANT['acceptsReservations']
-SCHEMA = '<script type="application/ld+json">\n%s\n</script>' % json.dumps(RESTAURANT, ensure_ascii=False, indent=2)
+
+
+def fit(text, most=160):
+    """A description made from data (a summary, a role), cut at a word to fit search
+    results (check_search() allows 200 at most, and notes over 160)."""
+    if len(text) <= most:
+        return text
+    return text[:most - 1].rsplit(' ', 1)[0].rstrip(' ,.;:–—') + '…'
+
+
+def ld(obj):
+    """A JSON-LD block (structured data for search engines). Every < is escaped (still
+    JSON), so nothing in the data can end the script or open a comment."""
+    return ('<script type="application/ld+json">\n%s\n</script>\n'
+            % json.dumps(obj, ensure_ascii=False, indent=1).replace('<', '\\u003c'))
+
+
+ADDRESS_LD = {
+    'en': {'@type': 'PostalAddress', 'streetAddress': 'No 7, Lane 88 Quang An Street', 'addressLocality': 'Tây Hồ',
+           'addressRegion': 'Hanoi', 'addressCountry': 'VN'},
+    'vi': {'@type': 'PostalAddress', 'streetAddress': 'Số 7, Ngõ 88 Quảng An', 'addressLocality': 'Tây Hồ',
+           'addressRegion': 'Hà Nội', 'addressCountry': 'VN'},
+}
+
+
+def restaurant_ld(lang):
+    """The restaurant, in the page's language: what search engines show for Sol (the
+    name, address, hours once set, menu, booking, photos, the map pin once confirmed,
+    Eclipse editions coming up)."""
+    r = dict(RESTAURANT, url=SITE + lang_path('/', lang), description=HOME_DESC[LANGS.index(lang)],
+             address=ADDRESS_LD[lang], currenciesAccepted='VND',
+             hasMap=MAPS_URL.replace('&amp;', '&'), sameAs=[INSTAGRAM] + [u for _, u in SOCIAL])
+    photos = [photo_url(p, 1600) for slot in ('home-hero', 'about-room', 'press') for p in photos_for(slot)]
+    r['image'] = list(dict.fromkeys(photos))[:5] + [og_image('home', lang)]
+    if GEO:
+        r['geo'] = {'@type': 'GeoCoordinates', 'latitude': GEO[0], 'longitude': GEO[1]}
+    if PAYMENT_ACCEPTED[0]:
+        r['paymentAccepted'] = PAYMENT_ACCEPTED[LANGS.index(lang)]
+    if 'hasMenu' in r:
+        r['hasMenu'] = [{'@id': SITE + lang_path(p, lang) + '#menu'} for p in MENU_PATHS]
+    if 'acceptsReservations' in r:
+        r['acceptsReservations'] = SITE + lang_path('/booking/', lang)
+    if live('events'):
+        upcoming = [night for e in ev_upcoming() for night in event_ld(e, lang, alone=False)]
+        if upcoming:
+            r['event'] = upcoming
+    return r
+
+
+def schema(lang):
+    return ld(restaurant_ld(lang))
+
+
+def website_ld(lang):
+    """The site's name for search results: Sol (and its other names)."""
+    return ld({'@context': 'https://schema.org', '@type': 'WebSite', 'name': 'Sol',
+               'alternateName': ['Sol Hanoi', 'sol.pizza'], 'url': SITE + '/', 'inLanguage': ['en', 'vi']})
 
 
 # ==========================================================================
@@ -1677,7 +1770,7 @@ def build_home():
     return page('/', 'page-home',
                 ('Sol — Italian-American restaurant in Tây Hồ, Hanoi',
                  'Sol — Nhà hàng Ý–Mỹ tại Tây Hồ, Hà Nội'),
-                HOME_DESC, main, og='home', extra=preload('home-hero') + SCHEMA, news=False)
+                HOME_DESC, main, og='home', extra=[preload('home-hero'), schema, website_ld], news=False)
 
 
 # ==========================================================================
@@ -1785,9 +1878,47 @@ def good_to_know(drinks=False):
                ''.join('<li>%s</li>' % t(esc(en), esc(vi)) for en, vi in rules), updated))
 
 
+MENU_PATHS = ('/menu/', '/menu/wine/', '/menu/bar/')
+
+
+def menu_ld(key, path, lang):
+    """A menu page as a Menu: its sections and items, in the page's language, with each
+    price once set (VND), and Veg as a vegetarian diet."""
+    vi = lang == 'vi'
+    data = MENU[key]
+
+    def offers(d):
+        if key == 'wine':
+            return [{'@type': 'Offer', 'price': str(d[k]), 'priceCurrency': 'VND', 'name': name}
+                    for k, name in (('glass', 'ly' if vi else 'glass'), ('bottle', 'chai' if vi else 'bottle'))
+                    if d.get(k)]
+        return [{'@type': 'Offer', 'price': str(d['price']), 'priceCurrency': 'VND'}] if d.get('price') else []
+
+    sections = []
+    for sec in data['sections']:
+        items = []
+        for d in sec['items']:
+            field = 'details' if key == 'wine' else 'description'
+            text = (d.get(field + '_vi') or d.get(field)) if vi else d.get(field)
+            it = {'@type': 'MenuItem', 'name': d['name']}
+            if text:
+                it['description'] = text
+            if offers(d):
+                it['offers'] = offers(d)
+            if 'Veg' in d.get('tags', []):
+                it['suitableForDiet'] = 'https://schema.org/VegetarianDiet'
+            items.append(it)
+        sections.append({'@type': 'MenuSection', 'name': (sec.get('name_vi') or sec['name']) if vi else sec['name'],
+                         'hasMenuItem': items})
+    name = {'food': ('Food', 'Món ăn'), 'wine': ('Wine', 'Vang'), 'bar': ('Bar', 'Quầy bar')}[key][1 if vi else 0]
+    return ld({'@context': 'https://schema.org', '@type': 'Menu', '@id': SITE + lang_path(path, lang) + '#menu',
+               'name': 'Sol: %s' % name, 'url': SITE + lang_path(path, lang), 'inLanguage': lang,
+               'hasMenuSection': sections})
+
+
 def menu_page(path, key, body_class, title, desc, main, og):
     return page(path, body_class + ' section-menu', title, desc, '<main id="main" class="wrap">\n' + main + '\n</main>\n',
-                cur=key, og=og, body_attrs=' data-menu="%s"' % key)
+                cur=key, og=og, body_attrs=' data-menu="%s"' % key, extra=lambda lang: menu_ld(key, path, lang))
 
 
 def build_food():
@@ -2244,7 +2375,7 @@ def build_booking():
                  'Số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. %s%s. %s' % (HOURS_PLAIN[1], frm[1], how[1])),
                 main, cur='booking', og='visit', bar=False,
                 # iOS would turn the booking box's phone number back into a link
-                extra=('' if CONTACT_LIVE else '<meta name="format-detection" content="telephone=no">\n') + SCHEMA)
+                extra=['' if CONTACT_LIVE else '<meta name="format-detection" content="telephone=no">\n', schema])
 
 
 def build_private_dining():
@@ -2308,6 +2439,38 @@ def build_private_dining():
 # last night, then as past: the head script switches it in the browser (EV_STYLE),
 # so the list is right without a rebuild.
 # ==========================================================================
+def event_ld(e, lang, alone=True):
+    """An Eclipse edition as Events, one per night, in the page's language: only once it
+    has its details and its page (an edition still waiting shows its dates and nothing
+    more). alone: blocks of their own (with @context); otherwise inside the restaurant's."""
+    if not e['ready']:
+        return []
+    vi = lang == 'vi'
+    a, b = e['times'].split('–') if e['times'] else (None, None)
+    url = SITE + lang_path(e['path'], lang)
+    pic = PHOTO_BY_KEY.get(e['image'])
+    nights = []
+    for day in e['days']:
+        d = {'@type': 'Event', 'name': 'Eclipse %d' % e['edition'],
+             'description': e['summary_vi'] if vi else e['summary_en'],
+             'startDate': day.isoformat() + ('T%s:00+07:00' % a if a else ''),
+             # past midnight (18:00–01:00), it ends the next morning
+             'endDate': (day + timedelta(days=1 if b and b < a else 0)).isoformat() + ('T%s:00+07:00' % b if b else ''),
+             'eventStatus': 'https://schema.org/EventScheduled',
+             'eventAttendanceMode': 'https://schema.org/OfflineEventAttendanceMode',
+             'location': {'@type': 'Place', 'name': 'Sol', 'address': ADDRESS_LD[lang]},
+             'organizer': {'@type': 'Organization', 'name': 'Sol', 'url': SITE + lang_path('/', lang)},
+             'url': url,
+             'image': [photo_url(pic, 1600, (2, 1))] if pic else [og_image('events', lang)]}
+        if e['chefs']:
+            d['performer'] = [{'@type': 'Person', 'name': c['name']} for c in e['chefs']]
+        if e['price']:
+            d['offers'] = {'@type': 'Offer', 'price': str(e['price']), 'priceCurrency': 'VND',
+                           'url': e['booking'] or url}
+        nights.append(dict({'@context': 'https://schema.org'}, **d) if alone else d)
+    return nights
+
+
 def per_person(n):
     return t('%s VND a person' % vnd(n, ','), '%s đồng/người' % vnd(n, '.'))
 
@@ -2345,12 +2508,14 @@ def build_events():
         '<h2 id="s-ev-past">%s</h2></header><ul class="ev-list">%s</ul></section></div>'
         % (' has-past' if past_now else '', t('Past editions', 'Các lần trước'), past),
         '</main>', ''])
+    # the editions still to come, as Events, in the page's language
+    events = [lambda lang, e=e: ''.join(ld(night) for night in event_ld(e, lang)) for e in up]
     return page('/events/', 'page-events', ('Events — Sol, Tây Hồ', 'Sự kiện — Sol, Tây Hồ'),
                 ('Eclipse, Sol’s pop-up series, at No 7, Lane 88 Quang An, Tây Hồ, Hanoi: what’s coming up, and '
                  'what’s been.',
                  'Eclipse, chuỗi sự kiện pop-up của Sol tại số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội: những gì sắp '
                  'diễn ra và đã diễn ra.'),
-                main, cur='events', og='events')
+                main, cur='events', og='events', extra=events)
 
 
 def build_event(e):
@@ -2398,11 +2563,12 @@ def build_event(e):
             '<p class="ev-past ev-over" data-ev="%s">%s</p></div>' % (e['slug'], over),
             '</main>', '']
     return page(e['path'], 'page-event', ('%s — Sol, Tây Hồ' % name, '%s — Sol, Tây Hồ' % name),
-                ('%s, %s. %s' % (name, re.sub('<[^>]+>', '', _keep_lang(ev_dates(e), 'en')),
-                                 esc_attr(e['summary_en']) or 'Sol’s pop-up series.'),
-                 '%s, %s. %s' % (name, re.sub('<[^>]+>', '', _keep_lang(ev_dates(e), 'vi')),
-                                 esc_attr(e['summary_vi']) or 'Chuỗi sự kiện pop-up của Sol.')),
-                '\n'.join(parts), cur='events', og='events')
+                (esc_attr(fit('%s, %s. %s' % (name, re.sub('<[^>]+>', '', _keep_lang(ev_dates(e), 'en')),
+                                              e['summary_en'] or 'Sol’s pop-up series.'))),
+                 esc_attr(fit('%s, %s. %s' % (name, re.sub('<[^>]+>', '', _keep_lang(ev_dates(e), 'vi')),
+                                              e['summary_vi'] or 'Chuỗi sự kiện pop-up của Sol.')))),
+                '\n'.join(parts), cur='events', og='events',
+                extra=[lambda lang: ''.join(ld(night) for night in event_ld(e, lang))])
 
 
 # Visit & FAQ: the questions guests ask before they come, each answered once we have
@@ -2416,8 +2582,9 @@ VISIT_FAQ = [
      t('Getting here and parking', 'Đường đến và chỗ gửi xe'), None),
     ('visit-access', 'the lift, steps, and the toilets: step-free or not',
      t('Step-free access and the lift', 'Lối vào không bậc thềm và thang máy'), None),
-    ('visit-payment', 'how guests can pay: cash, which cards, transfer, e-wallets',
-     t('Paying', 'Thanh toán'), None),
+    ('visit-payment', 'how guests can pay: cash, which cards, transfer, e-wallets (PAYMENT_ACCEPTED in gen.py)',
+     t('Paying', 'Thanh toán'),
+     t(esc(PAYMENT_ACCEPTED[0]) + '.', esc(PAYMENT_ACCEPTED[1]) + '.') if PAYMENT_ACCEPTED[0] else None),
     ('visit-corkage', 'whether guests can bring their own wine, and the corkage fee',
      t('Bringing your own wine', 'Mang rượu vang riêng'), None),
     ('visit-dress', 'whether there is a dress code',
@@ -2943,7 +3110,7 @@ def build_open_role(r):
     if r['openings']:
         posting['totalJobOpenings'] = r['openings']
     ld = '<script type="application/ld+json">\n%s\n</script>' % json.dumps(
-        posting, ensure_ascii=False, indent=2).replace('</', '<\\/')
+        posting, ensure_ascii=False, indent=2).replace('<', '\\u003c')
     og_title = 'Tuyển %s — Sol, Tây Hồ' % r['name_en']
     og_desc = 'Lương cơ bản %s + phí phục vụ ước tính %s/tháng. Hạn nộp %s.' % (
         trieu(r['base']), trieu(SERVICE), vi_date(CLOSES, True).split(' ')[-1])
@@ -2953,7 +3120,7 @@ def build_open_role(r):
     desc_vi = 'Tuyển %s tại Sol, Tây Hồ, Hà Nội. %s' % (r['name_vi'], og_desc)
     page(open_role_path(r), 'page-role',
          (esc_attr('%s — Sol, Tây Hồ' % r['name_en']), esc_attr('%s — Sol, Tây Hồ' % r['name_vi'])),
-         (esc_attr(desc_en), esc_attr(desc_vi)), main, cur='role', og='jobs',
+         (esc_attr(fit(desc_en, 200)), esc_attr(fit(desc_vi, 200))), main, cur='role', og='jobs',
          # The Vietnamese page's share card speaks to the ads' Vietnamese readers
          og_text=((esc_attr('%s — Sol, Tây Hồ' % r['name_en']), esc_attr(desc_en)),
                   (esc_attr(og_title), esc_attr(og_desc))), bar=False,
@@ -4442,6 +4609,62 @@ def check_languages():
 
 
 # ==========================================================================
+# SEARCH CHECK   (every build)
+# Every structured-data block is valid JSON, with what search engines need for its
+# type; every indexed page's title and description fit in a search result. Titles
+# over 70 characters and descriptions under 50 or over 200 stop the build; over 60
+# and over 160 are listed (Google may shorten them).
+# ==========================================================================
+LD_NEEDS = {'Restaurant': ('name', 'address', 'url'), 'WebSite': ('name', 'url'),
+            'Event': ('name', 'startDate', 'location', 'url'), 'Menu': ('hasMenuSection', 'url'),
+            'BreadcrumbList': ('itemListElement',), 'JobPosting': ('title', 'datePosted', 'hiringOrganization')}
+
+
+def check_search():
+    problems, long_titles, long_descs, blocks = [], [], [], 0
+    for r in PAGES:
+        if r['kitchen'] or r['hidden']:
+            continue
+        for lang in LANGS:
+            f = out_file(lang_path(r['path'], lang))
+            where = 'dist/' + os.path.relpath(f, DIST).replace(os.sep, '/')
+            h = read(f)
+            for raw in re.findall(r'<script type="?application/ld\+json"?>(.*?)</script>', h, flags=re.S):
+                blocks += 1
+                try:
+                    data = json.loads(raw)
+                except ValueError as e:
+                    problems.append('%s: structured data that isn\'t JSON (%s)' % (where, e))
+                    continue
+                for item in data if isinstance(data, list) else [data]:
+                    missing = [k for k in LD_NEEDS.get(item.get('@type'), ()) if not item.get(k)]
+                    if missing:
+                        problems.append('%s: %s without %s' % (where, item.get('@type'), ', '.join(missing)))
+                    for ev in [item] + item.get('event', []):
+                        if ev.get('@type') == 'Event' and ev.get('endDate', '') < ev.get('startDate', ''):
+                            problems.append('%s: Event %s ends (%s) before it starts (%s)'
+                                            % (where, ev.get('name'), ev['endDate'], ev['startDate']))
+            if not r['index']:
+                continue
+            title = _html.unescape(re.search(r'<title>(.*?)</title>', h, flags=re.S).group(1))
+            m = re.search(r'<meta name="?description"? content="([^"]*)"', h)
+            desc = _html.unescape(m.group(1)) if m else ''
+            if len(title) > 70:
+                problems.append('%s: the title is %d characters (70 at most): %s' % (where, len(title), title))
+            elif len(title) > 60:
+                long_titles.append(where)
+            if not 50 <= len(desc) <= 200:
+                problems.append('%s: the description is %d characters (50 to 200)' % (where, len(desc)))
+            elif len(desc) > 160:
+                long_descs.append(where)
+    if problems:
+        raise SystemExit('Search check failed:\n  ' + '\n  '.join(problems))
+    print('search check: %d structured-data blocks valid; titles and descriptions fit%s'
+          % (blocks, ''.join('; %d %s over %d (may be shortened): %s' % (len(x), what, n, ', '.join(x))
+                             for x, what, n in ((long_titles, 'titles', 60), (long_descs, 'descriptions', 160)) if x)))
+
+
+# ==========================================================================
 # BOOTSTRAP: make a clean checkout buildable
 # Fonts come from the @fontsource npm packages (npm ci); share-card PNGs and
 # BN Arora from build/assets.b64.json (a text manifest, see build/pack_assets.py).
@@ -4536,5 +4759,6 @@ if __name__ == '__main__':
     optimise()
     print('optimised')
     check_languages()
+    check_search()
     if not FULL:
         check_links()

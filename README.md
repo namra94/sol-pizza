@@ -357,6 +357,33 @@ brand fonts don't include the Vietnamese letters.
 
 ---
 
+## Search
+
+- Every page has its own title, description, canonical address and `hreflang` to its twin
+  in the other language; `sitemap.xml` lists every public page in both.
+- Structured data (JSON-LD), in the page's language:
+  - the home page and Booking: the restaurant (`restaurant_ld()`): name, address,
+    phone, its three menus, the booking address, photos, the opening hours once
+    `OPENING_DATE` is set or we're open, the map pin once `GEO` is set, how guests pay
+    once `PAYMENT_ACCEPTED` is, `SOCIAL`, and the Eclipse editions still to come; the
+    home page adds the site's name (`WebSite`: Sol, also Sol Hanoi);
+  - each menu page: its `Menu`, sections and items, with prices once they're set;
+  - `/events/` and each edition's page: the editions as `Event`s, one for each night,
+    once an edition has its details and its page (until then, nothing: its dates are on
+    `/events/` for guests);
+  - each role page: its `JobPosting` (as before);
+  - every page below the home page: its breadcrumb (Sol › Menu › Wine list).
+- The build's search check stops on structured data that isn't JSON or lacks what
+  search engines need for its type, on a title over 70 characters, and on a description
+  under 50 or over 200, and on an `Event` that ends before it starts; it lists titles
+  over 60 and descriptions over 160 (Google may shorten those). Descriptions made from
+  data (an edition's summary, a role) are cut at a word to fit (`fit()`).
+- `GEO`: the map pin, `(latitude, longitude)`, once it's confirmed (CONTENT-NEEDED.md).
+  `PAYMENT_ACCEPTED`: how guests can pay, `('English', 'Tiếng Việt')`, once we know: it
+  also answers Visit's "Paying".
+  `GOOGLE_VERIFICATION`: Search Console's HTML-tag code, if the site is verified that way
+  rather than by DNS (LAUNCH-CHECKLIST.md, Search).
+
 ## Cookies and analytics
 
 GA4 (`G-SLBWDVH550`) and the Meta Pixel (`856214124247013`) load only after the guest

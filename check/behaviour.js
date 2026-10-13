@@ -332,6 +332,16 @@ async function main() {
     const cards = await page.$$eval('.home-paths .card a', as => as.map(a => a.getAttribute('href')));
     ok(cards.length === 3, 'home: three ways in (' + cards.join(' ') + ')');
     ok(await page.isVisible('.today'), 'home: the opening date or today\'s hours under the buttons');
+    // what search engines read: the restaurant in the page's language
+    await page.goto(base + '/vi/', {waitUntil: 'load'});
+    const ld = await page.$$eval('script[type="application/ld+json"]', ss => ss.map(x => JSON.parse(x.textContent)));
+    const rest = ld.find(x => x['@type'] === 'Restaurant');
+    ok(rest && rest.address.addressRegion === 'Hà Nội' && rest.url.endsWith('/vi/') && ld.some(x => x['@type'] === 'WebSite'),
+       'structured data: the restaurant in Vietnamese on /vi/, and the site\'s name');
+    await page.goto(base + '/menu/wine/', {waitUntil: 'load'});
+    const crumbs = await page.$$eval('script[type="application/ld+json"]', ss => ss.map(x => JSON.parse(x.textContent))
+      .filter(x => x['@type'] === 'BreadcrumbList').map(x => x.itemListElement.map(i => i.name).join(' › ')));
+    ok(crumbs[0] === 'Sol › Menu › Wine list', 'structured data: the breadcrumb (' + crumbs[0] + ')');
     await page.goto(base + '/no-such-page/');
     const paths = await page.$$eval('.paths-404 a', as => as.map(a => a.getAttribute('href')));
     ok(paths.length >= 3 && paths.includes('/'), '404: the main pages to go to (' + paths.join(' ') + ')');

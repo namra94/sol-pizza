@@ -1,7 +1,7 @@
 {
   "_about": [
     "Eclipse, Sol's pop-up series: one entry per edition. /events/ lists them, coming up then past, and the home page shows the next one.",
-    "An edition gets its own page, /events/<slug>/, once it has its details: summary_en and summary_vi, a line or two on what it is. Until then it's listed with its dates only, and its page waits (full previews show it, marked Content needed).",
+    "An edition gets its own page, /events/<slug>/, once it has its details: summary_en and summary_vi, a line or two on what it is (its first 120 characters or so also make the page's description in search results, after the name and dates). Until then it's listed with its dates only, its page waits (full previews show it, marked Content needed), and search engines are told nothing more about it.",
     "dates: each night it runs, YYYY-MM-DD. times: 'HH:MM–HH:MM' if it's the same every night, or ''. price: per person, in đồng, or null. booking: the address where guests book or buy tickets, or '' to book by email (to ENQUIRIES in build/gen.py). chefs: {name, line_en, line_vi}, the guest chefs. menu_en and menu_vi: the courses in order, as many in each. image: the key of a photo in build/media.json, or ''.",
     "An edition counts as coming up until 23:59 on its last night, Hanoi time (or its closing time the next morning, if its times run past midnight). That switch happens in the browser too, so it moves to Past without a rebuild. A new edition needs nothing else: add its entry, in any order (the build sorts them by date)."
   ],

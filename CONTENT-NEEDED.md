@@ -27,7 +27,7 @@ Last updated 13 October 2026.
 | Zalo number | `ZALO` in `build/gen.py`: the phone bar on Vietnamese pages, the booking page (from when online booking is live) | The number as Zalo shows it | Arman |
 | WhatsApp number | `WHATSAPP` in `build/gen.py`: the booking page (from when online booking is live) | International, without the + (84…) | Arman |
 | Inbox for enquiries | Where the private dining form, the opening-week form and the newsletter sign-up send their email (`ENQUIRIES` in `build/gen.py`) | An address (hello@sol.pizza unless you say otherwise) | Arman |
-| The map pin | The Directions button and the structured data. The Google listing "Sol Hanoi" carries Sol Pizza's reviews: say whether its pin is on the new building | Latitude and longitude, or the Google Maps link to the right place | Arman |
+| The map pin | `GEO` in `build/gen.py`: the structured data (and the Directions button follows the Google listing). The Google listing "Sol Hanoi" carries Sol Pizza's reviews: say whether its pin is on the new building | Latitude and longitude, or the Google Maps link to the right place | Arman |
 | Holiday and Tết hours | `build/announcements.json`: the bar at the top of every page, and Visit | Dates, and a line in English and Vietnamese | Arman, Supervisor |
 | Eclipse, 23–24 October | `build/events-data.json`, the first edition: `/events/` lists it with its dates now; its own page, `/events/eclipse-1/`, goes live once it has its line (`summary_en`, `summary_vi`) | A line or two on what it is, the times, guest chef(s) and a line on each, the menu, the price, how to book (a link, or by email), artwork | Arman |
 
@@ -69,8 +69,8 @@ Last updated 13 October 2026.
 
 | What | Where it goes | Format | Who has it |
 | --- | --- | --- | --- |
-| Search Console verification | A tag in every page's head | The code Google gives | Arman |
-| Payment methods | Visit and the structured data | Cash, cards (which), transfer, e-wallets | Supervisor |
+| Search Console verification | Only if not verified by DNS: `GOOGLE_VERIFICATION` in `build/gen.py`, a tag in the home page's head | The code Google gives (the `content="…"` value) | Arman |
+| Payment methods | `PAYMENT_ACCEPTED` in `build/gen.py`: Visit's "Paying" answer and the structured data | Cash, cards (which), transfer, e-wallets: a line in English and Vietnamese | Supervisor |
 
 ## Legal
 
@@ -97,7 +97,7 @@ Each key below is a section the public build leaves out until its content arrive
 | `visit-capacity` | `/visit-us/`, Good to know, "Big groups": how many seats in all, the largest table (Large groups, above) |
 | `visit-getting-here` | `/visit-us/`, "Getting here and parking": motorbike and car parking, where Grab drops off (Getting here, above) |
 | `visit-access` | `/visit-us/`, "Step-free access and the lift": the lift, steps, the toilets (Getting here, above) |
-| `visit-payment` | `/visit-us/`, "Paying": cash, which cards, transfer, e-wallets (Payment methods, above) |
+| `visit-payment` | `/visit-us/`, "Paying": cash, which cards, transfer, e-wallets (`PAYMENT_ACCEPTED`; Payment methods, above) |
 | `visit-corkage` | `/visit-us/`, "Bringing your own wine": whether guests can, and the corkage fee (Getting here, above) |
 | `visit-dress` | `/visit-us/`, "What to wear": whether there's a dress code (Getting here, above) |
 | `visit-dogs` | `/visit-us/`, "Dogs": whether dogs are welcome, inside or out (Getting here, above) |
