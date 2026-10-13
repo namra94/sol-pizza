@@ -578,6 +578,9 @@ MEDIA = json.loads(read(os.path.join(HERE, 'media.json')))
 MEDIA_BASE = 'https://media.sol.pizza/'
 IMAGE_CDN = 'https://sol.pizza/cdn-cgi/image/'
 PHOTO_WIDTHS = (480, 768, 1080, 1600, 2400)
+# A phone never gets more than this: it fills a 390 px screen at 3x, and keeps the
+# home page's first photo (4:5 on a phone) under about 200 KB (check/media.js checks).
+PHONE_MAX = 1080
 # Where photographs go: slot: (what to shoot, shape on a wide screen, shape on a phone,
 # how wide it shows (the sizes attribute), how many). Shapes are (width, height).
 SLOTS = {
@@ -643,11 +646,16 @@ def photo_url(p, w, shape=None):
     return '%s%s,quality=75,format=auto/%s%s' % (IMAGE_CDN, ','.join(opts), MEDIA_BASE, p['key'])
 
 
-def _widths(p, shape):
-    """The widths to offer, never wider than the original allows for this shape."""
-    most = min(p['width'], int(p['height'] * shape[0] / shape[1]))
+def _widths(p, shape, cap=None):
+    """The widths to offer, never wider than the original allows for this shape (nor than cap)."""
+    most = min(p['width'], int(p['height'] * shape[0] / shape[1]), cap or PHOTO_WIDTHS[-1])
     ws = [w for w in PHOTO_WIDTHS if w <= most]
     return ws or [most]
+
+
+def _phone_sizes(sizes):
+    """How wide a photo shows on a phone: the sizes attribute's last, unconditional width."""
+    return sizes.rsplit(',', 1)[-1].strip()
 
 
 def alt_attr(en, vi):
@@ -656,15 +664,14 @@ def alt_attr(en, vi):
 
 
 def picture(p, spec, eager=False):
-    """A photo, sized for the screen: the phone's shape below 761px, the wide one above."""
+    """A photo, sized for the screen: the phone's shape (and at most PHONE_MAX wide) below
+    761px, the wide one above."""
     _, wide, phone, sizes, _ = spec
-    ws_wide, ws_phone = _widths(p, wide), _widths(p, phone)
+    ws_wide, ws_phone = _widths(p, wide), _widths(p, phone, PHONE_MAX)
     w0 = max(w for w in ws_wide if w <= 1080) if min(ws_wide) <= 1080 else ws_wide[0]
-    source = ''
-    if phone != wide:
-        source = ('<source media="(max-width: 760.98px)" srcset="%s" sizes="100vw" width="%d" height="%d">'
-                  % (', '.join('%s %dw' % (photo_url(p, w, phone), w) for w in ws_phone),
-                     ws_phone[-1], round(ws_phone[-1] * phone[1] / phone[0])))
+    source = ('<source media="(max-width: 760.98px)" srcset="%s" sizes="%s" width="%d" height="%d">'
+              % (', '.join('%s %dw' % (photo_url(p, w, phone), w) for w in ws_phone), _phone_sizes(sizes),
+                 ws_phone[-1], round(ws_phone[-1] * phone[1] / phone[0])))
     img = ('<img src="%s" srcset="%s" sizes="%s" width="%d" height="%d" %s%s decoding="async">'
            % (photo_url(p, w0, wide), ', '.join('%s %dw' % (photo_url(p, w, wide), w) for w in ws_wide), sizes,
               w0, round(w0 * wide[1] / wide[0]), alt_attr(p['alt_en'], p['alt_vi']),
@@ -709,10 +716,10 @@ def preload(slot):
         return ''
     _, wide, phone, sizes, _ = SLOTS[slot]
     return ''.join('<link rel="preload" as="image" imagesrcset="%s" imagesizes="%s" media="%s" fetchpriority="high">\n'
-                   % (', '.join('%s %dw' % (photo_url(p, w, shape), w) for w in _widths(p, shape)).replace('&', '&amp;'),
+                   % (', '.join('%s %dw' % (photo_url(p, w, shape), w) for w in _widths(p, shape, cap)).replace('&', '&amp;'),
                       sz, media)
-                   for shape, sz, media in ((phone, '100vw', '(max-width: 760.98px)'),
-                                            (wide, sizes, '(min-width: 761px)')))
+                   for shape, cap, sz, media in ((phone, PHONE_MAX, _phone_sizes(sizes), '(max-width: 760.98px)'),
+                                                 (wide, None, sizes, '(min-width: 761px)')))
 
 
 # --------------------------------------------------------------------------

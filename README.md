@@ -162,9 +162,11 @@ never in this repo; `build/media.json` lists each one: its name in the bucket, i
 its alt text in English and Vietnamese, the photographer's credit, the point to keep
 when it's cropped (`focus`), and where it goes (`slots`). Each page asks Cloudflare for
 the size the screen needs (`https://sol.pizza/cdn-cgi/image/…`: 480 to 2,400 px wide,
-never wider than the original, in WebP or AVIF where the browser takes it), cropped to
-the slot's shape: wide on a laptop, taller on a phone. The home page's first picture
-loads first; the rest load as they come into view. A slot with no photo shows nothing on
+never wider than the original, and never more than 1,080 px on a phone; in WebP or AVIF
+where the browser takes it), cropped to the slot's shape: wide on a laptop, taller on a
+phone. The home page's first picture loads first; the rest load as they come into view.
+That first picture should weigh under about 200 KB on a phone: `npm run check` with a
+URL weighs it, and says if a busier photo goes over (pick a calmer one for the top). A slot with no photo shows nothing on
 sol.pizza and a placeholder on the full previews, with what to shoot: the shot list.
 
 To add a photo:
@@ -181,7 +183,8 @@ To add a photo:
 5. Cloudflare → R2 → `sol-media` → **Upload**: the file, under the same name (the
    `2026-11/` folder and all).
 6. Open a pull request: the preview shows it in place. Merge, then
-   `npm run check -- https://sol.pizza` checks every photo loads.
+   `npm run check -- https://sol.pizza` checks every photo loads (and weighs the home
+   page's first one).
 
 An Eclipse edition's picture is its `image` in `build/events-data.json`: the key of a
 photo in `media.json` (no slot needed). Photos for the press go in the `press` slot: they
