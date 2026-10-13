@@ -152,9 +152,11 @@ booking box then shows the widget and says "Book online below, or call or
 email us." Until then the booking box gives the phone number, email and Instagram
 as text to copy (the team's call, 23 Sep), and the phone bar has no Call button;
 with `RESDIARY_URL` set they become a tap away (`CONTACT_LIVE`), with Zalo and WhatsApp
-too once their numbers are in `ZALO` and `WHATSAPP`. If guests pay a deposit inside the
-widget, set `RESDIARY_PAYMENTS = True`: the pages then let the widget's frame use the
-browser's payment feature. Under the widget there's always a way round it (call, Zalo,
+too once their numbers are in `ZALO` and `WHATSAPP`. If ResDiary gives the widget a
+separate Vietnamese address, put it in `RESDIARY_URL_VI` (the Vietnamese page uses it). If
+guests pay a deposit inside the widget, set `RESDIARY_PAYMENTS = True`: the pages then let
+the widget's frame use the browser's payment feature (if its payment step comes from
+another address, add that origin too: ask ResDiary). Under the widget there's always a way round it (call, Zalo,
 email), and the booking terms ("Before you book") wait for their content
 (CONTENT-NEEDED.md). Before online booking, `/booking/` has a form to ask for a table in
 opening week.
@@ -299,10 +301,12 @@ says yes, on the guest pages only (never the kitchen's), from `build/design/site
 - `/privacy/cookies/` lists everything kept in the browser. If that changes, change the
   notice, the banner and `CONSENT_VERSION` together.
 - Events, with a yes: `book_click`, `call_click`, `zalo_click`, `whatsapp_click`,
-  `email_click`, `directions_click`, `menu_view` (with the section), and from the
-  booking and enquiry forms when they come, `booking_complete`, `newsletter_signup`,
-  `enquiry_submit`; with a yes to Advertising, the matching Meta events (`BookClick`,
-  `Contact`, `FindLocation`, `ViewContent`, `Lead`, `Schedule`). Add `?debug_analytics=1`
+  `email_click`, `directions_click`, `menu_view` (with the section), `enquiry_submit`
+  (once per form per visit, with the form: Private dining or Opening week) and
+  `newsletter_signup`; with a yes to Advertising, the matching Meta events (`BookClick`,
+  `Contact`, `FindLocation`, `ViewContent`, `Lead`). A finished booking
+  (`booking_complete`, Meta's `Schedule`) is mapped but not sent: it happens inside
+  ResDiary's widget, which the page can't see. Add `?debug_analytics=1`
   to any address to see each one in the browser's console (and in GA4's DebugView);
   `?debug_analytics=0` stops it.
 

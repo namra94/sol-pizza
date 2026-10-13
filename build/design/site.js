@@ -291,7 +291,7 @@
     directions_click: ['track', 'FindLocation'],
     menu_view: ['track', 'ViewContent', {content_type: 'menu'}],
     newsletter_signup: ['track', 'Lead', {content_category: 'Newsletter'}],
-    enquiry_submit: ['track', 'Lead', {content_category: 'Private dining'}]
+    enquiry_submit: ['track', 'Lead']             // content_category: the form's (Private dining, Opening week)
   };
 
   function send(name, params) {
@@ -369,16 +369,31 @@
     var to = form.getAttribute('data-to');
     var subject = form.getAttribute('data-subject') + (who && who.value.trim() ? who.value.trim() : '');
     var body = lines.join('\n');
-    track('enquiry_submit', {enquiry_type: form.getAttribute('data-mailform')});
+    // One enquiry per form per visit, however many times Send is pressed
+    if (!form.hasAttribute('data-sent')) {
+      form.setAttribute('data-sent', '');
+      track('enquiry_submit', {enquiry_type: form.getAttribute('data-mailform'),
+                               content_category: form.getAttribute('data-category')});
+    }
     var done = form.querySelector('.mailform-done');
     if (done) {
+      var vi = root.lang === 'vi';
       var copy = done.querySelector('textarea');
       copy.rows = Math.min(10, lines.length + 3);
-      copy.value = 'To: ' + to + '\nSubject: ' + subject + '\n\n' + body;
+      copy.value = (vi ? 'Gửi tới: ' : 'To: ') + to + '\n' + (vi ? 'Tiêu đề: ' : 'Subject: ') + subject + '\n\n' + body;
       done.hidden = false;
+      // The guest sees (and a screen reader reads) what happened, even if no email app opens
+      var note = done.querySelector('p');
+      note.focus({preventScroll: true});
+      done.scrollIntoView({block: 'nearest', behavior: 'smooth'});
     }
     window.location.href = 'mailto:' + to + '?subject=' + encodeURIComponent(subject) +
       '&body=' + encodeURIComponent(body.replace(/\n/g, '\r\n'));
+  });
+  // A date to ask for can't be in the past (Hanoi's today)
+  var todayHanoi = new Date(Date.now() + 7 * 36e5).toISOString().slice(0, 10);
+  document.querySelectorAll('form[data-mailform] input[type="date"]').forEach(function (el) {
+    el.min = todayHanoi;
   });
 
   /* 5. Announcements ---------------------------------------------------- */

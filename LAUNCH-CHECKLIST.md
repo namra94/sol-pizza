@@ -139,7 +139,10 @@ The listing is "Sol Hanoi" and still carries Sol Pizza's reviews.
       `build/gen.py` (CONTENT-NEEDED.md). The widget appears on `/booking/`, and the
       phone number, Call and Zalo become tappable across the site.
 - [ ] Deposits: if guests pay a deposit inside the widget, say so: the site has to
-      allow payment in the widget's frame.
+      allow payment in the widget's frame (and ask ResDiary whether the payment step
+      comes from another address, which needs allowing too).
+- [ ] Languages: ask whether the widget can open in Vietnamese (a separate widget
+      address, or a setting). If it's a separate address, it goes in `RESDIARY_URL_VI`.
 - [ ] Analytics: the site already counts clicks on Book (`book_click`), after a yes to
       Analytics. If you switch on ResDiary's own Google Analytics, it runs inside the
       widget without the site's cookie banner: ask ResDiary first whether it waits for
@@ -148,10 +151,11 @@ The listing is "Sol Hanoi" and still carries Sol Pizza's reviews.
 ### 10. Enquiries and the newsletter
 
 The site's forms send email to hello@sol.pizza (`ENQUIRIES` in `build/gen.py`), with
-subjects that start the same way every time:
+subjects that start the same way every time (`Private dining — Lan`, `Opening week —
+Minh`, `Newsletter`):
 
-- [ ] In Gmail, a filter for each, so nothing waits: subject starts `Private dining —`
-      (label "Private dining", and star it), `Opening week —` (label "Opening week"),
+- [ ] In Gmail, a filter for each, so nothing waits: **Subject** `"Private dining —"`
+      (label "Private dining", and star it), `"Opening week —"` (label "Opening week"),
       `Newsletter` (label "Newsletter").
 - [ ] Newsletter: keep the addresses in one place (a Google Contacts label, or a sheet),
       with the date each asked. When you choose a newsletter tool, import them, and
@@ -170,8 +174,8 @@ subjects that start the same way every time:
 ### 12. Analytics
 
 - [ ] GA4 (`G-SLBWDVH550`): **Admin** → **Events**: mark `book_click`, `call_click`,
-      `zalo_click` and `directions_click` as key events (they appear after the first
-      visitor who says yes).
+      `zalo_click`, `directions_click`, `enquiry_submit` and `newsletter_signup` as key
+      events (they appear after the first visitor who says yes).
 - [ ] GA4: **Admin** → **Data retention**: 14 months, unless the lawyer says shorter.
 - [ ] Meta Events Manager (pixel `856214124247013`): the site sends `BookClick`
       (custom), `Contact`, `FindLocation`, `ViewContent` and `Lead`, only after a yes to

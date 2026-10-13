@@ -135,6 +135,9 @@ COMPANY_VI = 'Công ty TNHH Aurelian'
 # ResDiary: paste the widget URL here (ResDiary > Promote > Widget configurator >
 # Embed Code) and rebuild. The Booking page's booking box then shows the widget.
 RESDIARY_URL = ''
+# The widget in Vietnamese, if ResDiary gives a separate address for it (the Widget
+# configurator, Vietnamese selected); empty: Vietnamese pages use RESDIARY_URL too.
+RESDIARY_URL_VI = ''
 # Until online booking is live, the phone number in the booking box is text to copy,
 # not a button that opens another app (Linh, 23 Sep), and the phone bar has no Call
 # button. Both follow RESDIARY_URL: once it is set, contact is a tap away.
@@ -144,10 +147,15 @@ CONTACT_LIVE = bool(RESDIARY_URL)
 RESDIARY_PAYMENTS = False
 # Zalo and WhatsApp (CONTENT-NEEDED.md), once we have the numbers: Zalo as Zalo shows
 # it ('0866161600'), WhatsApp in international form without the + ('84866161600').
-# With online booking live they join the phone and email wherever contact is offered:
-# Zalo is the phone bar's button on Vietnamese pages, Call on English ones.
+# With online booking live they join the phone and email on the booking page, and Zalo
+# is the phone bar's button on Vietnamese pages (Call on English ones).
 ZALO     = ''
 WHATSAPP = ''
+assert re.fullmatch(r'(0\d{9})?', ZALO), "ZALO: the number as Zalo shows it, ten digits from 0, or ''"
+assert re.fullmatch(r'(84\d{9})?', WHATSAPP), "WHATSAPP: 84 then nine digits, no + or spaces, or ''"
+assert all(re.fullmatch(r'(https://[^\s"<>]+)?', u) for u in (RESDIARY_URL, RESDIARY_URL_VI)), \
+    "RESDIARY_URL: the widget's https:// address, or ''"
+
 # Where the enquiry forms (groups and private dining, opening week) and the newsletter
 # sign-up send their email: an inbox the team reads every day.
 ENQUIRIES = EMAIL
@@ -879,6 +887,10 @@ def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website
     body += nbsp('<a class="skip" href="#main">%s</a>\n' % t('Skip to content', 'Chuyển đến nội dung chính')
                  + consent_banner() + announcement_bars() + header(cur, en_href, vi_href))
     body += main if verbatim else nbsp(main)
+    bad = re.search(r'="[^"<>]*<span data-l=', body)
+    if bad:
+        raise SystemExit('%s: t() inside an attribute (use label(), or one element per language): …%s…'
+                         % (path, body[max(0, bad.start() - 60):bad.end() + 40]))
     body += nbsp(footer() + (actionbar() if bar else ''))
     body += '</body>\n</html>\n'
     rec = dict(path=path, kitchen=False, title=title, desc=desc, og=og, ogtype=ogtype, extra=extra,
@@ -1557,7 +1569,8 @@ def mailform(kind, subject, fields, submit):
     app opens with the details filled in, to ENQUIRIES, the subject in English (the inbox
     is sorted by it) and the details in the page's language (site.js builds it, and fires
     enquiry_submit). Without JavaScript the browser sends the form as the email's text.
-    The address is always on the form too, for a computer with no email app.
+    The address is always on the form too, for a computer with no email app, and after
+    Send the message is on the page to copy.
     fields: (name, label, type, required); type is an <input> type or 'textarea'."""
     rows = []
     for name, text, kind_, required in fields:
@@ -1572,21 +1585,23 @@ def mailform(kind, subject, fields, submit):
                        '' if required else ' <span class="opt">%s</span>' % t('(optional)', '(không bắt buộc)'),
                        control))
     mail = '<a href="mailto:%s">%s</a>' % (ENQUIRIES, ENQUIRIES)
+    # Without JavaScript (rare) the fields stay hidden and the note gives the address
+    # (site.css: html:not(.js)); browsers send a form as an email unreliably.
     return ('<form class="mailform" action="mailto:%s?subject=%s" method="post" enctype="text/plain" '
-            'data-mailform="%s" data-to="%s" data-subject="%s">'
+            'data-mailform="%s" data-category="%s" data-to="%s" data-subject="%s">'
             '<div class="mailform-fields">%s</div>'
             '<div class="actions"><button class="btn btn-red" type="submit">%s</button></div>'
             '<p class="mailform-note">%s</p>'
-            '<div class="mailform-done" role="status" hidden><p>%s</p><textarea readonly rows="8" %s></textarea></div>'
+            '<div class="mailform-done" hidden><p tabindex="-1">%s</p><textarea readonly rows="8" %s></textarea></div>'
             '</form>'
-            % (ENQUIRIES, encode_uri_component(subject.rstrip(' —')), kind, ENQUIRIES, esc_attr(subject), ''.join(rows),
-               submit,
+            % (ENQUIRIES, encode_uri_component(subject.strip()), kind, esc_attr(subject.rstrip(' —')), ENQUIRIES,
+               esc_attr(subject), ''.join(rows), submit,
                t('This opens your email app with the details filled in: send it from there. Or write to us at %s.' % mail,
                  'Nút này mở ứng dụng email với nội dung đã điền sẵn: bạn chỉ cần gửi đi. Hoặc viết cho chúng tôi '
                  'qua %s.' % mail),
                t('Your email app should have opened with your message. If it didn’t, copy the message below and '
                  'send it to %s.' % mail,
-                 'Ứng dụng email của bạn sẽ mở ra với nội dung đã điền sẵn. Nếu không thấy, hãy sao chép nội dung dưới '
+                 'Ứng dụng email của bạn lẽ ra đã mở với nội dung điền sẵn. Nếu chưa thấy, hãy sao chép nội dung dưới '
                  'đây và gửi tới %s.' % mail),
                label('Your message', 'Nội dung email')))
 
@@ -1611,13 +1626,15 @@ def build_booking():
                    ('<a href="mailto:%s">%s</a>' % (EMAIL, EMAIL))]
         if ZALO:
             contact.insert(1, '<a href="%s" data-track="zalo_click">Zalo</a>' % zalo_url())
-        # The widget, and always under it a way round it: whether a frame loaded can't be told
-        widget = ('<div class="book-widget"><iframe src="%s" title="%s" loading="lazy"%s></iframe></div>\n  '
-                  '<p class="book-fallback">%s</p>\n  '
-                  % (RESDIARY_URL, t('Book a table at Sol', 'Đặt bàn tại Sol'),
-                     ' allow="payment"' if RESDIARY_PAYMENTS else '',
-                     t('Trouble with the booking form? %s.' % ' · '.join(contact),
-                       'Không đặt được qua biểu mẫu? %s.' % ' · '.join(contact))))
+        # The widget, one frame per language (its title in that language), and always
+        # under it a way round it: whether a frame loaded can't be told
+        widget = ''.join('<div class="book-widget" data-l="%s" lang="%s"><iframe src="%s" title="%s" loading="lazy"%s>'
+                         '</iframe></div>' % (lang, lang, esc_attr(url), title,
+                                              ' allow="payment"' if RESDIARY_PAYMENTS else '')
+                         for lang, url, title in (('en', RESDIARY_URL, 'Book a table at Sol'),
+                                                  ('vi', RESDIARY_URL_VI or RESDIARY_URL, 'Đặt bàn tại Sol')))
+        widget += '\n  <p class="book-fallback">%s</p>\n  ' % t('Trouble with the booking form? %s.' % ' · '.join(contact),
+                                                             'Không đặt được qua biểu mẫu? %s.' % ' · '.join(contact))
     else:
         # Before opening, and from opening day (by_state(): in the browser on the day)
         booking_p = by_state(
@@ -1717,15 +1734,15 @@ def build_private_dining():
             t('Private dining', 'Tiệc riêng'), t('Groups and private dining', 'Nhóm đông và tiệc riêng'),
             t('For seven or more, or a night that’s all yours: tell us what you have in mind, and we’ll come back '
               'to you.',
-              'Từ bảy người trở lên, hay một buổi tối chỉ dành riêng cho bạn: hãy cho chúng tôi biết bạn đang nghĩ '
-              'gì, chúng tôi sẽ liên hệ lại.')),
+              'Từ bảy người trở lên, hay một buổi tối chỉ dành riêng cho bạn: hãy cho chúng tôi biết bạn muốn tổ '
+              'chức thế nào, chúng tôi sẽ liên hệ lại.')),
         '<div class="wrap">%s%s%s</div>' % (
             gate('private-dining-spaces', 'the spaces on each floor and how many each seats',
                  placeholder('s-spaces', t('The spaces', 'Không gian'),
                              [t('Ground floor', 'Tầng 1'), t('Upstairs', 'Tầng 2'),
                               t('The whole restaurant', 'Cả nhà hàng')])),
             gate('private-dining-menus', 'set menus for groups',
-                 placeholder('s-set-menus', t('Set menus', 'Thực đơn đặt trước'),
+                 placeholder('s-set-menus', t('Set menus', 'Thực đơn set'),
                              [t('Menus and prices', 'Thực đơn và giá')])),
             gate('private-dining-minimum', 'the minimum spend for a private space',
                  placeholder('s-minimum', t('Minimum spend', 'Mức chi tối thiểu'),
@@ -1734,8 +1751,8 @@ def build_private_dining():
         '%s<h2 id="s-enquire">%s</h2><p>%s</p></header>%s</section></div>' % (
             sun(5), t('Tell us about it', 'Cho chúng tôi biết về buổi tiệc'),
             t('The date, how many of you, and anything we should know. We’ll write back with what we can do.',
-              'Ngày nào, bao nhiêu người, và những điều chúng tôi nên biết. Chúng tôi sẽ trả lời với những gì có thể '
-              'sắp xếp.'),
+              'Ngày nào, bao nhiêu người, và những điều chúng tôi nên biết. Chúng tôi sẽ phản hồi và cho bạn biết '
+              'những gì chúng tôi có thể sắp xếp.'),
             mailform('private-dining', 'Private dining — ', [
                 ('name', t('Name', 'Họ tên'), 'text', True),
                 ('phone', t('Phone or Zalo', 'Điện thoại hoặc Zalo'), 'tel', True),
@@ -1751,8 +1768,8 @@ def build_private_dining():
                 ('Private dining — Sol, Tây Hồ', 'Tiệc riêng — Sol, Tây Hồ'),
                 ('Groups of seven or more and private dining at Sol, No 7, Lane 88 Quang An, Tây Hồ, Hanoi. Tell us '
                  'what you have in mind.',
-                 'Nhóm từ bảy người và tiệc riêng tại Sol, số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Hãy cho chúng tôi '
-                 'biết bạn đang nghĩ gì.'),
+                 'Nhóm từ bảy người trở lên và tiệc riêng tại Sol, số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Hãy cho '
+                 'chúng tôi biết bạn muốn tổ chức thế nào.'),
                 main, cur='private-dining', og='private-dining')
 
 
@@ -3279,7 +3296,8 @@ def optimise():
   ! Cache-Control
   ! Link
   Cache-Control: public, max-age=86400
-""" % dict(payment='self "%s"' % '{0.scheme}://{0.netloc}'.format(urlsplit(RESDIARY_URL))
+""" % dict(payment=' '.join(['self'] + sorted({'"{0.scheme}://{0.netloc}"'.format(urlsplit(u))
+                                                 for u in (RESDIARY_URL, RESDIARY_URL_VI) if u}))
                    if RESDIARY_URL and RESDIARY_PAYMENTS else '',
            link_en=', '.join('<%s>; rel=preload; as=font; type=font/woff2; crossorigin' % f for f in FONT_PRELOADS['en']),
            link_vi=', '.join('<%s>; rel=preload; as=font; type=font/woff2; crossorigin' % f for f in FONT_PRELOADS['vi']),
