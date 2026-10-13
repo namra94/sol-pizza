@@ -1,0 +1,5 @@
+{
+  "note": "The announcement bar at the top of every guest page (holiday and Tết hours, the next event). Each announcement shows from show_from until show_until, Hanoi time: write them with their +07:00, e.g. 2027-02-01T00:00:00+07:00. The pages switch it on and off by themselves at those times, without a rebuild; one that has ended can be deleted. id: lowercase letters, digits and -, unique (a dismissed bar stays dismissed by its id). link is optional: a page on the site (/visit-us/) or a full address, with link_text and link_text_vi. Example: {\"id\": \"tet-2027\", \"show_from\": \"2027-01-30T00:00:00+07:00\", \"show_until\": \"2027-02-11T00:00:00+07:00\", \"text\": \"We're closed from 5 to 10 February for Tết.\", \"text_vi\": \"Sol nghỉ Tết từ 05/02 đến 10/02.\", \"link\": \"/visit-us/\", \"link_text\": \"Opening hours\", \"link_text_vi\": \"Giờ mở cửa\"}",
+  "note_vi": "Every *_vi field is the Vietnamese twin of the field above it.",
+  "announcements": []
+}
