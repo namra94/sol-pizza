@@ -7,6 +7,17 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Photographs, 13 Oct 2026
+
+The photos come with their own alt text, in English and Vietnamese, written in `build/media.json` as each one is added: please read each photo's `alt_vi` when it arrives. The site's own new lines:
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /press/ | Photographs · Photo: (the photographer) · Full size | — | Hình ảnh · Ảnh: (tên nhiếp ảnh gia) · Ảnh gốc |
+| /press/ | each Full size link, for screen readers: Full size: (the photo's alt text) | — | Ảnh gốc: (alt_vi của ảnh) |
+| every page with a gallery | its label for screen readers: Photographs | — | Hình ảnh |
+| full previews only | a photo still to come: Photo `slot`: what to shoot (2:1 wide, 4:5 on a phone, up to 3) | — | Ảnh `slot`: … (2:1 trên màn hình rộng, 4:5 trên điện thoại, tối đa 3 ảnh) |
+
 ## The home page, events, press and the pages to come, 13 Oct 2026
 
 The home page in a new order, Events (Eclipse), Press, and pages built ahead of their content. Lines marked “(full previews only)” wait for content or for the lawyer, and aren't on sol.pizza until then; “(once open)” and “(once priced)” appear from opening day, or once the menu has its prices.

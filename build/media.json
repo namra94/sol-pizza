@@ -1,0 +1,8 @@
+{
+  "_about": [
+    "Every photograph on the site: one entry per photo. The files live in Cloudflare R2 (the sol-media bucket, served at https://media.sol.pizza/), never in this repo; the pages ask Cloudflare for each one at the size the screen needs (/cdn-cgi/image/ on sol.pizza).",
+    "key: the file's name in the bucket, as uploaded (2026-11/room-ground-floor.jpg). width and height: the original's, in pixels (python3 build/media_tool.py <file> prints them). alt_en and alt_vi: what the photo shows, for someone who can't see it, one sentence each. credit: the photographer. focus: the point to keep when the photo is cropped, [x, y] from the top left, each 0 to 1 ([0.5, 0.5] is the middle). slots: where it appears (python3 build/media_tool.py slots lists them, with their shapes).",
+    "The build stops if an entry has no alt text, no credit, or a slot it doesn't know. A slot with no photo shows nothing on sol.pizza, and a marked placeholder on the full previews."
+  ],
+  "photos": []
+}

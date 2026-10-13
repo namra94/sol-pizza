@@ -62,7 +62,7 @@ Last updated 13 October 2026.
 
 | What | Where it goes | Format | Who has it |
 | --- | --- | --- | --- |
-| Photographs: the room on each floor, the bar, the oven, the food, the team, the building from the lane | Cloudflare R2 (`media.sol.pizza`) and `build/media.json`: the home page, About, Menu, Private dining, Events, Press | sRGB JPEG, long edge 3,000–4,000 px, with a credit; alt text in English and Vietnamese for each | The photographer |
+| Photographs: the room on each floor, the bar, the oven, the food, the team, the building from the lane | Cloudflare R2 (the `sol-media` bucket, `media.sol.pizza`) and `build/media.json`: the home page, About, Menu, Private dining, Visit, Events, Press (README.md, "Photographs", says how) | sRGB JPEG, long edge 3,000–4,000 px, with a credit; alt text in English and Vietnamese for each; which photos the press may use | The photographer |
 | A video for the home page (optional) | The home page's first screen, muted, with a still for phones | MP4, about 2 MB at most, and a poster frame | The photographer |
 
 ## Search
@@ -107,7 +107,7 @@ Each key below is a section the public build leaves out until its content arrive
 | `about-team` | `/about/`, "The team": a portrait and two or three lines on each person (The team, above) |
 | `company-tax-code` | The footer's last line: the tax code (`TAX_CODE` in `build/gen.py`; Tax code, above) |
 | `press-contact` | `/press/`, "Who to ask": a name and an email (`PRESS_CONTACT`; Press contact, above). Until then it says hello@sol.pizza |
-| `press-photos` | `/press/`: approved photographs to download, with their credits (Photography, above) |
+| `photography` | Every photograph: the home page (the first picture, the story, the three cards), About (the room, the oven), the menus, Private dining, Visit, each Eclipse edition, and the ones the press may use on `/press/`. Each placeholder on the full preview gives its slot, what to shoot and its shapes; `python3 build/media_tool.py slots` lists them (Photography, above) |
 | `home-press` | The home page: press or review quotes (Press and review quotes, above) |
 | `event-<slug>` | The whole page of each Eclipse edition, `/events/<slug>/` (today `event-eclipse-1`): its line (Eclipse, above). It goes live by itself once `summary_en` and `summary_vi` are in `build/events-data.json`; a new edition needs nothing here |
 | `gift-cards` | The whole page `/gift-cards/`: the values, how long a card lasts, how to buy one (Gift cards, above). To publish it, delete its line in `WAITING` in `build/gen.py` |

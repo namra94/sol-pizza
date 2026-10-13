@@ -566,6 +566,182 @@ EV_STYLE = ''.join('html.past-%s .ev-up[data-ev="%s"],html:not(.past-%s) .ev-pas
 
 
 # --------------------------------------------------------------------------
+# photographs: build/media.json
+#   The files live in Cloudflare R2 (the sol-media bucket at media.sol.pizza), never
+#   in git. Each page asks Cloudflare's image transformations on sol.pizza for the
+#   size the screen needs (/cdn-cgi/image/…), cropped around the photo's focus, in
+#   the format the browser takes best. Always the sol.pizza address: a preview's
+#   workers.dev address can't transform. A slot with no photo shows nothing on
+#   sol.pizza, and a marked placeholder in the full build (the shot list).
+# --------------------------------------------------------------------------
+MEDIA = json.loads(read(os.path.join(HERE, 'media.json')))
+MEDIA_BASE = 'https://media.sol.pizza/'
+IMAGE_CDN = 'https://sol.pizza/cdn-cgi/image/'
+PHOTO_WIDTHS = (480, 768, 1080, 1600, 2400)
+# A phone never gets more than this: it fills a 390 px screen at 3x, and keeps the
+# home page's first photo (4:5 on a phone) under about 200 KB (check/media.js checks).
+PHONE_MAX = 1080
+# Where photographs go: slot: (what to shoot, shape on a wide screen, shape on a phone,
+# how wide it shows (the sizes attribute, as site.css lays it out; its last width is the
+# phone's), how many). Shapes are (width, height). Bands across the wide canvas are at
+# most 1,440 px, across the text column 1,040; cards and the press photos are a third of
+# the column (331 px), galleries too (339 px), and the home page's story photo 440 px.
+SLOTS = {
+    'home-hero': ('The room in the evening, or the oven with its fire: the first picture on the home page',
+                  (2, 1), (4, 5), '100vw', 1),
+    'home-story': ('Sol Pizza then and Sol now: the old room, the new one, the team at work',
+                   (4, 5), (4, 5), '(min-width: 901px) 440px, calc(100vw - 48px)', 1),
+    'home-menu': ('A pizza out of the oven', (3, 2), (3, 2), '(min-width: 901px) 331px, calc(100vw - 48px)', 1),
+    'home-private-dining': ('A long table set for a group', (3, 2), (3, 2),
+                            '(min-width: 901px) 331px, calc(100vw - 48px)', 1),
+    'home-events': ('Eclipse: a night of it (landscape: a poster would be cropped)', (3, 2), (3, 2),
+                    '(min-width: 901px) 331px, calc(100vw - 48px)', 1),
+    'about-room': ('The room on each floor, and the bar', (2, 1), (4, 5),
+                   '(min-width: 1488px) 1440px, calc(100vw - 48px)', 1),
+    'about-oven': ('The Pavesi oven, and the pizzaiolo at it', (2, 1), (4, 5),
+                   '(min-width: 1488px) 1440px, calc(100vw - 48px)', 1),
+    'menu-food': ('Dishes: pizza, pasta, small plates', (4, 5), (4, 5), '(min-width: 761px) 339px, 82vw', 3),
+    'menu-wine': ('The wine: bottles on the bar, a glass being poured', (2, 1), (4, 5),
+                  '(min-width: 1088px) 1040px, calc(100vw - 48px)', 1),
+    'menu-bar': ('The bar: a cocktail being made, the draft taps', (2, 1), (4, 5),
+                 '(min-width: 1088px) 1040px, calc(100vw - 48px)', 1),
+    'private-dining': ('Each space, set for a group', (4, 5), (4, 5), '(min-width: 761px) 339px, 82vw', 3),
+    'visit': ('The building and its door, from the lane, so guests know it', (2, 1), (4, 5),
+              '(min-width: 1488px) 1440px, calc(100vw - 48px)', 1),
+    'press': ('Photographs the press may use: any of the above, at full size', (4, 3), (4, 3),
+              '(min-width: 901px) 331px, calc(100vw - 48px)', 9),
+}
+EVENT_SLOT = ('Eclipse, each edition: a night of it (landscape: a poster would be cropped)', (2, 1), (4, 5),
+              '(min-width: 1488px) 1440px, calc(100vw - 48px)', 1)
+
+
+def _photos():
+    out, keys = [], set()
+    for p in MEDIA['photos']:
+        k = p.get('key', '')
+        assert re.fullmatch(r'[a-z0-9][a-z0-9/_.-]*\.(jpe?g|png|webp)', k) and k not in keys, \
+            'media.json: %r: key is the file\'s name in the bucket (a-z 0-9 / _ . -), once each' % k
+        keys.add(k)
+        assert isinstance(p.get('width'), int) and isinstance(p.get('height'), int) and p['width'] > 0 \
+            and p['height'] > 0, 'media.json: %s: width and height of the original, in pixels' % k
+        assert (p.get('alt_en') or '').strip() and (p.get('alt_vi') or '').strip(), \
+            'media.json: %s: alt_en and alt_vi, what the photo shows, in both languages' % k
+        assert (p.get('credit') or '').strip(), 'media.json: %s: credit, the photographer' % k
+        f = p.get('focus', [0.5, 0.5])
+        assert len(f) == 2 and all(isinstance(x, (int, float)) and 0 <= x <= 1 for x in f), \
+            'media.json: %s: focus is [x, y], each from 0 to 1' % k
+        for sl in p.get('slots', []):
+            assert sl in SLOTS, ('media.json: %s: no slot %r (python3 build/media_tool.py slots; an Eclipse '
+                                 'edition\'s photo needs no slot: it\'s the "image" in events-data.json)' % (k, sl))
+        out.append(dict(p, focus=f))
+    for sl, spec in SLOTS.items():
+        n = sum(sl in p.get('slots', []) for p in out)
+        assert n <= spec[4], 'media.json: %d photos for %s, which takes %d' % (n, sl, spec[4])
+    return out
+
+
+PHOTOS = _photos()
+PHOTO_BY_KEY = {p['key']: p for p in PHOTOS}
+for _e in EVENTS:
+    assert not _e['image'] or _e['image'] in PHOTO_BY_KEY, \
+        'events-data.json: %s: image %r is not a key in build/media.json' % (_e['slug'], _e['image'])
+
+
+def photos_for(slot):
+    return [p for p in PHOTOS if slot in p.get('slots', [])]
+
+
+def photo_url(p, w, shape=None):
+    """Cloudflare's address for photo p, w pixels wide, cropped to shape around its focus."""
+    opts = ['width=%d' % w]
+    if shape:
+        opts += ['height=%d' % round(w * shape[1] / shape[0]), 'fit=cover',
+                 'gravity=%sx%s' % tuple(('%.3f' % x).rstrip('0').rstrip('.') for x in p['focus'])]
+    return '%s%s,quality=75,format=auto/%s%s' % (IMAGE_CDN, ','.join(opts), MEDIA_BASE, p['key'])
+
+
+def _widths(p, shape, cap=None):
+    """The widths to offer, never wider than the original allows for this shape (nor than cap)."""
+    most = min(p['width'], int(p['height'] * shape[0] / shape[1]), cap or PHOTO_WIDTHS[-1])
+    ws = [w for w in PHOTO_WIDTHS if w <= most]
+    return ws or [most]
+
+
+def _phone_sizes(sizes):
+    """How wide a photo shows on a phone: the sizes attribute's last, unconditional width
+    (a plain length, or a calc() without commas)."""
+    last = sizes.rsplit(',', 1)[-1].strip()
+    assert re.fullmatch(r'\d+(px|vw)|calc\([^,()]+\)', last), 'SLOTS: sizes ends with the phone\'s width: %r' % sizes
+    return last
+
+
+def alt_attr(en, vi):
+    """An alt text in both languages: localise() keeps the page's (like label())."""
+    return 'alt="%s" data-alt-en="%s" data-alt-vi="%s"' % (esc_attr(en), esc_attr(en), esc_attr(vi))
+
+
+def picture(p, spec, eager=False):
+    """A photo, sized for the screen: the phone's shape (and at most PHONE_MAX wide) below
+    761px, the wide one above."""
+    _, wide, phone, sizes, _ = spec
+    ws_wide, ws_phone = _widths(p, wide), _widths(p, phone, PHONE_MAX)
+    w0 = max(w for w in ws_wide if w <= 1080) if min(ws_wide) <= 1080 else ws_wide[0]
+    source = ('<source media="(max-width: 760.98px)" srcset="%s" sizes="%s" width="%d" height="%d">'
+              % (', '.join('%s %dw' % (photo_url(p, w, phone), w) for w in ws_phone), _phone_sizes(sizes),
+                 ws_phone[-1], round(ws_phone[-1] * phone[1] / phone[0])))
+    img = ('<img src="%s" srcset="%s" sizes="%s" width="%d" height="%d" %s%s decoding="async">'
+           % (photo_url(p, w0, wide), ', '.join('%s %dw' % (photo_url(p, w, wide), w) for w in ws_wide), sizes,
+              w0, round(w0 * wide[1] / wide[0]), alt_attr(p['alt_en'], p['alt_vi']),
+              ' fetchpriority="high"' if eager else ' loading="lazy"'))
+    return '<picture>%s%s</picture>' % (source, img)
+
+
+def photo_placeholder(slot, spec):
+    """The full build's stand-in for a photo still to come: its shape, and what to shoot."""
+    what, wide, phone, _, n = spec
+    return gate('photography', 'photographs (build/media.json; CONTENT-NEEDED.md, Photography)',
+                '<div class="ph ph-photo" style="--ar:%d/%d;--ar-phone:%d/%d">%s <code>%s</code>: %s (%s)</div>'
+                % (wide[0], wide[1], phone[0], phone[1], t('Photo', 'Ảnh'), slot, esc(what),
+                   t('%d:%d wide, %d:%d on a phone%s' % (wide + phone + ((', up to %d' % n) if n > 1 else '',)),
+                     '%d:%d trên màn hình rộng, %d:%d trên điện thoại%s'
+                     % (wide + phone + ((', tối đa %d ảnh' % n) if n > 1 else '',)))))
+
+
+def band(slot, cls='band', eager=False, spec=None, p=None):
+    """One photo across the page (a figure), or its placeholder, or nothing."""
+    spec = spec or SLOTS[slot]
+    p = p or next(iter(photos_for(slot)), None)
+    if not p:
+        return photo_placeholder(slot, spec) if FULL else ''
+    return '<figure class="%s">%s</figure>' % (cls, picture(p, spec, eager))
+
+
+def gallery(slot, eager=False):
+    """Up to three (or the slot's number of) photos in a row, to swipe on a phone. eager: the
+    first loads at once, when the gallery is near the top of its page."""
+    spec = SLOTS[slot]
+    ps = photos_for(slot)
+    if not ps:
+        return photo_placeholder(slot, spec) if FULL else ''
+    return ('<div class="gallery" style="--n:%d" role="region" tabindex="0" %s>%s</div>'
+            % (min(len(ps), 3), label('Photographs', 'Hình ảnh'),
+               ''.join('<figure>%s</figure>' % picture(p, spec, eager and i == 0) for i, p in enumerate(ps))))
+
+
+def preload(slot):
+    """<link rel="preload"> for a page's first photo (the home page's), in each shape."""
+    p = next(iter(photos_for(slot)), None)
+    if not p:
+        return ''
+    _, wide, phone, sizes, _ = SLOTS[slot]
+    return ''.join('<link rel="preload" as="image" imagesrcset="%s" imagesizes="%s" media="%s" fetchpriority="high">\n'
+                   % (', '.join('%s %dw' % (photo_url(p, w, shape), w) for w in _widths(p, shape, cap)).replace('&', '&amp;'),
+                      sz, media)
+                   for shape, cap, sz, media in ((phone, PHONE_MAX, _phone_sizes(sizes), '(max-width: 760.98px)'),
+                                                 (wide, None, sizes, '(min-width: 761px)')))
+
+
+# --------------------------------------------------------------------------
 # announcements: build/announcements.json
 # --------------------------------------------------------------------------
 ANNOUNCE = json.loads(read(os.path.join(HERE, 'announcements.json')))
@@ -1080,6 +1256,7 @@ def out_file(path):
 # --------------------------------------------------------------------------
 _DATA_L = re.compile(r'<([a-zA-Z][a-zA-Z0-9]*)\b([^>]*?)\sdata-l="(en|vi)"([^>]*)>')
 _ARIA = re.compile(r'aria-label="[^"]*" data-aria-en="([^"]*)" data-aria-vi="([^"]*)"')
+_ALT = re.compile(r'alt="[^"]*" data-alt-en="([^"]*)" data-alt-vi="([^"]*)"')
 _A_TAG = re.compile(r'<a\b[^>]*>')
 
 
@@ -1123,6 +1300,7 @@ def localise(body, lang, guest_paths):
     address (links with an hreflang, like the EN · VI switch, go where they say)."""
     body = _keep_lang(body, lang)
     body = _ARIA.sub(lambda m: 'aria-label="%s"' % m.group(1 if lang == 'en' else 2), body)
+    body = _ALT.sub(lambda m: 'alt="%s"' % m.group(1 if lang == 'en' else 2), body)
     if lang == 'en':
         return body
 
@@ -1388,8 +1566,14 @@ def home_paths():
          t('No 7, Lane 88 Quang An, Tây Hồ: how to find us.', 'Số 7, ngõ 88 Quảng An, Tây Hồ: đường đến Sol.'),
          t('Find us', 'Tìm chúng tôi')),
     ]
-    cards = ['<li class="card"><div class="card-body"><h2>%s</h2><p>%s</p><a class="link-sc" href="%s">%s</a></div></li>'
-             % (name, line, href, link) for key, href, name, line, link in paths if live(key)][:3]
+    def photo(key):
+        # The Visit card (it shows only when one of the first three is off) takes Visit's photo
+        slot = 'visit' if key == 'visit' else 'home-' + key
+        spec = (SLOTS['visit'][0],) + SLOTS['home-menu'][1:] if key == 'visit' else SLOTS[slot]
+        p = next(iter(photos_for(slot)), None)
+        return picture(p, spec) if p else (photo_placeholder(slot, spec) if FULL else '')
+    cards = ['<li class="card">%s<div class="card-body"><h2>%s</h2><p>%s</p><a class="link-sc" href="%s">%s</a></div></li>'
+             % (photo(key), name, line, href, link) for key, href, name, line, link in paths if live(key)][:3]
     return '<div class="wrap"><ul class="cards home-paths">%s</ul></div>' % ''.join(cards)
 
 
@@ -1445,10 +1629,11 @@ def build_home():
   <div class="actions">{actions}</div>
   {today}
 </section>
+{hero_photo}
 {paths}
-<section class="home-story wrap" aria-labelledby="s-story">
-  <header class="section-intro">{sun}<p class="eyebrow">{story_eyebrow}</p><h2 class="h-lg" id="s-story">{story_h}</h2><p>{story}</p></header>
-  {story_link}
+<section class="home-story wrap{story_cls}" aria-labelledby="s-story">
+  {story_photo}<div class="home-story-text"><header class="section-intro">{sun}<p class="eyebrow">{story_eyebrow}</p><h2 class="h-lg" id="s-story">{story_h}</h2><p>{story}</p></header>
+  {story_link}</div>
 </section>
 {next_event}
 <div class="wrap">{press}</div>
@@ -1469,7 +1654,11 @@ def build_home():
         actions=buttons([('booking', '/booking/', BOOK), ('menu', '/menu/', t('See the menu', 'Xem thực đơn')),
                          (None, '/jobs/', SEE_ROLES), (None, INSTAGRAM, INSTA_TEXT)]),
         today=today_line(),
+        # the first picture: as wide as the window, loaded first, never faded in
+        hero_photo=band('home-hero', 'band band-hero', eager=True),
         paths=home_paths(),
+        story_photo=band('home-story', 'home-story-photo'),
+        story_cls=' has-photo' if photos_for('home-story') or FULL else '',
         sun=sun(2), story_eyebrow=t('Our story', 'Câu chuyện của chúng tôi'),
         story_h=t('We closed Sol Pizza to build Sol.', 'Chúng tôi đóng cửa Sol Pizza để xây dựng Sol.'),
         story=story,
@@ -1488,7 +1677,7 @@ def build_home():
     return page('/', 'page-home',
                 ('Sol — Italian-American restaurant in Tây Hồ, Hanoi',
                  'Sol — Nhà hàng Ý–Mỹ tại Tây Hồ, Hà Nội'),
-                HOME_DESC, main, og='home', extra=SCHEMA, news=False)
+                HOME_DESC, main, og='home', extra=preload('home-hero') + SCHEMA, news=False)
 
 
 # ==========================================================================
@@ -1620,6 +1809,8 @@ def build_food():
         legend,
         currency_note() if some else '',
     ]
+    parts.append('<div class="menu-photos">%s</div>' % gallery('menu-food', eager=True)
+                 if photos_for('menu-food') or FULL else '')
     if not every:
         parts.append(note_box(t('A first draft', 'Bản nháp đầu tiên'),
                  t('These are the dishes we cooked at Sol Pizza, and they’re where Sol starts. Expect '
@@ -1671,6 +1862,7 @@ def build_wine():
                      'Hai mươi sáu loại trong số đó có phục vụ theo ly.'), GRAPE),
         '<p class="legend">%s</p>' % legend,
         currency_note() if some else '',
+        band('menu-wine', eager=True),
         '' if every else note_box(t('A first draft', 'Bản nháp đầu tiên'),
                  t('This is the Sol Pizza list while the new one is being built. Vintages change and '
                    'bottles run out, so ask what’s open tonight.',
@@ -1720,7 +1912,7 @@ def build_bar():
                           'so ask for anything.',
                           'Cocktail, bia tươi Bia Craft, sake và mọi thứ còn lại. Quầy bar đầy đủ, '
                           'bạn cứ gọi món mình thích.')),
-             currency_note() if some else '']
+             currency_note() if some else '', band('menu-bar', eager=True)]
     for i, sec in enumerate(bar['sections']):
         if all(not d['description'] for d in sec['items']) and sec['name'] == 'Soft drinks' \
                 and not any(d.get('price') for d in sec['items']):
@@ -1813,6 +2005,7 @@ def build_about():
             ''.join('<p class="page-lead%s">%s</p>' % (cls, p) for p, cls in intro)),
         '<div class="wrap"><ul class="trio">%s</ul></div>' % ''.join(
             '<li><h2>%s</h2><p>%s</p></li>' % box for box in trio),
+        band('about-room', 'band wrap-wide'),
         '<figure class="pullquote wrap">%s<blockquote><p>%s</p></blockquote>%s</figure>' % (
             sun(2),
             t('We’d rather cook a short menu well than a long one adequately.',
@@ -1855,6 +2048,7 @@ def build_about():
                 'Trung tâm của tất cả là chiếc lò củi Pavesi, chế tác tại Ý và đưa về Hà Nội. Mọi thứ '
                 'còn lại trong bếp đều được sắp xếp quanh nó.'),
         ], level=3, cls=' has-envoy'),
+        band('about-oven', 'band wrap-wide'),
         gate('about-dough', 'the kitchen’s lines on the dough: its flours, how long it ferments, how it’s baked',
              prose_section('s-the-dough', 3, t('The dough', 'Bột bánh'), [
                  '<p>%s</p>' % t('[The flours, the fermentation and the bake, in the kitchen’s words, to come]',
@@ -2070,6 +2264,7 @@ def build_private_dining():
               'to you.',
               'Từ bảy người trở lên, hay một buổi tối chỉ dành riêng cho bạn: hãy cho chúng tôi biết bạn muốn tổ '
               'chức thế nào, chúng tôi sẽ liên hệ lại.')),
+        '<div class="wrap">%s</div>' % gallery('private-dining', eager=True),
         '<div class="wrap">%s%s%s</div>' % (
             gate('private-dining-spaces', 'the spaces on each floor and how many each seats',
                  placeholder('s-spaces', t('The spaces', 'Không gian'),
@@ -2177,9 +2372,11 @@ def build_event(e):
     else:
         book = ('<a class="btn btn-red" href="%s" data-track="book_click" data-booking="%s">%s</a>'
                 % (mailto(ENQUIRIES, name, ''), e['slug'], t('Book by email', 'Đặt chỗ qua email')))
+    pic = PHOTO_BY_KEY.get(e['image'])
     parts = [
         '<main id="main">',
         '<div class="wrap">%s</div>' % page_title(ev_name(e), 'Eclipse', summary),
+        band('event', 'band wrap-wide', eager=True, spec=EVENT_SLOT, p=pic) if pic or FULL else '',
         '<div class="wrap"><dl class="facts ev-facts">%s</dl></div>' % ''.join(
             '<div><dt>%s</dt><dd>%s</dd></div>' % f for f in facts),
     ]
@@ -2257,6 +2454,7 @@ def build_visit():
   <section aria-labelledby="v-addr"><h2 class="label" id="v-addr">{l_addr}</h2><p>{addr}</p><a class="link-sc" href="{maps}">{maps_t}</a></section>
   <section aria-labelledby="v-contact"><h2 class="label" id="v-contact">{l_talk}</h2><p><a href="{tel}">{phone}</a><br><a href="mailto:{email}">{email}</a><br>{insta}</p></section>
 </div></div>
+{photo}
 <section class="prose-section wrap" aria-labelledby="s-gtk"><header class="section-head">{sun}<h2 id="s-gtk">{gtk}</h2></header>{faq}</section>
 {book_box}</main>
 """.format(
@@ -2274,7 +2472,7 @@ def build_visit():
         l_addr=t('Address', 'Địa chỉ'), addr=t(ADDRESS_EN, ADDRESS_VI),
         maps=MAPS_URL, maps_t=MAPS_LINK_TEXT,
         l_talk=t('Talk to us', 'Liên hệ'), tel=PHONE_TEL, phone=PHONE, email=EMAIL, insta=INSTA_LINK,
-        sun=sun(3), gtk=t('Good to know', 'Thông tin hữu ích'), faq=visit_faq(),
+        sun=sun(3), gtk=t('Good to know', 'Thông tin hữu ích'), faq=visit_faq(), photo=band('visit', 'band wrap-wide', eager=True),
         # Book a table: while the booking page is public (HIDDEN)
         book_box=('<div class="wrap"><section class="offer" aria-labelledby="s-book"><h2 id="s-book">%s</h2><p>%s</p>'
                   '<a class="btn btn-red" href="/booking/#book" data-track="book_click">%s</a></section></div>\n' % (
@@ -2355,6 +2553,11 @@ def band_en(lo_hi, dash=' – '):
 
 def band_vi(lo_hi):
     return ' – '.join(vnd(n, '.') for n in lo_hi)
+
+
+def band_vi_cut(lo_hi, unit):
+    """band_vi() and its unit for a narrow card: it may break after the dash, nowhere else."""
+    return '<span class="nowrap">%s –</span> <span class="nowrap">%s %s</span>' % (vnd(lo_hi[0], '.'), vnd(lo_hi[1], '.'), unit)
 
 
 def trieu(lo_hi):
@@ -2570,9 +2773,9 @@ def role_card(r):
     pay = t('Base salary <span class="nowrap">%s VND</span> gross a month<br>'
             '+ service charge &amp; tips, est. <span class="nowrap">%s</span> a month'
             % (band_en(r['base'], '–'), band_en(SERVICE, '–')),
-            'Lương cơ bản <span class="nowrap">%s VNĐ</span> gross/tháng<br>'
-            '+ phí phục vụ &amp; tip ước tính <span class="nowrap">%s VNĐ</span>/tháng'
-            % (band_vi(r['base']), band_vi(SERVICE)))
+            'Lương cơ bản %s gross/tháng<br>'
+            '+ phí phục vụ &amp; tip ước tính %s'
+            % (band_vi_cut(r['base'], 'VNĐ'), band_vi_cut(SERVICE, 'VNĐ/tháng')))
     nowrap = '<span class="nowrap">%s</span>'
     dates = t('%s · %s' % (nowrap % ('Applications close ' + en_date(CLOSES, True)),
                            nowrap % ('Start ' + en_date(STARTS, True))),
@@ -3143,6 +3346,20 @@ def build_gift_cards():
                  'Thẻ quà tặng của Sol, nhà hàng Ý–Mỹ tại Tây Hồ, Hà Nội.'), main, og='home')
 
 
+def press_photos():
+    """The photographs the press may use: each with its credit and its full-size file."""
+    ps = photos_for('press')
+    if not ps:
+        return '<div class="wrap">%s</div>' % (photo_placeholder('press', SLOTS['press']) if FULL else '')
+    return ('<section class="prose-section wrap" aria-labelledby="s-photos"><header class="section-head">%s'
+            '<h2 id="s-photos">%s</h2></header><ul class="press-photos">%s</ul></section>'
+            % (sun(6), t('Photographs', 'Hình ảnh'), ''.join(
+                '<li><figure>%s<figcaption>%s · <a href="%s%s" %s>%s</a></figcaption></figure></li>'
+                % (picture(p, SLOTS['press']), t('Photo: %s' % esc(p['credit']), 'Ảnh: %s' % esc(p['credit'])),
+                   MEDIA_BASE, p['key'], label(esc_attr('Full size: ' + p['alt_en']), esc_attr('Ảnh gốc: ' + p['alt_vi'])),
+                   t('Full size', 'Ảnh gốc')) for p in ps)))
+
+
 def build_press():
     opening = t('%s %d' % (en_date(OPENING_DAY), OPENING_DAY.year) if OPENING_DAY else 'Soon',
                 vi_date(OPENING_DAY, year=True)[0].upper() + vi_date(OPENING_DAY, year=True)[1:]
@@ -3190,10 +3407,7 @@ def build_press():
                                                   'Màu đỏ Sol. Vui lòng dùng nguyên bản: không đổi màu, kéo giãn hay '
                                                   'vẽ lại.'),
            t('Download the logo (SVG)', 'Tải logo (SVG)')),
-        '<div class="wrap">%s</div>' % gate('press-photos', 'approved photographs to download, with their credits',
-                                            '<div class="gallery" role="region" tabindex="0" %s>' % label('Photographs', 'Ảnh') + '%s</div>' % ''.join(
-                                                '<div class="ph" style="aspect-ratio:4/3">%s</div>'
-                                                % t('Photograph', 'Ảnh') for _ in range(3))),
+        press_photos(),
         '<div class="wrap"><section class="offer" aria-labelledby="s-press-contact"><h2 id="s-press-contact">%s</h2>'
         '<p>%s</p></section></div>' % (t('Who to ask', 'Liên hệ'), contact),
         '</main>', ''])
@@ -4100,7 +4314,9 @@ def _site_path(url, base):
     if url.startswith(('#', 'mailto:', 'tel:', 'data:', 'javascript:')):
         return None
     parts = urlsplit(urljoin(SITE + base, url))
-    return (unquote(parts.path) or '/') if parts.netloc == 'sol.pizza' else None
+    if parts.netloc != 'sol.pizza' or parts.path.startswith('/cdn-cgi/'):
+        return None                     # another site, or Cloudflare's own (the photos' sizes)
+    return unquote(parts.path) or '/'
 
 
 # Addresses the Worker's own code answers (worker/index.js), not files in dist/: the
@@ -4193,8 +4409,8 @@ def check_languages():
             m = re.search(r'<html lang="([a-z]+)"', h)
             if not m or m.group(1) != lang:
                 problems.append('%s: <html lang="%s">, should be %s' % (where, m and m.group(1), lang))
-            if re.search(r'\sdata-l="|\sdata-aria-(en|vi)="', h):
-                problems.append('%s: still carries both languages (data-l or data-aria-)' % where)
+            if re.search(r'\sdata-l="|\sdata-(aria|alt)-(en|vi)="', h):
+                problems.append('%s: still carries both languages (data-l, data-aria- or data-alt-)' % where)
             if r['index']:
                 canon = re.findall(r'<link rel="canonical" href="([^"]+)"', h)
                 if canon != [SITE + path]:
