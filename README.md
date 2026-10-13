@@ -171,7 +171,9 @@ sol.pizza and a placeholder on the full previews, with what to shoot: the shot l
 
 To add a photo:
 
-1. Export it as an sRGB JPEG, 3,000 to 4,000 px on its long edge.
+1. Export it as an sRGB JPEG, 3,000 to 4,000 px on its long edge, without its location
+   (Lightroom: Export → Metadata → Remove Location Info): the original is public at
+   `media.sol.pizza`.
 2. `python3 build/media_tool.py slots` lists the slots (`home-hero`, `home-story`, the
    home page's cards, `about-room`, `about-oven`, `menu-food`, `menu-wine`, `menu-bar`,
    `private-dining`, `visit`, `press`) with their shapes; pick one or more.
@@ -187,8 +189,9 @@ To add a photo:
    page's first one).
 
 An Eclipse edition's picture is its `image` in `build/events-data.json`: the key of a
-photo in `media.json` (no slot needed). Photos for the press go in the `press` slot: they
-appear on `/press/` with their credit and a link to the full-size file.
+photo in `media.json` (no slot needed; landscape, as it's cropped wide). Photos for the
+press go in the `press` slot: they appear on `/press/` with their credit and a link to the
+full-size file.
 
 ### The menu
 

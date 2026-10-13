@@ -193,8 +193,8 @@ Minh`, `Newsletter`):
 
 The site asks Cloudflare for every photo at the size each screen needs. Two things in
 Cloudflare, once, in the **Polarized Jar** account (both free at this size: R2 includes
-10 GB, and the zone's image transformations include 5,000 different sizes a month; the
-site uses about 250):
+10 GB, and the account's free image transformations make 5,000 different sizes a month;
+the site uses about 250):
 
 1. **R2** → **Create bucket**: name `sol-media`, location **Asia-Pacific**. Then the
    bucket → **Settings** → **Custom Domains** → **Connect Domain**: `media.sol.pizza`
@@ -210,8 +210,14 @@ site uses about 250):
 
    The free plan makes up to 5,000 different sizes a month. Past that, sizes already
    made keep working and new ones fail until the month turns; nothing is charged.
-3. Upload the photos (README.md, "Photographs"), merge their entries, then
-   `npm run check -- https://sol.pizza`: its last step loads every photo.
+3. Now and then, look at the count: the **Images** section of the dashboard shows how
+   many different sizes it has made this month. The site needs about 250. If it climbs
+   towards 5,000, someone else is asking for odd sizes of your photos: ask a developer
+   for a security rule that lets through only the site's sizes, before new photos
+   stop resizing.
+4. Upload the photos (README.md, "Photographs"), merge their entries, then
+   `npm run check -- https://sol.pizza`: its last steps load every photo the pages use
+   and weigh the home page's first one on a phone.
 
 No Worker binding is needed: the bucket is reached over its own address.
 

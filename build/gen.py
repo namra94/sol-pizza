@@ -582,27 +582,37 @@ PHOTO_WIDTHS = (480, 768, 1080, 1600, 2400)
 # home page's first photo (4:5 on a phone) under about 200 KB (check/media.js checks).
 PHONE_MAX = 1080
 # Where photographs go: slot: (what to shoot, shape on a wide screen, shape on a phone,
-# how wide it shows (the sizes attribute), how many). Shapes are (width, height).
+# how wide it shows (the sizes attribute, as site.css lays it out; its last width is the
+# phone's), how many). Shapes are (width, height). Bands across the wide canvas are at
+# most 1,440 px, across the text column 1,040; cards and the press photos are a third of
+# the column (331 px), galleries too (339 px), and the home page's story photo 440 px.
 SLOTS = {
     'home-hero': ('The room in the evening, or the oven with its fire: the first picture on the home page',
                   (2, 1), (4, 5), '100vw', 1),
     'home-story': ('Sol Pizza then and Sol now: the old room, the new one, the team at work',
-                   (4, 5), (4, 5), '(min-width: 1024px) 440px, 100vw', 1),
-    'home-menu': ('A pizza out of the oven', (3, 2), (3, 2), '(min-width: 901px) 330px, 100vw', 1),
-    'home-private-dining': ('A long table set for a group', (3, 2), (3, 2), '(min-width: 901px) 330px, 100vw', 1),
-    'home-events': ('Eclipse: a night of it, or its poster', (3, 2), (3, 2), '(min-width: 901px) 330px, 100vw', 1),
-    'home-visit': ('The building, from the lane', (3, 2), (3, 2), '(min-width: 901px) 330px, 100vw', 1),
-    'about-room': ('The room on each floor, and the bar', (2, 1), (4, 5), '100vw', 1),
-    'about-oven': ('The Pavesi oven, and the pizzaiolo at it', (2, 1), (4, 5), '100vw', 1),
-    'menu-food': ('Dishes: pizza, pasta, small plates', (4, 5), (4, 5), '(min-width: 761px) 330px, 82vw', 3),
-    'menu-wine': ('The wine: bottles on the bar, a glass being poured', (2, 1), (4, 5), '100vw', 1),
-    'menu-bar': ('The bar: a cocktail being made, the draft taps', (2, 1), (4, 5), '100vw', 1),
-    'private-dining': ('Each space, set for a group', (4, 5), (4, 5), '(min-width: 761px) 330px, 82vw', 3),
-    'visit': ('The building and its door, from the lane, so guests know it', (2, 1), (4, 5), '100vw', 1),
+                   (4, 5), (4, 5), '(min-width: 901px) 440px, calc(100vw - 48px)', 1),
+    'home-menu': ('A pizza out of the oven', (3, 2), (3, 2), '(min-width: 901px) 331px, calc(100vw - 48px)', 1),
+    'home-private-dining': ('A long table set for a group', (3, 2), (3, 2),
+                            '(min-width: 901px) 331px, calc(100vw - 48px)', 1),
+    'home-events': ('Eclipse: a night of it (landscape: a poster would be cropped)', (3, 2), (3, 2),
+                    '(min-width: 901px) 331px, calc(100vw - 48px)', 1),
+    'about-room': ('The room on each floor, and the bar', (2, 1), (4, 5),
+                   '(min-width: 1488px) 1440px, calc(100vw - 48px)', 1),
+    'about-oven': ('The Pavesi oven, and the pizzaiolo at it', (2, 1), (4, 5),
+                   '(min-width: 1488px) 1440px, calc(100vw - 48px)', 1),
+    'menu-food': ('Dishes: pizza, pasta, small plates', (4, 5), (4, 5), '(min-width: 761px) 339px, 82vw', 3),
+    'menu-wine': ('The wine: bottles on the bar, a glass being poured', (2, 1), (4, 5),
+                  '(min-width: 1088px) 1040px, calc(100vw - 48px)', 1),
+    'menu-bar': ('The bar: a cocktail being made, the draft taps', (2, 1), (4, 5),
+                 '(min-width: 1088px) 1040px, calc(100vw - 48px)', 1),
+    'private-dining': ('Each space, set for a group', (4, 5), (4, 5), '(min-width: 761px) 339px, 82vw', 3),
+    'visit': ('The building and its door, from the lane, so guests know it', (2, 1), (4, 5),
+              '(min-width: 1488px) 1440px, calc(100vw - 48px)', 1),
     'press': ('Photographs the press may use: any of the above, at full size', (4, 3), (4, 3),
-              '(min-width: 761px) 330px, 82vw', 9),
+              '(min-width: 901px) 331px, calc(100vw - 48px)', 9),
 }
-EVENT_SLOT = ('Eclipse, each edition: its poster or a night of it', (2, 1), (4, 5), '100vw', 1)
+EVENT_SLOT = ('Eclipse, each edition: a night of it (landscape: a poster would be cropped)', (2, 1), (4, 5),
+              '(min-width: 1488px) 1440px, calc(100vw - 48px)', 1)
 
 
 def _photos():
@@ -621,7 +631,8 @@ def _photos():
         assert len(f) == 2 and all(isinstance(x, (int, float)) and 0 <= x <= 1 for x in f), \
             'media.json: %s: focus is [x, y], each from 0 to 1' % k
         for sl in p.get('slots', []):
-            assert sl in SLOTS or sl == 'event', 'media.json: %s: no slot %r (python3 build/media_tool.py slots)' % (k, sl)
+            assert sl in SLOTS, ('media.json: %s: no slot %r (python3 build/media_tool.py slots; an Eclipse '
+                                 'edition\'s photo needs no slot: it\'s the "image" in events-data.json)' % (k, sl))
         out.append(dict(p, focus=f))
     for sl, spec in SLOTS.items():
         n = sum(sl in p.get('slots', []) for p in out)
@@ -631,6 +642,9 @@ def _photos():
 
 PHOTOS = _photos()
 PHOTO_BY_KEY = {p['key']: p for p in PHOTOS}
+for _e in EVENTS:
+    assert not _e['image'] or _e['image'] in PHOTO_BY_KEY, \
+        'events-data.json: %s: image %r is not a key in build/media.json' % (_e['slug'], _e['image'])
 
 
 def photos_for(slot):
@@ -654,8 +668,11 @@ def _widths(p, shape, cap=None):
 
 
 def _phone_sizes(sizes):
-    """How wide a photo shows on a phone: the sizes attribute's last, unconditional width."""
-    return sizes.rsplit(',', 1)[-1].strip()
+    """How wide a photo shows on a phone: the sizes attribute's last, unconditional width
+    (a plain length, or a calc() without commas)."""
+    last = sizes.rsplit(',', 1)[-1].strip()
+    assert re.fullmatch(r'\d+(px|vw)|calc\([^,()]+\)', last), 'SLOTS: sizes ends with the phone\'s width: %r' % sizes
+    return last
 
 
 def alt_attr(en, vi):
@@ -699,14 +716,16 @@ def band(slot, cls='band', eager=False, spec=None, p=None):
     return '<figure class="%s">%s</figure>' % (cls, picture(p, spec, eager))
 
 
-def gallery(slot):
-    """Up to three (or the slot's number of) photos in a row, to swipe on a phone."""
+def gallery(slot, eager=False):
+    """Up to three (or the slot's number of) photos in a row, to swipe on a phone. eager: the
+    first loads at once, when the gallery is near the top of its page."""
     spec = SLOTS[slot]
     ps = photos_for(slot)
     if not ps:
         return photo_placeholder(slot, spec) if FULL else ''
-    return ('<div class="gallery" role="region" tabindex="0" %s>%s</div>'
-            % (label('Photographs', 'Ảnh'), ''.join('<figure>%s</figure>' % picture(p, spec) for p in ps)))
+    return ('<div class="gallery" style="--n:%d" role="region" tabindex="0" %s>%s</div>'
+            % (min(len(ps), 3), label('Photographs', 'Hình ảnh'),
+               ''.join('<figure>%s</figure>' % picture(p, spec, eager and i == 0) for i, p in enumerate(ps))))
 
 
 def preload(slot):
@@ -1548,9 +1567,11 @@ def home_paths():
          t('Find us', 'Tìm chúng tôi')),
     ]
     def photo(key):
-        slot = 'home-' + key
+        # The Visit card (it shows only when one of the first three is off) takes Visit's photo
+        slot = 'visit' if key == 'visit' else 'home-' + key
+        spec = (SLOTS['visit'][0],) + SLOTS['home-menu'][1:] if key == 'visit' else SLOTS[slot]
         p = next(iter(photos_for(slot)), None)
-        return picture(p, SLOTS[slot]) if p else (photo_placeholder(slot, SLOTS[slot]) if FULL else '')
+        return picture(p, spec) if p else (photo_placeholder(slot, spec) if FULL else '')
     cards = ['<li class="card">%s<div class="card-body"><h2>%s</h2><p>%s</p><a class="link-sc" href="%s">%s</a></div></li>'
              % (photo(key), name, line, href, link) for key, href, name, line, link in paths if live(key)][:3]
     return '<div class="wrap"><ul class="cards home-paths">%s</ul></div>' % ''.join(cards)
@@ -1788,7 +1809,8 @@ def build_food():
         legend,
         currency_note() if some else '',
     ]
-    parts.append('<div class="menu-photos">%s</div>' % gallery('menu-food') if photos_for('menu-food') or FULL else '')
+    parts.append('<div class="menu-photos">%s</div>' % gallery('menu-food', eager=True)
+                 if photos_for('menu-food') or FULL else '')
     if not every:
         parts.append(note_box(t('A first draft', 'Bản nháp đầu tiên'),
                  t('These are the dishes we cooked at Sol Pizza, and they’re where Sol starts. Expect '
@@ -1840,7 +1862,7 @@ def build_wine():
                      'Hai mươi sáu loại trong số đó có phục vụ theo ly.'), GRAPE),
         '<p class="legend">%s</p>' % legend,
         currency_note() if some else '',
-        band('menu-wine'),
+        band('menu-wine', eager=True),
         '' if every else note_box(t('A first draft', 'Bản nháp đầu tiên'),
                  t('This is the Sol Pizza list while the new one is being built. Vintages change and '
                    'bottles run out, so ask what’s open tonight.',
@@ -1890,7 +1912,7 @@ def build_bar():
                           'so ask for anything.',
                           'Cocktail, bia tươi Bia Craft, sake và mọi thứ còn lại. Quầy bar đầy đủ, '
                           'bạn cứ gọi món mình thích.')),
-             currency_note() if some else '', band('menu-bar')]
+             currency_note() if some else '', band('menu-bar', eager=True)]
     for i, sec in enumerate(bar['sections']):
         if all(not d['description'] for d in sec['items']) and sec['name'] == 'Soft drinks' \
                 and not any(d.get('price') for d in sec['items']):
@@ -2242,7 +2264,7 @@ def build_private_dining():
               'to you.',
               'Từ bảy người trở lên, hay một buổi tối chỉ dành riêng cho bạn: hãy cho chúng tôi biết bạn muốn tổ '
               'chức thế nào, chúng tôi sẽ liên hệ lại.')),
-        '<div class="wrap">%s</div>' % gallery('private-dining'),
+        '<div class="wrap">%s</div>' % gallery('private-dining', eager=True),
         '<div class="wrap">%s%s%s</div>' % (
             gate('private-dining-spaces', 'the spaces on each floor and how many each seats',
                  placeholder('s-spaces', t('The spaces', 'Không gian'),
@@ -2354,7 +2376,7 @@ def build_event(e):
     parts = [
         '<main id="main">',
         '<div class="wrap">%s</div>' % page_title(ev_name(e), 'Eclipse', summary),
-        band('event', 'band wrap-wide', spec=EVENT_SLOT, p=pic) if pic or FULL else '',
+        band('event', 'band wrap-wide', eager=True, spec=EVENT_SLOT, p=pic) if pic or FULL else '',
         '<div class="wrap"><dl class="facts ev-facts">%s</dl></div>' % ''.join(
             '<div><dt>%s</dt><dd>%s</dd></div>' % f for f in facts),
     ]
@@ -2450,7 +2472,7 @@ def build_visit():
         l_addr=t('Address', 'Địa chỉ'), addr=t(ADDRESS_EN, ADDRESS_VI),
         maps=MAPS_URL, maps_t=MAPS_LINK_TEXT,
         l_talk=t('Talk to us', 'Liên hệ'), tel=PHONE_TEL, phone=PHONE, email=EMAIL, insta=INSTA_LINK,
-        sun=sun(3), gtk=t('Good to know', 'Thông tin hữu ích'), faq=visit_faq(), photo=band('visit', 'band wrap-wide'),
+        sun=sun(3), gtk=t('Good to know', 'Thông tin hữu ích'), faq=visit_faq(), photo=band('visit', 'band wrap-wide', eager=True),
         # Book a table: while the booking page is public (HIDDEN)
         book_box=('<div class="wrap"><section class="offer" aria-labelledby="s-book"><h2 id="s-book">%s</h2><p>%s</p>'
                   '<a class="btn btn-red" href="/booking/#book" data-track="book_click">%s</a></section></div>\n' % (
@@ -2531,6 +2553,11 @@ def band_en(lo_hi, dash=' – '):
 
 def band_vi(lo_hi):
     return ' – '.join(vnd(n, '.') for n in lo_hi)
+
+
+def band_vi_cut(lo_hi, unit):
+    """band_vi() and its unit for a narrow card: it may break after the dash, nowhere else."""
+    return '<span class="nowrap">%s –</span> <span class="nowrap">%s %s</span>' % (vnd(lo_hi[0], '.'), vnd(lo_hi[1], '.'), unit)
 
 
 def trieu(lo_hi):
@@ -2746,9 +2773,9 @@ def role_card(r):
     pay = t('Base salary <span class="nowrap">%s VND</span> gross a month<br>'
             '+ service charge &amp; tips, est. <span class="nowrap">%s</span> a month'
             % (band_en(r['base'], '–'), band_en(SERVICE, '–')),
-            'Lương cơ bản <span class="nowrap">%s VNĐ</span> gross/tháng<br>'
-            '+ phí phục vụ &amp; tip ước tính <span class="nowrap">%s VNĐ</span>/tháng'
-            % (band_vi(r['base']), band_vi(SERVICE)))
+            'Lương cơ bản %s gross/tháng<br>'
+            '+ phí phục vụ &amp; tip ước tính %s'
+            % (band_vi_cut(r['base'], 'VNĐ'), band_vi_cut(SERVICE, 'VNĐ/tháng')))
     nowrap = '<span class="nowrap">%s</span>'
     dates = t('%s · %s' % (nowrap % ('Applications close ' + en_date(CLOSES, True)),
                            nowrap % ('Start ' + en_date(STARTS, True))),
@@ -3326,10 +3353,11 @@ def press_photos():
         return '<div class="wrap">%s</div>' % (photo_placeholder('press', SLOTS['press']) if FULL else '')
     return ('<section class="prose-section wrap" aria-labelledby="s-photos"><header class="section-head">%s'
             '<h2 id="s-photos">%s</h2></header><ul class="press-photos">%s</ul></section>'
-            % (sun(6), t('Photographs', 'Ảnh'), ''.join(
-                '<li><figure>%s<figcaption>%s · <a href="%s%s" download>%s</a></figcaption></figure></li>'
+            % (sun(6), t('Photographs', 'Hình ảnh'), ''.join(
+                '<li><figure>%s<figcaption>%s · <a href="%s%s" %s>%s</a></figcaption></figure></li>'
                 % (picture(p, SLOTS['press']), t('Photo: %s' % esc(p['credit']), 'Ảnh: %s' % esc(p['credit'])),
-                   MEDIA_BASE, p['key'], t('Full size', 'Kích thước đầy đủ')) for p in ps)))
+                   MEDIA_BASE, p['key'], label(esc_attr('Full size: ' + p['alt_en']), esc_attr('Ảnh gốc: ' + p['alt_vi'])),
+                   t('Full size', 'Ảnh gốc')) for p in ps)))
 
 
 def build_press():
