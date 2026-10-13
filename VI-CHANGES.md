@@ -7,6 +7,36 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Booking, private dining and enquiries, 13 Oct 2026
+
+A new page for groups and private dining, forms that write an email (the guest's email app opens with the details filled in, in the page's language), and a newsletter sign-up in every page's footer. Lines marked “(once online booking is live)” appear when the ResDiary widget goes on `/booking/`; “(full previews only)” are sections waiting for their content, never on sol.pizza until it arrives.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| every page | header tab, now that its page exists: Private dining | — | Tiệc riêng |
+| every page | footer: News from Sol · Events, new dishes and the next Eclipse, by email, now and then. · Sign up by email | — | Tin từ Sol · Sự kiện, món mới và Eclipse kế tiếp, thỉnh thoảng gửi qua email. · Đăng ký qua email |
+| every page | the email the sign-up writes: Please add this email address to Sol’s newsletter. | — | Vui lòng thêm địa chỉ email này vào danh sách nhận tin của Sol. |
+| every page | phone bar (once online booking is live): Zalo on Vietnamese pages, once we have the Zalo number; Call until then | — | Zalo; Gọi |
+| /private-dining/ | new page: Private dining · Groups and private dining · For seven or more, or a night that’s all yours: tell us what you have in mind, and we’ll come back to you. | — | Tiệc riêng · Nhóm đông và tiệc riêng · Từ bảy người trở lên, hay một buổi tối chỉ dành riêng cho bạn: hãy cho chúng tôi biết bạn muốn tổ chức thế nào, chúng tôi sẽ liên hệ lại. |
+| /private-dining/ | Tell us about it · The date, how many of you, and anything we should know. We’ll write back with what we can do. | — | Cho chúng tôi biết về buổi tiệc · Ngày nào, bao nhiêu người, và những điều chúng tôi nên biết. Chúng tôi sẽ phản hồi và cho bạn biết những gì chúng tôi có thể sắp xếp. |
+| /private-dining/ | the form: Name · Phone or Zalo · Email · Date · Number of guests · The occasion · Budget per person · Anything else · (optional) · Send by email | — | Họ tên · Điện thoại hoặc Zalo · Email · Ngày · Số khách · Dịp tổ chức · Ngân sách mỗi người · Thông tin thêm · (không bắt buộc) · Gửi qua email |
+| /private-dining/ | full previews only: The spaces (Ground floor · Upstairs · The whole restaurant) · Set menus (Menus and prices) · Minimum spend (For a private space) · [to come] | — | Không gian (Tầng 1 · Tầng 2 · Cả nhà hàng) · Thực đơn set (Thực đơn và giá) · Mức chi tối thiểu (Cho một không gian riêng) · [sẽ cập nhật] |
+| /private-dining/ | page title and description: Private dining — Sol, Tây Hồ · Groups of seven or more and private dining at Sol, No 7, Lane 88 Quang An, Tây Hồ, Hanoi. Tell us what you have in mind. | — | Tiệc riêng — Sol, Tây Hồ · Nhóm từ bảy người trở lên và tiệc riêng tại Sol, số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Hãy cho chúng tôi biết bạn muốn tổ chức thế nào. |
+| /private-dining/, /booking/ | under each form: This opens your email app with the details filled in: send it from there. Or write to us at hello@sol.pizza. | — | Nút này mở ứng dụng email với nội dung đã điền sẵn: bạn chỉ cần gửi đi. Hoặc viết cho chúng tôi qua hello@sol.pizza. |
+| /private-dining/, /booking/ | after Send: Your email app should have opened with your message. If it didn’t, copy the message below and send it to hello@sol.pizza. The box with the message, for screen readers: Your message; in the box: To: · Subject: | — | Ứng dụng email của bạn lẽ ra đã mở với nội dung điền sẵn. Nếu chưa thấy, hãy sao chép nội dung dưới đây và gửi tới hello@sol.pizza.; Nội dung email; Gửi tới: · Tiêu đề: |
+| /booking/ | until online booking is live: Hold me a table for opening week · Tell us who’s coming and when, and we’ll write back to confirm. | — | Giữ bàn cho tôi trong tuần khai trương · Hãy cho chúng tôi biết bạn đi mấy người và vào tối nào, chúng tôi sẽ trả lời để xác nhận. |
+| /booking/ | its form: Name · Phone or Zalo · Email · Number of guests · Which night, and roughly what time · Anything else · Send by email | — | Họ tên · Điện thoại hoặc Zalo · Email · Số khách · Tối nào, khoảng mấy giờ · Thông tin thêm · Gửi qua email |
+| /booking/, /visit-us/ | Seven or more? Tell us about your group and we’ll look after you personally. (The link goes to the private dining form.) | Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn. | Nhóm từ bảy người trở lên? Hãy cho chúng tôi biết về nhóm của bạn, chúng tôi sẽ sắp xếp riêng. |
+| /booking/ | under the widget (once online booking is live): Trouble with the booking form? Phone · Zalo · email. | — | Không đặt được qua biểu mẫu? (the same links) |
+| /booking/ | the contact list (once online booking is live, and once we have the numbers): Zalo · WhatsApp, between Phone and Email | — | Zalo · WhatsApp (names stay as written) |
+| /booking/ | full previews only: Before you book · Cancellations · Deposits · How long a table is yours · Booking online · [to come] | — | Trước khi đặt bàn · Hủy bàn · Đặt cọc · Thời gian giữ bàn · Đặt bàn trực tuyến · [sẽ cập nhật] |
+| share cards | private dining, new, in both languages: Private dining · Tây Hồ, Hanoi / Groups and private dining. | — | Tiệc riêng · Tây Hồ, Hà Nội / Nhóm đông và tiệc riêng. |
+
+Questions for Linh:
+
+1. **Floors.** The private dining spaces will be named by floor: “Tầng 1” for the ground floor and “Tầng 2” upstairs, as Hanoi counts them. Right, or “Tầng trệt” and “Tầng 1”?
+2. **Newsletter.** “Tin từ Sol” for News from Sol, and “danh sách nhận tin” for the newsletter: natural?
+
 ## Vietnamese addresses, the new header, cookies, 13 Oct 2026
 
 Every page now has its own Vietnamese address: `/vi/` for the home page, `/vi/menu/`, `/vi/about/` and so on. The Vietnamese is the same as before unless listed here; it just isn't in the English page any more. EN · VI are now links to the same page in the other language. Lines marked “(with a date)” or “(once open)” appear only when the opening date is set, or from opening day.

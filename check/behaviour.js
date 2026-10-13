@@ -207,10 +207,55 @@ async function main() {
     ok((await events()).includes('book_click'), 'book_click from the Book button');
     await page.click('.site-footer a[href^="tel:"]');
     ok((await events()).includes('call_click'), 'call_click from a phone number');
-    await page.click('.site-footer a[href^="mailto:"]');
+    await page.click('.footer-cols a[href^="mailto:"]');
     ok((await events()).includes('email_click'), 'email_click from an email address');
     await page.click('.site-footer a[href*="google.com/maps"]');
     ok((await events()).includes('directions_click'), 'directions_click from a map link');
+    await ctx.close();
+  }
+
+  console.log('Enquiry forms and the newsletter');
+  {
+    const {ctx, page} = await visitor({width: 390, height: 844});
+    await ctx.addInitScript(() => localStorage.setItem('sol-consent', JSON.stringify({v: 1, t: new Date().toISOString(), analytics: true, ads: false})));
+    const events = () => page.evaluate(() => (window.dataLayer || []).filter(e => e[0] === 'event').map(e => [e[1], e[2] || {}]));
+    await page.goto(base + '/vi/private-dining/', {waitUntil: 'load'});
+    if (!(await page.$('#enquire form'))) {
+      console.log('  (no /private-dining/ in this build: its form is not checked)');
+    } else {
+      await page.click('#enquire [type="submit"]');
+      ok(!(await page.isVisible('#enquire .mailform-done')), 'a form with empty required fields stays put');
+      const soon = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
+      await page.fill('#f-private-dining-name', 'Lan');
+      await page.fill('#f-private-dining-phone', '0900000000');
+      await page.fill('#f-private-dining-date', soon);
+      await page.fill('#f-private-dining-guests', '12');
+      await page.fill('#f-private-dining-notes', 'Sinh nhật');
+      await page.click('#enquire [type="submit"]');
+      await page.waitForTimeout(300);
+      const text = await page.inputValue('#enquire .mailform-done textarea');
+      ok(/^Gửi tới: hello@sol\.pizza\nTiêu đề: Private dining — Lan\n/.test(text),
+         'the email: to the enquiries inbox, the subject in English with the name (the labels in Vietnamese)');
+      ok(/Họ tên: Lan/.test(text) && /Số khách: 12/.test(text) && /Thông tin thêm: Sinh nhật/.test(text) && !/Email:/.test(text),
+         'the details in Vietnamese, the empty ones left out');
+      ok(await page.evaluate(() => document.querySelector('#enquire .mailform-done').contains(document.activeElement)),
+         'after Send the focus moves to what happened, and the copy');
+      await page.click('#enquire [type="submit"]');
+      const sent = (await events()).filter(e => e[0] === 'enquiry_submit');
+      ok(sent.length === 1 && sent[0][1].content_category === 'Private dining',
+         'enquiry_submit once per form, as Private dining (' + sent.length + ')');
+      await page.evaluate(() => document.addEventListener('click', e => e.preventDefault()));
+      await page.click('.footer-news .btn');
+      ok((await events()).some(e => e[0] === 'newsletter_signup'), 'newsletter_signup from the footer');
+      ok(/^mailto:hello@sol\.pizza\?subject=Newsletter&body=Vui/.test(await page.getAttribute('.footer-news .btn', 'href')),
+         'the newsletter email asks, in Vietnamese, to be added');
+    }
+    await page.goto(base + '/booking/');
+    const live = await page.evaluate(() => !!document.querySelector('.book-widget') || document.documentElement.classList.contains('is-open'));
+    if (live) console.log('  (online booking or opening day: no opening-week form to check)');
+    else ok(await page.isVisible('#f-opening-week-name'), 'before online booking: the opening-week form on /booking/');
+    const group = await page.$('.offer-note a');
+    ok(!group || (await group.getAttribute('href')) === '/private-dining/#enquire', 'seven or more: the group enquiry');
     await ctx.close();
   }
 

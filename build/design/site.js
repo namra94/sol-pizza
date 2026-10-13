@@ -11,9 +11,10 @@
       allows. Nothing optional loads before a choice: Google Analytics (gtag.js,
       consent mode in its basic form) only after a yes to Analytics, the Meta Pixel
       (and pixel.js, the careers events) only after a yes to Advertising.
-   4. Events: what guests do (book, call, directions, menus…), to GA4 and, with the
-      Advertising yes, to Meta. ?debug_analytics=1 logs every one to the console
-      (and turns on GA4 DebugView); ?debug_analytics=0 stops it.
+   4. Events: what guests do (book, call, directions, menus, enquiries…), to GA4
+      and, with the Advertising yes, to Meta. ?debug_analytics=1 logs every one to
+      the console (and turns on GA4 DebugView); ?debug_analytics=0 stops it. And the
+      enquiry forms, which write an email (4b).
    5. Announcements: closing one keeps it closed (localStorage sol-ann-<id>).
    6. Slow fades for .reveal, never for anyone who asks for less motion. */
 (function () {
@@ -290,7 +291,7 @@
     directions_click: ['track', 'FindLocation'],
     menu_view: ['track', 'ViewContent', {content_type: 'menu'}],
     newsletter_signup: ['track', 'Lead', {content_category: 'Newsletter'}],
-    enquiry_submit: ['track', 'Lead', {content_category: 'Private dining'}]
+    enquiry_submit: ['track', 'Lead']             // content_category: the form's (Private dining, Opening week)
   };
 
   function send(name, params) {
@@ -347,6 +348,53 @@
 
   var section = document.body.getAttribute('data-menu');
   if (section) track('menu_view', {menu_section: section});
+
+  /* 4b. Enquiry forms --------------------------------------------------- */
+  // A form that writes an email (gen.py, mailform()): the guest's email app opens with
+  // the details in the page's language and the subject in English (the inbox is sorted
+  // by it). Nothing is stored or sent from here. The message also appears on the page,
+  // to copy, in case no email app opens.
+  document.addEventListener('submit', function (e) {
+    var form = e.target;
+    if (!form.matches || !form.matches('form[data-mailform]')) return;
+    e.preventDefault();
+    var lines = [];
+    form.querySelectorAll('input, textarea, select').forEach(function (el) {
+      var value = (el.value || '').trim();
+      if (!el.name || !value) return;
+      var label = form.querySelector('label[for="' + el.id + '"] .field-name');
+      lines.push((label ? label.textContent.trim() : el.name) + ': ' + value);
+    });
+    var who = form.querySelector('[name="name"]');
+    var to = form.getAttribute('data-to');
+    var subject = form.getAttribute('data-subject') + (who && who.value.trim() ? who.value.trim() : '');
+    var body = lines.join('\n');
+    // One enquiry per form per visit, however many times Send is pressed
+    if (!form.hasAttribute('data-sent')) {
+      form.setAttribute('data-sent', '');
+      track('enquiry_submit', {enquiry_type: form.getAttribute('data-mailform'),
+                               content_category: form.getAttribute('data-category')});
+    }
+    var done = form.querySelector('.mailform-done');
+    if (done) {
+      var vi = root.lang === 'vi';
+      var copy = done.querySelector('textarea');
+      copy.rows = Math.min(10, lines.length + 3);
+      copy.value = (vi ? 'Gửi tới: ' : 'To: ') + to + '\n' + (vi ? 'Tiêu đề: ' : 'Subject: ') + subject + '\n\n' + body;
+      done.hidden = false;
+      // The guest sees (and a screen reader reads) what happened, even if no email app opens
+      var note = done.querySelector('p');
+      note.focus({preventScroll: true});
+      done.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+    }
+    window.location.href = 'mailto:' + to + '?subject=' + encodeURIComponent(subject) +
+      '&body=' + encodeURIComponent(body.replace(/\n/g, '\r\n'));
+  });
+  // A date to ask for can't be in the past (Hanoi's today)
+  var todayHanoi = new Date(Date.now() + 7 * 36e5).toISOString().slice(0, 10);
+  document.querySelectorAll('form[data-mailform] input[type="date"]').forEach(function (el) {
+    el.min = todayHanoi;
+  });
 
   /* 5. Announcements ---------------------------------------------------- */
   document.addEventListener('click', function (e) {

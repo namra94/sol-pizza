@@ -21,12 +21,12 @@ Last updated 13 October 2026.
 | --- | --- | --- | --- |
 | The opening date | `OPENING_DATE` near the top of `build/gen.py`: the home page, Booking, Visit, the descriptions and the opening hours in the structured data. From the opening time that day, the pages switch to "open" by themselves | `YYYY-MM-DD` | Arman |
 | Last orders | `HOURS['last_orders']` in `build/gen.py`: the footer and Visit | `HH:MM` | The kitchen |
-| The ResDiary widget | `RESDIARY_URL` in `build/gen.py`: the widget on `/booking/`, and contact becomes tappable everywhere (phone bar, booking box) | The widget's URL (ResDiary → Promote → Widget configurator → Embed Code) | Host and Supervisor |
+| The ResDiary widget | `RESDIARY_URL` in `build/gen.py`: the widget on `/booking/`, and contact becomes tappable everywhere (phone bar, booking box); `RESDIARY_URL_VI` if there's a separate Vietnamese widget | The widget's URL (ResDiary → Promote → Widget configurator → Embed Code), and the Vietnamese one if there is one | Host and Supervisor |
 | Deposits in the widget | Whether `/booking/` must allow payments in the widget's frame (`Permissions-Policy`) | Yes or no, and which payment screen it shows | Supervisor (ResDiary) |
 | Booking terms | The booking policy on `/booking/`: cancellations, deposits, how long a table is held, the largest party that can book online | A few lines, English and Vietnamese | Supervisor |
-| Zalo number | The phone bar on Vietnamese pages, contact lines | Phone number | Arman |
-| WhatsApp number | Contact lines | Phone number | Arman |
-| Inbox for private dining enquiries | Where the private dining and group form sends its email | An address (hello@sol.pizza unless you say otherwise) | Arman |
+| Zalo number | `ZALO` in `build/gen.py`: the phone bar on Vietnamese pages, the booking page (from when online booking is live) | The number as Zalo shows it | Arman |
+| WhatsApp number | `WHATSAPP` in `build/gen.py`: the booking page (from when online booking is live) | International, without the + (84…) | Arman |
+| Inbox for enquiries | Where the private dining form, the opening-week form and the newsletter sign-up send their email (`ENQUIRIES` in `build/gen.py`) | An address (hello@sol.pizza unless you say otherwise) | Arman |
 | The map pin | The Directions button and the structured data. The Google listing "Sol Hanoi" carries Sol Pizza's reviews: say whether its pin is on the new building | Latitude and longitude, or the Google Maps link to the right place | Arman |
 | Holiday and Tết hours | `build/announcements.json`: the bar at the top of every page, and Visit | Dates, and a line in English and Vietnamese | Arman, Supervisor |
 | Eclipse, 23–24 October | An Eclipse page under `/events/` | Title, dates and times, guest chef(s) and a line on each, the menu, the price, how to book, artwork | Arman |
@@ -87,3 +87,7 @@ Each key below is a section the public build leaves out until its content arrive
 
 | Key | What it waits for |
 | --- | --- |
+| `booking-terms` | `/booking/`, "Before you book": cancellations, deposits, how long a table is held, the largest party that can book online (Booking terms, above) |
+| `private-dining-spaces` | `/private-dining/`, "The spaces": each floor and the whole restaurant, and how many each seats (Private dining, above) |
+| `private-dining-menus` | `/private-dining/`, "Set menus": menus for groups and their prices |
+| `private-dining-minimum` | `/private-dining/`, "Minimum spend" for a private space |
