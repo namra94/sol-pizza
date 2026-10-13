@@ -153,6 +153,38 @@ until 23:59 on its last night, Hanoi time, and the browser moves it to Past then
 nothing waits for a rebuild. Its own page, `/events/<slug>/`, goes live once its line
 (`summary_en`, `summary_vi`) is in; until then it's listed with its dates.
 
+### Photographs
+
+The photos live in Cloudflare R2 (the `sol-media` bucket, at `https://media.sol.pizza/`),
+never in this repo; `build/media.json` lists each one: its name in the bucket, its size,
+its alt text in English and Vietnamese, the photographer's credit, the point to keep
+when it's cropped (`focus`), and where it goes (`slots`). Each page asks Cloudflare for
+the size the screen needs (`https://sol.pizza/cdn-cgi/image/…`: 480 to 2,400 px wide,
+never wider than the original, in WebP or AVIF where the browser takes it), cropped to
+the slot's shape: wide on a laptop, taller on a phone. The home page's first picture
+loads first; the rest load as they come into view. A slot with no photo shows nothing on
+sol.pizza and a placeholder on the full previews, with what to shoot: the shot list.
+
+To add a photo:
+
+1. Export it as an sRGB JPEG, 3,000 to 4,000 px on its long edge.
+2. `python3 build/media_tool.py slots` lists the slots (`home-hero`, `home-story`, the
+   home page's cards, `about-room`, `about-oven`, `menu-food`, `menu-wine`, `menu-bar`,
+   `private-dining`, `visit`, `press`) with their shapes; pick one or more.
+3. `python3 build/media_tool.py photo.jpg --key 2026-11/room-ground-floor.jpg --slot
+   home-hero` reads its size, checks it's big enough and sRGB, and prints its entry.
+4. Paste the entry into `photos` in `build/media.json` and fill in `alt_en`, `alt_vi`
+   (one sentence each: what's in the photo), `credit`, and `focus` (`[0.5, 0.5]` is the
+   middle; `[0.5, 0.3]` keeps the upper part when it's cropped).
+5. Cloudflare → R2 → `sol-media` → **Upload**: the file, under the same name (the
+   `2026-11/` folder and all).
+6. Open a pull request: the preview shows it in place. Merge, then
+   `npm run check -- https://sol.pizza` checks every photo loads.
+
+An Eclipse edition's picture is its `image` in `build/events-data.json`: the key of a
+photo in `media.json` (no slot needed). Photos for the press go in the `press` slot: they
+appear on `/press/` with their credit and a link to the full-size file.
+
 ### The menu
 
 Food, wine and bar live in `build/menu-data.json`. Each English field has a
@@ -380,6 +412,8 @@ build/gen.py            the generator: every page in both languages, the shell, 
                         cards' words, redirects, sitemap, and the build's checks
 build/menu-data.json    food, wine, bar (and their prices, once set)
 build/events-data.json  Eclipse: each edition, its nights and details
+build/media.json        every photograph: its name in R2, size, alt text, credit, focus, slots
+build/media_tool.py     the photos' helper: the slots, and a new photo's entry (no installs)
 build/jobs-data.json    the opening-team round and its six roles
 build/jobs/             the six job descriptions, English and Vietnamese (Markdown)
 build/announcements.json  the line across the top of every page, with its dates
@@ -394,7 +428,7 @@ build/og/               share cards: card.html (the template), cards.json (what 
                         was rendered from); the words are OG_CARDS in gen.py
 build/assets.b64.json   the share-card PNGs and BN Arora, as text (see build/pack_assets.py)
 check/                  the checks and tools that need a browser (own package.json):
-                        og.js, behaviour.js, axe.js, lighthouse.js, check.js
+                        og.js, behaviour.js, axe.js, lighthouse.js, media.js, check.js
 src/jobs/ src/privacy/  role pages and the privacy notice, re-wrapped at build time
 src/_redirects          copied to dist/ as it is, or rewritten while HIDDEN lists a
                         page (public build, see build/README.md); Cloudflare applies it

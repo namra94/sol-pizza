@@ -4,8 +4,9 @@
 //      public one also checks every link)
 //   2. behaviour: languages, cookies, header, phone bar, events (behaviour.js)
 //   3. accessibility: axe on every page in both languages (axe.js)
-//   with a URL (npm run check -- https://…): behaviour and axe there too, and
-//   Lighthouse against the budgets (lighthouse.js)
+//   with a URL (npm run check -- https://…): behaviour and axe there too,
+//   Lighthouse against the budgets (lighthouse.js), and every photo in
+//   build/media.json loading from R2 and through Cloudflare (media.js)
 // The public build is left in dist/ at the end. Nothing here is committed: reports go
 // to check/out/. First time: npm --prefix check ci (and, outside Claude's cloud,
 // npx --prefix check playwright install chromium).
@@ -23,7 +24,8 @@ const steps = [
 if (url) {
   steps.push(['behaviour at ' + url, 'node', ['behaviour.js', url], __dirname],
              ['accessibility at ' + url, 'node', ['axe.js', url], __dirname],
-             ['Lighthouse at ' + url, 'node', ['lighthouse.js', url], __dirname]);
+             ['Lighthouse at ' + url, 'node', ['lighthouse.js', url], __dirname],
+             ['photos online', 'node', ['media.js'], __dirname]);
 }
 const results = [];
 for (const [name, cmd, args, cwd] of steps) {

@@ -21,7 +21,10 @@ section still waiting for content, with `noindex`; see "Build modes" below. Eith
    from `src/`), the cookie notice, the guest privacy notice and the accessibility
    statement, 404, and in the full build the components page (`/styleguide/`). Pages
    in `WAITING` (gift cards, an edition without its details, the legal drafts) are
-   built in both modes but written only in the full build. Each guest page is assembled with every line in both languages and
+   built in both modes but written only in the full build. Photographs come from
+   `media.json` (checked: alt text in both languages, a credit, a known slot), each a
+   `<picture>` of Cloudflare-resized sizes; the full build puts a placeholder where one
+   is missing. Each guest page is assembled with every line in both languages and
    written twice: English at `/…`, Vietnamese at `/vi/…` (`write_pages()`,
    `localise()`). The kitchen's pages (`/dough/`, `/dough/log/`, `/dough/login/`:
    behind the kitchen password, which `worker/index.js` checks; `noindex`) are written

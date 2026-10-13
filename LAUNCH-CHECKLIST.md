@@ -189,7 +189,33 @@ Minh`, `Newsletter`):
 
 ---
 
-### 14. The legal pages: the lawyer's review
+### 14. Photographs: the bucket and the resizing (once, before the first photo)
+
+The site asks Cloudflare for every photo at the size each screen needs. Two things in
+Cloudflare, once, in the **Polarized Jar** account (both free at this size: R2 includes
+10 GB, and the zone's image transformations include 5,000 different sizes a month; the
+site uses about 250):
+
+1. **R2** → **Create bucket**: name `sol-media`, location **Asia-Pacific**. Then the
+   bucket → **Settings** → **Custom Domains** → **Connect Domain**: `media.sol.pizza`
+   (Cloudflare adds its DNS record). Check: a file uploaded as `test.jpg` opens at
+   `https://media.sol.pizza/test.jpg`.
+2. **Images** → **Transformations** → find the zone **sol.pizza** → **Enable**. Leave its
+   **Sources** as they are: only the zone's own addresses, which include
+   `media.sol.pizza` (don't allow "any origin": others could resize their images on your
+   account). Check:
+   `https://sol.pizza/cdn-cgi/image/width=480,format=auto/https://media.sol.pizza/test.jpg`
+   opens a small copy. If it answers with an error about the source, add
+   `media.sol.pizza` under **Sources** → **Add origin**.
+
+   The free plan makes up to 5,000 different sizes a month. Past that, sizes already
+   made keep working and new ones fail until the month turns; nothing is charged.
+3. Upload the photos (README.md, "Photographs"), merge their entries, then
+   `npm run check -- https://sol.pizza`: its last step loads every photo.
+
+No Worker binding is needed: the bucket is reached over its own address.
+
+### 15. The legal pages: the lawyer's review
 
 Drafts waiting in the full preview (`/privacy/guests/`, `/accessibility/`; the booking
 terms on `/booking/`), each marked "Draft":
