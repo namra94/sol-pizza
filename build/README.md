@@ -2,66 +2,87 @@
 
 `python3 build/gen.py` (or `npm run build`) writes the public site into `dist/`:
 every page not in `HIDDEN`, which is empty, so the whole site.
-`python3 build/gen.py --full` (or `npm run build:full`) writes every page with
-`noindex`; see "Build modes" below. Either way:
+`python3 build/gen.py --full` (or `npm run build:full`) writes every page, and every
+section still waiting for content, with `noindex`; see "Build modes" below. Either way:
 
 1. **Fonts.** Copies the Philosopher and EB Garamond woff2 files
    (Latin, Latin Extended, Vietnamese) out of `node_modules/@fontsource` into
    `build/fonts/` and writes `build/fonts.css`. Both are generated and
    git-ignored; run `npm ci` first on a fresh machine.
 2. **Share cards and BN Arora.** Unpacks the PNGs and the BN Arora font in
-   `assets.b64.json` if they're missing.
-3. **Pages.** Home, About, the three menu pages (from `menu-data.json`), Booking,
-   Jobs and the opening-team role pages (from `jobs-data.json` and `jobs/*.md`),
-   the filled role pages and the privacy notice (re-wrapped from `src/`), the
-   kitchen's pages (`/dough/`, `/dough/log/`, `/dough/login/`: behind the kitchen
-   password, which `worker/index.js` checks; `noindex`), 404.
+   `assets.b64.json` if they're missing, writes each share card's page into
+   `og/html/` (for `npm run og`), and stops if a card's words have changed since its
+   PNG was rendered (`og/cards.json`; "Share cards" below).
+3. **Pages.** Home, About, the three menu pages (from `menu-data.json`), Visit,
+   Booking, Jobs and the opening-team role pages (from `jobs-data.json` and
+   `jobs/*.md`), the filled role pages and the applicant privacy notice (re-wrapped
+   from `src/`), the cookie notice, 404, and in the full build the components page
+   (`/styleguide/`). Each guest page is assembled with every line in both languages and
+   written twice: English at `/…`, Vietnamese at `/vi/…` (`write_pages()`,
+   `localise()`). The kitchen's pages (`/dough/`, `/dough/log/`, `/dough/login/`:
+   behind the kitchen password, which `worker/index.js` checks; `noindex`) are written
+   once each, bilingual, in their own frozen shell (`kitchen_page()`).
    The public build builds any page in `HIDDEN` but doesn't write it, so a
    mistake in one still stops every build, pull request previews included.
-4. **Support files.** `sitemap.xml` (including the six role pages), `robots.txt`,
-   and `dist/_redirects`: `src/_redirects` as it is, or, in a public build while
-   `HIDDEN` lists a page, that file rewritten for it (below).
+4. **Support files.** `sitemap.xml` (every public page in both languages, each listing
+   both and English as the default, including the six role pages), `robots.txt`, and
+   `dist/_redirects`: `src/_redirects` as it is, or, in a public build while `HIDDEN`
+   lists a page, that file rewritten for it (below).
 5. **Optimise.** Minifies the CSS (csso) and JS (terser), gives everything in
    `dist/assets/` a content-hashed name, inlines the free fonts' `@font-face`
    rules into each page, quantises the share cards if Pillow is installed, and
-   writes `dist/_headers` (caching, security headers, a font preload hint).
-6. **Link check** (public build). Every `href`, `src`, canonical and alternate
+   writes `dist/_headers` (caching, security headers, and early hints for the fonts
+   above the fold: English pages' and, for `/vi/`, Vietnamese pages').
+6. **Language check** (both builds). Every guest page is in `dist/` in both
+   languages, each with the right `<html lang>`, a self-canonical and reciprocal
+   `hreflang`, nothing of the other language left in it, and links that stay in its
+   language (EN · VI and other links with an `hreflang` go where they say); nothing is
+   written under `/vi/dough`; and every section `gate()` keeps back is listed in
+   `CONTENT-NEEDED.md`.
+7. **Link check** (public build). Every `href`, `src`, canonical and alternate
    link, `og:url`, `og:image`, JSON-LD address, CSS `url()`, sitemap and
    `robots.txt` address, font preload and redirect destination must be a file in
    `dist/`, a redirect or an address the Worker answers (`WORKER_PATHS`: the
    kitchen's `/api/`), and none may lead to a page in `HIDDEN` (nor may such a
    page be in `dist/`). If one does, the build stops and lists it.
 
-The checks on the data run in both modes: the wine counts (`PROSE_WINE_COUNTS`)
-and the job descriptions against `jobs-data.json` (salaries, openings, dates).
+The checks on the data run in both modes: the wine counts (`PROSE_WINE_COUNTS`),
+the job descriptions against `jobs-data.json` (salaries, openings, dates), the
+announcements' dates (`announcements.json`), and the settings (`SITE_STATE`,
+`OPENING_DATE`).
+
+`npm run check` (in `check/`, its own package) runs both builds, then what a browser
+can check: the behaviour (languages, cookie banner, header, phone bar, events,
+`behaviour.js`), accessibility with axe on every page in both languages (`axe.js`), and,
+given a URL, Lighthouse against the budgets (`lighthouse.js`).
 
 ## Build modes
 
 Every page is public: `HIDDEN`, near the top of `gen.py`, is empty, so the public
 build is the whole site and starts "Build mode: PUBLIC: not yet public: nothing,
-the whole site". To take a page down, add its header tab's key (`about`, `menu`,
-`booking`, as in `NAV_TABS`); the Public column says what changes then. Every
-build prints its mode on its first line.
+the whole site". To take a page down, add its section's key (`menu`, `about`, `visit`,
+`booking`, `events`, `private-dining`, as in `SECTIONS`); the Public column says what
+changes then. Every build prints its mode on its first line.
 
 | | Public (the default) | Full |
 | --- | --- | --- |
-| Run by | `npm run build`, `npm run deploy` (`--public`), Workers Builds on `main` and on every other branch (pull request previews) | `npm run build:full` (`--full`), Workers Builds on the `full-site` branch (`WORKERS_CI_BRANCH=full-site`) |
-| Pages | Every page not in `HIDDEN` (now all of them). A hidden page isn't written, and neither are the share cards and illustrations only it uses | Every page |
-| Header | The public tabs, plus Work with us while anything is hidden; no Food / Wine / Bar tabs while Menu is hidden. Now About · Menu · Booking | About · Menu · Booking |
-| Footer "More" | The public tabs, Work with us, Privacy | About, Menu, Booking, Work with us, Privacy |
+| Run by | `npm run build`, `npm run deploy` (`--public`), Workers Builds on `main` and on every other branch (pull request previews) | `npm run build:full` (`--full`), Workers Builds on the `full-site` branch and on the `full/…` branches (`WORKERS_CI_BRANCH`), each pull request's full preview |
+| Pages | Every page not in `HIDDEN` (now all of them), in both languages. A hidden page isn't written, and neither are the share cards and illustrations only it uses | Every page, in both languages, and the components page |
+| Sections waiting for content (`gate()`) | Left out | Shown, with a yellow "Content needed" label and the key in `CONTENT-NEEDED.md` |
+| Header | The public tabs whose pages exist (`BUILT`), plus Work with us while anything is hidden; no Food / Wine / Bar tabs while Menu is hidden. Now Menu · About · Visit | The same, whatever `HIDDEN` says |
+| Footer "More" | The public tabs, Booking, Work with us, Privacy, Cookies | The same, whatever `HIDDEN` says |
 | Home buttons | The first two of Book a table, See the menu, See open roles and @solhanoi on Instagram whose page is public (red, then outline): now Book a table and See the menu | Book a table, See the menu |
 | 404 buttons | The first two of Menu, Booking, Home and See open roles whose page is public: now Menu and Booking | Menu, Booking |
 | Home JSON-LD | `hasMenu` and `acceptsReservations` only while Menu and Booking are public (now both) | Both |
-| Sitemap | Only public pages (now all of them): `/`, About, the three menu pages, Booking, `/jobs/` and the six open role pages | The same pages, whatever `HIDDEN` says |
-| `_redirects` | While anything is hidden, its pages (with and without the slash, and anything under them) and every old address in `src/_redirects` that leads to one go to `/` with a **302** (browsers cache a 301, and these pages come back), and the rest of `src/_redirects` stays as it is. Now `src/_redirects` as it is | `src/_redirects` as it is |
+| Sitemap | Only public pages (now all of them), in both languages: `/`, About, the three menu pages, Visit, Booking, `/jobs/` and the six open role pages | The same pages, whatever `HIDDEN` says |
+| `_redirects` | While anything is hidden, its pages (with and without the slash, and anything under them, English and `/vi/`) and every old address in `src/_redirects` that leads to one go to the home page in the same language with a **302** (browsers cache a 301, and these pages come back), and the rest of `src/_redirects` stays as it is. Now `src/_redirects` as it is | `src/_redirects` as it is |
 | Search | Indexable | `noindex`: `X-Robots-Tag: noindex` in `_headers`, `Disallow: /` in `robots.txt` |
 | Link check | Yes | No |
 
-`--public` builds the public site even on the `full-site` branch; `npm run
-deploy` uses it, so a full build can't be deployed by accident. With `HIDDEN`
-empty, as now, the public build is the whole site, the same as the full build
-without `noindex`. To take a page down, add its key to `HIDDEN`; to put it back,
-delete the key (README.md, "Taking a page down").
+`--public` builds the public site even on the `full-site` and `full/…` branches; `npm
+run deploy` uses it, so a full build can't be deployed by accident. With `HIDDEN` empty,
+as now, the public build is every page, the same as the full build without `noindex`,
+the components page and the sections waiting for content.
 
 ## The design files
 
@@ -77,8 +98,15 @@ footer column headings in EB Garamond SemiBold (600, the one extra weight in
 rules off the home facts row. The header comment in each file lists what
 changed. Don't restyle them otherwise;
 put anything the design doesn't cover in `design/site.css`.
-`design/printed-menu.js` is the delivered header script with the language code
-merged into this repo's markup.
+`design/site.js` is the guest pages' script: the delivered header script (menu tabs,
+nav sheet), grown into the bar that stays at the top, EN · VI, the cookie banner and
+the analytics it allows, the events, the announcements.
+
+`design/kitchen/` is the kitchen pages' own shell, frozen as every page had it on
+12 Oct 2026: `kitchen.css` is tokens.css, printed-menu.css and site.css of that day,
+one after the other; `kitchen.js` is printed-menu.js of that day (the in-page EN / VI
+switch). Guest pages never load them, and the kitchen never loads the guest files, so
+a change on one side can't reach the other.
 
 ## Brand fonts
 
@@ -98,10 +126,28 @@ merged into this repo's markup.
 - **Plunct** (the one hand-written phrase per section, `.hand`, English only)
   comes from the Adobe Fonts kit, loaded without blocking the first paint.
   Vietnamese pages keep EB Garamond italic.
-- Preloaded on every page: BN Arora and EB Garamond (latin).
+- Preloaded: on English pages BN Arora and EB Garamond (Latin); on Vietnamese pages
+  Philosopher and EB Garamond, Latin and Vietnamese (in each page's head, and as early
+  hints in `_headers`).
 
 ## Share cards
 
-`og/og-*.html` are the sources. Render them with `node og.js` (needs
-Playwright), then run `npm run pack-assets` so the PNGs travel in
-`assets.b64.json`.
+A share card for each page in each language: `og-<name>.png` (English) and
+`og-<name>-vi.png` (Vietnamese), 1200 × 630, in the site's own fonts (BN Arora for
+English titles, Philosopher for Vietnamese, EB Garamond for the rest). The words are
+`OG_CARDS` in `gen.py`; the layout is `og/card.html`. No counts and no "opening soon":
+they'd go stale on a card nobody re-renders.
+
+To change one: edit `OG_CARDS` (or the template), then from the repo's root
+
+```
+npm run build          # writes each card's page into build/og/html/ (and stops: the card is out of date)
+npm run og             # renders build/og/png/, notes what each was rendered from in og/cards.json
+npm run pack-assets    # packs the PNGs into assets.b64.json (reduced to 96 colours with Pillow)
+npm run build          # passes again
+```
+
+and commit `build/assets.b64.json` and `build/og/cards.json`. `npm run og` needs the
+check package (`npm --prefix check ci`); it answers the cards' font requests
+(`localhost:8897`) from `build/` itself, so no server runs. The build stops while any card
+was rendered from words that have since changed, so a stale card can't reach sol.pizza.

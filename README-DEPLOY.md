@@ -69,6 +69,23 @@ the production branch.
 - To see the full build of a branch before it's merged, run `npm run build:full`
   and `npx wrangler dev` on your machine.
 
+## full/…: a full preview for each pull request
+
+A pull request's own preview shows the public site, as `main` would deploy it. To see the
+sections still waiting for content before merging, each branch Claude works on has a
+full twin: `.github/workflows/full-preview.yml` copies every push to `claude/<name>` to
+`full/claude/<name>`, Workers Builds builds that as the full site (every page and
+section, the "Content needed" markers, `noindex`), and it gets its own Preview URL:
+
+**`https://full-claude-<name>-sol-pizza.polarized-jar.workers.dev`**
+
+(for `claude/intl-1-foundations`: `https://full-claude-intl-1-foundations-sol-pizza.polarized-jar.workers.dev`).
+
+- **Never commit to a `full/…` branch.** It's a copy; the next push overwrites it.
+  Deleting `claude/<name>` deletes its copy.
+- Like every preview, it's public but kept out of search. LAUNCH-CHECKLIST.md
+  ("Previews") says how to put the previews behind a login.
+
 ## By hand
 
 Only if Workers Builds is off; otherwise a push already deploys.
