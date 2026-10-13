@@ -11,9 +11,10 @@
       allows. Nothing optional loads before a choice: Google Analytics (gtag.js,
       consent mode in its basic form) only after a yes to Analytics, the Meta Pixel
       (and pixel.js, the careers events) only after a yes to Advertising.
-   4. Events: what guests do (book, call, directions, menus…), to GA4 and, with the
-      Advertising yes, to Meta. ?debug_analytics=1 logs every one to the console
-      (and turns on GA4 DebugView); ?debug_analytics=0 stops it.
+   4. Events: what guests do (book, call, directions, menus, enquiries…), to GA4
+      and, with the Advertising yes, to Meta. ?debug_analytics=1 logs every one to
+      the console (and turns on GA4 DebugView); ?debug_analytics=0 stops it. And the
+      enquiry forms, which write an email (4b).
    5. Announcements: closing one keeps it closed (localStorage sol-ann-<id>).
    6. Slow fades for .reveal, never for anyone who asks for less motion. */
 (function () {
@@ -334,6 +335,38 @@
 
   var section = document.body.getAttribute('data-menu');
   if (section) track('menu_view', {menu_section: section});
+
+  /* 4b. Enquiry forms --------------------------------------------------- */
+  // A form that writes an email (gen.py, mailform()): the guest's email app opens with
+  // the details in the page's language and the subject in English (the inbox is sorted
+  // by it). Nothing is stored or sent from here. The message also appears on the page,
+  // to copy, in case no email app opens.
+  document.addEventListener('submit', function (e) {
+    var form = e.target;
+    if (!form.matches || !form.matches('form[data-mailform]')) return;
+    e.preventDefault();
+    var lines = [];
+    form.querySelectorAll('input, textarea, select').forEach(function (el) {
+      var value = (el.value || '').trim();
+      if (!el.name || !value) return;
+      var label = form.querySelector('label[for="' + el.id + '"] .field-name');
+      lines.push((label ? label.textContent.trim() : el.name) + ': ' + value);
+    });
+    var who = form.querySelector('[name="name"]');
+    var to = form.getAttribute('data-to');
+    var subject = form.getAttribute('data-subject') + (who && who.value.trim() ? who.value.trim() : '');
+    var body = lines.join('\n');
+    track('enquiry_submit', {enquiry_type: form.getAttribute('data-mailform')});
+    var done = form.querySelector('.mailform-done');
+    if (done) {
+      var copy = done.querySelector('textarea');
+      copy.rows = Math.min(10, lines.length + 3);
+      copy.value = 'To: ' + to + '\nSubject: ' + subject + '\n\n' + body;
+      done.hidden = false;
+    }
+    window.location.href = 'mailto:' + to + '?subject=' + encodeURIComponent(subject) +
+      '&body=' + encodeURIComponent(body.replace(/\n/g, '\r\n'));
+  });
 
   /* 5. Announcements ---------------------------------------------------- */
   document.addEventListener('click', function (e) {

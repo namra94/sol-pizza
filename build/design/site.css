@@ -429,3 +429,58 @@ html:not(.is-open) .when-open, html.is-open .when-pre { display: none !important
 
 /* Safe areas: with viewport-fit=cover, keep text clear of a phone's notch in landscape. */
 body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+
+/* ------------------------------------------------------------------ forms
+   The enquiry forms (mailform() in gen.py, site.js): they write an email. Boxes like
+   the kitchen's: white, a 1px red rule, hard corners; labels in the small capitals. */
+.form-section { max-width: 760px; margin: 84px auto 0; }
+.form-section .section-head p { font-style: normal; max-width: 600px; margin: 10px auto 0; color: var(--ink); }
+.mailform { margin-top: 30px; }
+.mailform-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field-wide { grid-column: 1 / -1; }
+.field label {         /* type: the labels rule in printed-menu.css */
+  font-size: var(--fs-label); line-height: 18px; letter-spacing: .1em; text-transform: uppercase; color: var(--sol-red);
+}
+.field .opt { text-transform: none; letter-spacing: 0; color: var(--ink-muted); }
+.field input, .field textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line-brand);
+  border-radius: 2px;
+  font: inherit;
+  font-size: var(--fs-body);
+  line-height: 1.4;
+  color: var(--ink);
+}
+.field textarea { min-height: 96px; resize: vertical; }
+.field input:focus, .field textarea:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
+.field input:user-invalid, .field textarea:user-invalid { box-shadow: inset 0 0 0 1px var(--sol-red); background: var(--surface); }
+.mailform .actions { justify-content: flex-start; margin-top: 24px; }
+.mailform-note { margin-top: 14px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+.mailform-note a, .mailform-done a, .book-fallback a, .offer-note a { color: var(--sol-red); border-bottom: 1px solid currentColor; }
+.mailform-done { margin-top: 18px; padding: 16px 18px; border: 1px solid var(--line-brand); }
+.mailform-done p { font-size: var(--fs-small); line-height: 1.5; }
+.mailform-done textarea { width: 100%; margin-top: 12px; padding: 10px 12px; font: inherit; font-size: var(--fs-small);
+  background: var(--surface-raised); border: 1px solid var(--line); color: var(--ink); }
+@media (max-width: 760.98px) {
+  .form-section { margin-top: 56px; }
+  .mailform-fields { grid-template-columns: minmax(0, 1fr); }
+  .mailform .actions .btn { width: 100%; }
+}
+
+/* the booking widget (ResDiary) and the way round it */
+.book-widget iframe { display: block; width: 100%; height: 760px; margin-top: 26px; border: 0; background: var(--surface-raised); }
+@media (max-width: 760.98px) { .book-widget iframe { height: 860px; } }
+.book-fallback { margin-top: 14px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+
+/* the newsletter, at the top of every footer */
+.footer-news { max-width: 560px; margin: 34px auto 0; }
+.footer-news h2 {      /* the footer's column headings */
+  font-family: var(--serif); font-size: var(--fs-label); line-height: 18px; letter-spacing: .1em; text-transform: uppercase;
+  font-weight: 600; color: var(--sol-red);
+}
+.footer-news p { margin-top: 8px; font-size: var(--fs-small); line-height: 1.5; }
+.footer-news .btn { margin-top: 14px; }

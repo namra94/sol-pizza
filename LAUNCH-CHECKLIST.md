@@ -138,7 +138,21 @@ The listing is "Sol Hanoi" and still carries Sol Pizza's reviews.
       widget without the site's cookie banner: ask ResDiary first whether it waits for
       consent, and leave it off if not.
 
-### 10. Search
+### 10. Enquiries and the newsletter
+
+The site's forms send email to hello@sol.pizza (`ENQUIRIES` in `build/gen.py`), with
+subjects that start the same way every time:
+
+- [ ] In Gmail, a filter for each, so nothing waits: subject starts `Private dining —`
+      (label "Private dining", and star it), `Opening week —` (label "Opening week"),
+      `Newsletter` (label "Newsletter").
+- [ ] Newsletter: keep the addresses in one place (a Google Contacts label, or a sheet),
+      with the date each asked. When you choose a newsletter tool, import them, and
+      honour every "please take me off".
+- [ ] Decide who answers private dining enquiries, and how soon (the page promises
+      "we'll come back to you").
+
+### 11. Search
 
 - [ ] Google Search Console: add `sol.pizza` as a **Domain** property and verify it
       with the TXT record it gives (Cloudflare → DNS → Add record), or send the
@@ -146,7 +160,7 @@ The listing is "Sol Hanoi" and still carries Sol Pizza's reviews.
       `https://sol.pizza/sitemap.xml` (both languages are in it).
 - [ ] Bing Webmaster Tools: **Import from Google Search Console**.
 
-### 11. Analytics
+### 12. Analytics
 
 - [ ] GA4 (`G-SLBWDVH550`): **Admin** → **Events**: mark `book_click`, `call_click`,
       `zalo_click` and `directions_click` as key events (they appear after the first
@@ -157,7 +171,7 @@ The listing is "Sol Hanoi" and still carries Sol Pizza's reviews.
       Advertising; build custom conversions from them.
 - [ ] Both count only visitors who said yes: expect lower numbers than before the banner.
 
-### 12. Workers Builds
+### 13. Workers Builds
 
 - [ ] Workers → sol-pizza → **Settings** → **Builds** → **Branch control**: builds for
       non-production branches stay on for every branch (the `full/…` previews need it).

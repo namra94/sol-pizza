@@ -180,10 +180,41 @@ async function main() {
     ok((await events()).includes('book_click'), 'book_click from the Book button');
     await page.click('.site-footer a[href^="tel:"]');
     ok((await events()).includes('call_click'), 'call_click from a phone number');
-    await page.click('.site-footer a[href^="mailto:"]');
+    await page.click('.footer-cols a[href^="mailto:"]');
     ok((await events()).includes('email_click'), 'email_click from an email address');
     await page.click('.site-footer a[href*="google.com/maps"]');
     ok((await events()).includes('directions_click'), 'directions_click from a map link');
+    await ctx.close();
+  }
+
+  console.log('Enquiry forms and the newsletter');
+  {
+    const {ctx, page} = await visitor({width: 390, height: 844});
+    await ctx.addInitScript(() => localStorage.setItem('sol-consent', JSON.stringify({v: 1, t: new Date().toISOString(), analytics: true, ads: false})));
+    await page.goto(base + '/vi/private-dining/', {waitUntil: 'load'});
+    const events = () => page.evaluate(() => (window.dataLayer || []).filter(e => e[0] === 'event').map(e => e[1]));
+    await page.click('#enquire [type="submit"]');
+    ok(!(await page.isVisible('#enquire .mailform-done')), 'a form with empty required fields stays put');
+    await page.fill('#f-private-dining-name', 'Lan');
+    await page.fill('#f-private-dining-phone', '0900000000');
+    await page.fill('#f-private-dining-date', '2026-11-20');
+    await page.fill('#f-private-dining-guests', '12');
+    await page.fill('#f-private-dining-notes', 'Sinh nhật');
+    await page.click('#enquire [type="submit"]');
+    await page.waitForTimeout(300);
+    const text = await page.inputValue('#enquire .mailform-done textarea');
+    ok(/^To: hello@sol\.pizza\nSubject: Private dining — Lan\n/.test(text), 'the email: to the enquiries inbox, the subject in English with the name');
+    ok(/Họ tên: Lan/.test(text) && /Số khách: 12/.test(text) && /Thông tin thêm: Sinh nhật/.test(text) && !/Email:/.test(text),
+       'the details in Vietnamese, the empty ones left out');
+    ok((await events()).includes('enquiry_submit'), 'enquiry_submit is sent (with a yes to Analytics)');
+    await page.evaluate(() => document.addEventListener('click', e => e.preventDefault()));
+    await page.click('.footer-news .btn');
+    ok((await events()).includes('newsletter_signup'), 'newsletter_signup from the footer');
+    ok(/^mailto:hello@sol\.pizza\?subject=Newsletter&body=Vui/.test(await page.getAttribute('.footer-news .btn', 'href')),
+       'the newsletter email asks, in Vietnamese, to be added');
+    await page.goto(base + '/booking/');
+    ok(await page.isVisible('#f-opening-week-name'), 'before online booking: the opening-week form on /booking/');
+    ok((await page.getAttribute('.offer-note a', 'href')) === '/private-dining/#enquire', 'seven or more: the group enquiry');
     await ctx.close();
   }
 

@@ -139,6 +139,18 @@ RESDIARY_URL = ''
 # not a button that opens another app (Linh, 23 Sep), and the phone bar has no Call
 # button. Both follow RESDIARY_URL: once it is set, contact is a tap away.
 CONTACT_LIVE = bool(RESDIARY_URL)
+# Does the ResDiary widget take payments (deposits) inside its frame? Then the pages
+# let that frame use the browser's payment feature (Permissions-Policy in _headers).
+RESDIARY_PAYMENTS = False
+# Zalo and WhatsApp (CONTENT-NEEDED.md), once we have the numbers: Zalo as Zalo shows
+# it ('0866161600'), WhatsApp in international form without the + ('84866161600').
+# With online booking live they join the phone and email wherever contact is offered:
+# Zalo is the phone bar's button on Vietnamese pages, Call on English ones.
+ZALO     = ''
+WHATSAPP = ''
+# Where the enquiry forms (groups and private dining, opening week) and the newsletter
+# sign-up send their email: an inbox the team reads every day.
+ENQUIRIES = EMAIL
 
 # --------------------------------------------------------------------------
 # opening and hours: EDIT THESE
@@ -371,7 +383,7 @@ SECTIONS = {
 }
 # The sections this build has pages for. A tab whose page doesn't exist yet stays
 # out of the header, the nav sheet and the footer.
-BUILT = {'menu', 'about', 'visit', 'booking'}
+BUILT = {'menu', 'about', 'private-dining', 'visit', 'booking'}
 # The header's tabs, the nav sheet's and the footer's: (key, href, name). Menu keeps
 # its Food / Wine / Bar sub-tabs (MENU_TABS). Booking has no tab: the Book button is on
 # every page. The public build shows the public ones, plus Work with us while anything
@@ -608,6 +620,8 @@ OG_CARDS = {  # name: ((English eyebrow, title), (Vietnamese eyebrow, title))
               ('Tây Hồ, Hà Nội', 'Tìm chúng tôi<br>và đặt bàn.')),
     'jobs':  (('Work with us · Tây Hồ, Hanoi', 'Come and build<br>the new Sol.'),
               ('Tuyển dụng · Tây Hồ, Hà Nội', 'Cùng xây dựng<br>Sol mới.')),
+    'private-dining': (('Private dining · Tây Hồ, Hanoi', 'Groups and<br>private dining.'),
+                       ('Tiệc riêng · Tây Hồ, Hà Nội', 'Nhóm đông<br>và tiệc riêng.')),
 }
 OG_DIR = os.path.join(HERE, 'og')
 
@@ -739,6 +753,7 @@ def footer():
     return """<footer class="site-footer">
   <div class="wrap"><div class="footer-inner">
     <a class="footer-logo" href="/" {home}>{logo}</a>
+    {news}
     <div class="footer-cols"><section><h2>{find}</h2><p>{addr}</p><p><a href="{maps}">{maps_t}</a></p></section><section><h2>{open}</h2><p>{days}</p><p>{hours}</p>{last}{closed}</section><section><h2>{talk}</h2><p><a href="{tel}">{phone}</a></p><p><a href="mailto:{email}">{email}</a></p><p>{insta}</p></section><nav {more_l}><h2>{more_h}</h2><ul>{more}</ul></nav></div>
     <p class="legal">{legal} · <button class="linkish" type="button" data-consent-open>{settings}</button></p>
   </div></div>
@@ -752,15 +767,48 @@ def footer():
            insta=INSTA_LINK, more_l=label('More', 'Thêm'), more_h=t('More', 'Thêm'),
            more=''.join('<li><a href="%s">%s</a></li>' % m for m in more),
            legal=t('© 2026 %s · Tây Hồ, Hanoi' % COMPANY_VI, '© 2026 %s · Tây Hồ, Hà Nội' % COMPANY_VI),
-           settings=t('Cookie settings', 'Cài đặt cookie'))
+           settings=t('Cookie settings', 'Cài đặt cookie'), news=newsletter())
+
+
+def mailto(to, subject, body):
+    """A mailto: link's address, its subject and body encoded as encodeURIComponent would."""
+    return 'mailto:%s?subject=%s&amp;body=%s' % (to, encode_uri_component(subject),
+                                                 encode_uri_component(body.replace('\n', '\r\n')))
+
+
+def newsletter():
+    """The newsletter sign-up, in every guest page's footer: an email from the guest's own
+    address, which is also their consent; the team keeps the list (README.md)."""
+    def button(body, text):
+        return ('<a class="btn btn-outline btn-sm" href="%s" data-track="newsletter_signup">%s</a>'
+                % (mailto(ENQUIRIES, 'Newsletter', body), text))
+    return ('<section class="footer-news" aria-labelledby="news-h"><h2 id="news-h">%s</h2><p>%s</p>%s</section>'
+            % (t('News from Sol', 'Tin từ Sol'),
+               t('Events, new dishes and the next Eclipse, by email, now and then.',
+                 'Sự kiện, món mới và Eclipse kế tiếp, thỉnh thoảng gửi qua email.'),
+               t(button('Please add this email address to Sol’s newsletter.', 'Sign up by email'),
+                 button('Vui lòng thêm địa chỉ email này vào danh sách nhận tin của Sol.', 'Đăng ký qua email'))))
+
+
+def zalo_url():
+    return 'https://zalo.me/%s' % ZALO
+
+
+def whatsapp_url():
+    return 'https://wa.me/%s' % WHATSAPP
 
 
 def actionbar():
-    """The phone bar (narrow screens): Book, then Call once online booking is live
-    (CONTACT_LIVE), then Directions. Not on /booking/ (it is the booking page) or the role
+    """The phone bar (narrow screens): Book, then, once online booking is live
+    (CONTACT_LIVE), Call on English pages and Zalo on Vietnamese ones (Call until there's
+    a Zalo number), then Directions. Not on /booking/ (it is the booking page) or the role
     pages (they have the Apply bar)."""
-    call = ('<a class="btn btn-outline" href="%s" data-track="call_click">%s</a>' % (PHONE_TEL, t('Call', 'Gọi'))
-            if CONTACT_LIVE else '')
+    call = ''
+    if CONTACT_LIVE:
+        call_en = '<a class="btn btn-outline" href="%s" data-track="call_click">Call</a>' % PHONE_TEL
+        call_vi = ('<a class="btn btn-outline" href="%s" data-track="zalo_click">Zalo</a>' % zalo_url() if ZALO
+                   else '<a class="btn btn-outline" href="%s" data-track="call_click">Gọi</a>' % PHONE_TEL)
+        call = t(call_en, call_vi)
     return ('<nav class="actionbar" %s><a class="btn btn-red" href="/booking/#book" data-track="book_click">%s</a>%s'
             '<a class="btn btn-outline" href="%s" data-track="directions_click">%s</a></nav>\n'
             % (label('Quick actions', 'Thao tác nhanh'), BOOK_SHORT, call, DIRECTIONS_URL, DIRECTIONS))
@@ -1490,13 +1538,60 @@ def from_opening():
     return ((', from the day we open', ', kể từ ngày khai trương') if SITE_STATE != 'open' else ('', ''))
 
 
+def mailform(kind, subject, fields, submit):
+    """A form that writes an email, for an enquiry (no server keeps it): the guest's email
+    app opens with the details filled in, to ENQUIRIES, the subject in English (the inbox
+    is sorted by it) and the details in the page's language (site.js builds it, and fires
+    enquiry_submit). Without JavaScript the browser sends the form as the email's text.
+    The address is always on the form too, for a computer with no email app.
+    fields: (name, label, type, required); type is an <input> type or 'textarea'."""
+    rows = []
+    for name, text, kind_, required in fields:
+        fid = 'f-%s-%s' % (kind, name)
+        auto = {'name': ' autocomplete="name"', 'phone': ' autocomplete="tel"', 'email': ' autocomplete="email"'}
+        attrs = '%s%s%s' % (' required' if required else '', auto.get(name, ''),
+                            ' min="1" inputmode="numeric"' if kind_ == 'number' else '')
+        control = ('<textarea id="%s" name="%s" rows="3"%s></textarea>' % (fid, name, attrs) if kind_ == 'textarea'
+                   else '<input id="%s" name="%s" type="%s"%s>' % (fid, name, kind_, attrs))
+        rows.append('<div class="field%s"><label for="%s"><span class="field-name">%s</span>%s</label>%s</div>'
+                    % (' field-wide' if kind_ == 'textarea' else '', fid, text,
+                       '' if required else ' <span class="opt">%s</span>' % t('(optional)', '(không bắt buộc)'),
+                       control))
+    mail = '<a href="mailto:%s">%s</a>' % (ENQUIRIES, ENQUIRIES)
+    return ('<form class="mailform" action="mailto:%s?subject=%s" method="post" enctype="text/plain" '
+            'data-mailform="%s" data-to="%s" data-subject="%s">'
+            '<div class="mailform-fields">%s</div>'
+            '<div class="actions"><button class="btn btn-red" type="submit">%s</button></div>'
+            '<p class="mailform-note">%s</p>'
+            '<div class="mailform-done" role="status" hidden><p>%s</p><textarea readonly rows="8" %s></textarea></div>'
+            '</form>'
+            % (ENQUIRIES, encode_uri_component(subject.rstrip(' —')), kind, ENQUIRIES, esc_attr(subject), ''.join(rows),
+               submit,
+               t('This opens your email app with the details filled in: send it from there. Or write to us at %s.' % mail,
+                 'Nút này mở ứng dụng email với nội dung đã điền sẵn: bạn chỉ cần gửi đi. Hoặc viết cho chúng tôi '
+                 'qua %s.' % mail),
+               t('Your email app should have opened with your message. If it didn’t, copy the message below and '
+                 'send it to %s.' % mail,
+                 'Ứng dụng email của bạn sẽ mở ra với nội dung đã điền sẵn. Nếu không thấy, hãy sao chép nội dung dưới '
+                 'đây và gửi tới %s.' % mail),
+               label('Your message', 'Nội dung email')))
+
+
 def build_booking():
     if RESDIARY_URL:
         booking_p = t('Book online below, or call or email us.',
                       'Đặt bàn trực tuyến ngay bên dưới, hoặc gọi điện hay gửi email cho chúng tôi.')
-        widget = ('<iframe src="%s" title="Book a table at Sol" %s loading="lazy" '
-                  'style="display:block;width:100%%;min-height:640px;margin-top:26px;border:0"></iframe>\n  '
-                  % (RESDIARY_URL, label('Book a table at Sol', 'Đặt bàn tại Sol')))
+        contact = [('<a href="%s" data-track="call_click">%s</a>' % (PHONE_TEL, PHONE)),
+                   ('<a href="mailto:%s">%s</a>' % (EMAIL, EMAIL))]
+        if ZALO:
+            contact.insert(1, '<a href="%s" data-track="zalo_click">Zalo</a>' % zalo_url())
+        # The widget, and always under it a way round it: whether a frame loaded can't be told
+        widget = ('<div class="book-widget"><iframe src="%s" title="%s" loading="lazy"%s></iframe></div>\n  '
+                  '<p class="book-fallback">%s</p>\n  '
+                  % (RESDIARY_URL, t('Book a table at Sol', 'Đặt bàn tại Sol'),
+                     ' allow="payment"' if RESDIARY_PAYMENTS else '',
+                     t('Trouble with the booking form? %s.' % ' · '.join(contact),
+                       'Không đặt được qua biểu mẫu? %s.' % ' · '.join(contact))))
     else:
         booking_p = t('Online booking opens closer to the day we open. Until then, call or email us '
                       'and we’ll hold you a table for opening week.',
@@ -1513,21 +1608,56 @@ def build_booking():
         insta = '<a href="%s">%s</a>' % (INSTAGRAM, INSTA_HANDLE)
     else:
         phone, email, insta = PHONE, EMAIL, INSTA_HANDLE
+    rows = [(t('Phone', 'Điện thoại'), phone)]
+    if CONTACT_LIVE and ZALO:
+        rows.append(('Zalo', '<a href="%s" data-track="zalo_click">%s</a>' % (zalo_url(), ZALO)))
+    if CONTACT_LIVE and WHATSAPP:
+        rows.append(('WhatsApp', '<a href="%s" data-track="whatsapp_click">+%s</a>' % (whatsapp_url(), WHATSAPP)))
+    rows += [('Email', email), ('Instagram', insta)]
+    # Before online booking: a table for opening week, by email
+    hold = ''
+    if not RESDIARY_URL and SITE_STATE != 'open':
+        hold = ('<div class="wrap"><section class="form-section" aria-labelledby="s-hold"><header class="section-head">%s'
+                '<h2 id="s-hold">%s</h2><p>%s</p></header>%s</section></div>' % (
+                    sun(2), t('Hold me a table for opening week', 'Giữ bàn cho tôi trong tuần khai trương'),
+                    t('Tell us who’s coming and when, and we’ll write back to confirm.',
+                      'Hãy cho chúng tôi biết bạn đi mấy người và vào tối nào, chúng tôi sẽ trả lời để xác nhận.'),
+                    mailform('opening-week', 'Opening week — ', [
+                        ('name', t('Name', 'Họ tên'), 'text', True),
+                        ('phone', t('Phone or Zalo', 'Điện thoại hoặc Zalo'), 'tel', True),
+                        ('email', 'Email', 'email', False),
+                        ('guests', t('Number of guests', 'Số khách'), 'number', True),
+                        ('night', t('Which night, and roughly what time', 'Tối nào, khoảng mấy giờ'), 'text', True),
+                        ('notes', t('Anything else', 'Thông tin thêm'), 'textarea', False),
+                    ], t('Send by email', 'Gửi qua email'))))
+    terms = gate('booking-terms', 'the booking terms: cancellations, deposits, how long a table is held, the largest '
+                 'party that can book online',
+                 '<section class="prose-section" aria-labelledby="s-terms"><header class="section-head"><h2 id="s-terms">%s'
+                 '</h2></header><dl class="gtk-items">%s</dl></section>' % (
+                     t('Before you book', 'Trước khi đặt bàn'),
+                     ''.join('<div><dt>%s</dt><dd>%s</dd></div>' % (k, t('[to come]', '[sẽ cập nhật]')) for k in (
+                         t('Cancellations', 'Hủy bàn'), t('Deposits', 'Đặt cọc'),
+                         t('How long a table is yours', 'Thời gian giữ bàn'),
+                         t('Booking online', 'Đặt bàn trực tuyến')))), tag='div')
     frm = from_opening()
     main = """<main id="main">
 <div class="wrap">{title}</div>
 <div class="wrap"><div class="offer booking">
-  {widget}<dl class="book-contact"><div><dt>{l_phone}</dt><dd>{phone}</dd></div><div><dt>Email</dt><dd>{email}</dd></div><div><dt>Instagram</dt><dd>{insta}</dd></div></dl>
+  {widget}<dl class="book-contact">{rows}</dl>
   <p class="offer-note">{groups}</p>
 </div></div>
+{hold}<div class="wrap">{terms}</div>
 <div class="wrap"><p class="booking-visit">{hours} · {addr}<br><a class="link-sc" href="/visit-us/">{visit}</a></p></div>
 </main>
 """.format(
         title=page_title(t('Reservations', 'Đặt chỗ'), BOOK, booking_p).replace(
             '<header class="page-title">', '<header class="page-title" id="book">', 1),
-        widget=widget, l_phone=t('Phone', 'Điện thoại'), phone=phone, email=email, insta=insta,
-        groups=t('Seven or more? Email us and we’ll look after you personally.',
-                 'Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn.'),
+        widget=widget, rows=''.join('<div><dt>%s</dt><dd>%s</dd></div>' % r for r in rows),
+        groups=t('Seven or more? <a href="/private-dining/#enquire">Tell us about your group</a> and we’ll look '
+                 'after you personally.',
+                 'Nhóm từ bảy người trở lên? <a href="/private-dining/#enquire">Hãy cho chúng tôi biết về nhóm của '
+                 'bạn</a>, chúng tôi sẽ sắp xếp riêng.'),
+        hold=hold, terms=terms,
         hours=t('%s%s' % (HOURS_PLAIN[0], frm[0]), '%s%s' % (HOURS_PLAIN[1], frm[1])),
         addr=t(ADDRESS_EN, ADDRESS_VI),
         visit=t('Hours, address and getting here', 'Giờ mở cửa, địa chỉ và đường đến'),
@@ -1541,6 +1671,60 @@ def build_booking():
                 main, cur='booking', og='visit', bar=False,
                 # iOS would turn the booking box's phone number back into a link
                 extra=('' if CONTACT_LIVE else '<meta name="format-detection" content="telephone=no">\n') + SCHEMA)
+
+
+def build_private_dining():
+    """/private-dining/: groups of seven or more, and private events. What we know (the
+    enquiry, by email) is public; the spaces, set menus and minimum spend wait for their
+    figures (CONTENT-NEEDED.md)."""
+    def placeholder(sid, heading, rows):
+        return ('<section class="prose-section" aria-labelledby="%s"><header class="section-head"><h2 id="%s">%s</h2>'
+                '</header><dl class="gtk-items">%s</dl></section>'
+                % (sid, sid, heading,
+                   ''.join('<div><dt>%s</dt><dd>%s</dd></div>' % (k, t('[to come]', '[sẽ cập nhật]')) for k in rows)))
+    main = '\n'.join([
+        '<main id="main">',
+        '<div class="wrap">%s</div>' % page_title(
+            t('Private dining', 'Tiệc riêng'), t('Groups and private dining', 'Nhóm đông và tiệc riêng'),
+            t('For seven or more, or a night that’s all yours: tell us what you have in mind, and we’ll come back '
+              'to you.',
+              'Từ bảy người trở lên, hay một buổi tối chỉ dành riêng cho bạn: hãy cho chúng tôi biết bạn đang nghĩ '
+              'gì, chúng tôi sẽ liên hệ lại.')),
+        '<div class="wrap">%s%s%s</div>' % (
+            gate('private-dining-spaces', 'the spaces on each floor and how many each seats',
+                 placeholder('s-spaces', t('The spaces', 'Không gian'),
+                             [t('Ground floor', 'Tầng 1'), t('Upstairs', 'Tầng 2'),
+                              t('The whole restaurant', 'Cả nhà hàng')])),
+            gate('private-dining-menus', 'set menus for groups',
+                 placeholder('s-set-menus', t('Set menus', 'Thực đơn đặt trước'),
+                             [t('Menus and prices', 'Thực đơn và giá')])),
+            gate('private-dining-minimum', 'the minimum spend for a private space',
+                 placeholder('s-minimum', t('Minimum spend', 'Mức chi tối thiểu'),
+                             [t('For a private space', 'Cho một không gian riêng')]))),
+        '<div class="wrap"><section class="form-section" id="enquire" aria-labelledby="s-enquire"><header class="section-head">'
+        '%s<h2 id="s-enquire">%s</h2><p>%s</p></header>%s</section></div>' % (
+            sun(5), t('Tell us about it', 'Cho chúng tôi biết về buổi tiệc'),
+            t('The date, how many of you, and anything we should know. We’ll write back with what we can do.',
+              'Ngày nào, bao nhiêu người, và những điều chúng tôi nên biết. Chúng tôi sẽ trả lời với những gì có thể '
+              'sắp xếp.'),
+            mailform('private-dining', 'Private dining — ', [
+                ('name', t('Name', 'Họ tên'), 'text', True),
+                ('phone', t('Phone or Zalo', 'Điện thoại hoặc Zalo'), 'tel', True),
+                ('email', 'Email', 'email', False),
+                ('date', t('Date', 'Ngày'), 'date', True),
+                ('guests', t('Number of guests', 'Số khách'), 'number', True),
+                ('occasion', t('The occasion', 'Dịp tổ chức'), 'text', False),
+                ('budget', t('Budget per person', 'Ngân sách mỗi người'), 'text', False),
+                ('notes', t('Anything else', 'Thông tin thêm'), 'textarea', False),
+            ], t('Send by email', 'Gửi qua email'))),
+        '</main>', ''])
+    return page('/private-dining/', 'page-private-dining',
+                ('Private dining — Sol, Tây Hồ', 'Tiệc riêng — Sol, Tây Hồ'),
+                ('Groups of seven or more and private dining at Sol, No 7, Lane 88 Quang An, Tây Hồ, Hanoi. Tell us '
+                 'what you have in mind.',
+                 'Nhóm từ bảy người và tiệc riêng tại Sol, số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Hãy cho chúng tôi '
+                 'biết bạn đang nghĩ gì.'),
+                main, cur='private-dining', og='private-dining')
 
 
 def build_visit():
@@ -1576,8 +1760,10 @@ def build_visit():
         children_d=t('Very welcome. We have high chairs, and the kitchen will happily make something plain.',
                      'Rất hoan nghênh. Có ghế ăn cho bé, và bếp sẵn sàng làm món đơn giản.'),
         book=BOOK,
-        book_p=t('Seven or more? Email us and we’ll look after you personally.',
-                 'Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn.'),
+        book_p=t('Seven or more? <a href="/private-dining/#enquire">Tell us about your group</a> and we’ll look '
+                 'after you personally.',
+                 'Nhóm từ bảy người trở lên? <a href="/private-dining/#enquire">Hãy cho chúng tôi biết về nhóm của '
+                 'bạn</a>, chúng tôi sẽ sắp xếp riêng.'),
     )
     return page('/visit-us/', 'page-visit',
                 ('Visit — Sol, Tây Hồ', 'Ghé thăm — Sol, Tây Hồ'),
@@ -2809,7 +2995,8 @@ def build_404():
                 switch=('/', '/vi/'))
 
 
-SITEMAP_PAGES = ['/', '/about/', '/menu/', '/menu/wine/', '/menu/bar/', '/visit-us/', '/booking/', '/jobs/']
+SITEMAP_PAGES = ['/', '/about/', '/menu/', '/menu/wine/', '/menu/bar/', '/private-dining/', '/visit-us/', '/booking/',
+                 '/jobs/']
 
 
 def build_support():
@@ -2818,8 +3005,8 @@ def build_support():
     pages = [p for p in pages if not hidden(p)]
     urls = []
     for p in pages:
-        pri = '1.0' if p == '/' else ('0.9' if p.startswith(('/about/', '/menu/', '/visit-us/', '/booking/'))
-                                      else '0.6')
+        pri = '1.0' if p == '/' else ('0.9' if p.startswith(('/about/', '/menu/', '/private-dining/', '/visit-us/',
+                                                             '/booking/')) else '0.6')
         # Each page in both languages, each listing both and English as the default
         alts = ''.join('    <xhtml:link rel="alternate" hreflang="%s" href="%s%s"/>\n' % (code, SITE, lang_path(p, code))
                        for code in LANGS) + \
@@ -3039,7 +3226,7 @@ def optimise():
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(%(payment)s)
   Cache-Control: public, max-age=0, must-revalidate
   Link: %(link_en)s, %(kit)s%(noindex)s
 
@@ -3061,7 +3248,9 @@ def optimise():
   ! Cache-Control
   ! Link
   Cache-Control: public, max-age=86400
-""" % dict(link_en=', '.join('<%s>; rel=preload; as=font; type=font/woff2; crossorigin' % f for f in FONT_PRELOADS['en']),
+""" % dict(payment='self "%s"' % '{0.scheme}://{0.netloc}'.format(urlsplit(RESDIARY_URL))
+                   if RESDIARY_URL and RESDIARY_PAYMENTS else '',
+           link_en=', '.join('<%s>; rel=preload; as=font; type=font/woff2; crossorigin' % f for f in FONT_PRELOADS['en']),
            link_vi=', '.join('<%s>; rel=preload; as=font; type=font/woff2; crossorigin' % f for f in FONT_PRELOADS['vi']),
            kit='<https://use.typekit.net>; rel=preconnect; crossorigin, <https://use.typekit.net>; rel=preconnect, '
                '<https://p.typekit.net>; rel=preconnect',
@@ -3324,7 +3513,7 @@ if __name__ == '__main__':
     og_cards()
     copy_existing()
     # Every page is built in both modes; write_pages() doesn't write the ones not public yet.
-    for fn in (build_home, build_about, build_food, build_wine, build_bar, build_visit, build_booking,
+    for fn in (build_home, build_about, build_food, build_wine, build_bar, build_private_dining, build_visit, build_booking,
                build_jobs, build_privacy, build_cookies, build_styleguide, build_dough, build_dough_log,
                build_dough_login, build_404):
         fn()

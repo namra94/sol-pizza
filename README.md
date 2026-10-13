@@ -19,6 +19,7 @@ come" and `README-DEPLOY.md`).
 | `/menu/` | Menu: Food | Public |
 | `/menu/wine/` | Menu: Wine (the old `/wine/` redirects here) | Public |
 | `/menu/bar/` | Menu: Bar | Public |
+| `/private-dining/` | Private dining: groups of seven or more and private events, the enquiry form (the spaces, set menus and minimum spend wait for their figures) | Public |
 | `/visit-us/` | Visit: hours, address, contact, good to know (not `/visit/`: browsers remember its old redirect to `/booking/`) | Public |
 | `/booking/` | Booking: the booking box at `/booking/#book`, where every Book button leads (the old `/visit/`, `/book` and `/reservations` redirect here) | Public |
 | `/jobs/` | Work with us: the opening-team cards, plus the role pages under `/jobs/` | Public |
@@ -36,12 +37,13 @@ use. The old addresses in `src/_redirects` (`/story`, `/visit`, `/wine`, `/wines
 pages with a 301, and keep any `?lang=vi`, which then opens the Vietnamese page.
 
 The header: the logo at the top; under it a bar that stays at the top of the window as the
-page scrolls, with Menu · About · Visit (and Events and Private dining once their pages
-exist: `BUILT` in `build/gen.py`), EN · VI and the red **Book** button, which goes to the
+page scrolls, with Menu · About · Private dining · Visit (and Events once its page
+exists: `BUILT` in `build/gen.py`), EN · VI and the red **Book** button, which goes to the
 booking page in the same language. On phones and tablets (below 1024px wide): a slim bar
 with EN · VI, the logo and the menu button, and at the foot of the window a bar with Book
-and Directions (and Call once online booking is live), hidden on the booking page and the
-role pages. Menu keeps its Food / Wine / Bar tabs. The footer lists the pages, Work with
+and Directions (and, once online booking is live, Call on English pages and Zalo on
+Vietnamese ones), hidden on the booking page and the role pages. Menu keeps its Food /
+Wine / Bar tabs. The footer has the newsletter sign-up, and lists the pages, Work with
 us, Privacy, Cookies and **Cookie settings**.
 
 ### Taking a page down
@@ -149,7 +151,27 @@ Promote → Widget configurator → Embed Code), paste its URL into
 booking box then shows the widget and says "Book online below, or call or
 email us." Until then the booking box gives the phone number, email and Instagram
 as text to copy (the team's call, 23 Sep), and the phone bar has no Call button;
-with `RESDIARY_URL` set they become a tap away (`CONTACT_LIVE`).
+with `RESDIARY_URL` set they become a tap away (`CONTACT_LIVE`), with Zalo and WhatsApp
+too once their numbers are in `ZALO` and `WHATSAPP`. If guests pay a deposit inside the
+widget, set `RESDIARY_PAYMENTS = True`: the pages then let the widget's frame use the
+browser's payment feature. Under the widget there's always a way round it (call, Zalo,
+email), and the booking terms ("Before you book") wait for their content
+(CONTENT-NEEDED.md). Before online booking, `/booking/` has a form to ask for a table in
+opening week.
+
+### Enquiries and the newsletter
+
+The enquiry forms write an email; nothing is stored on a server. Filling one in and
+pressing **Send by email** opens the guest's email app with the message ready, to
+`ENQUIRIES` (hello@sol.pizza), the subject in English so the inbox sorts them
+(`Private dining — Lan`, `Opening week — Minh`) and the details in the page's language;
+the message also appears on the page, to copy, for a computer with no email app. There
+are two: groups and private dining (`/private-dining/#enquire`, where every "seven or
+more?" line leads) and, before online booking, a table for opening week (`/booking/`).
+The **Sign up by email** button in every footer sends "Please add this email address to
+Sol's newsletter": the email from the guest's own address is their consent. Keep the
+list somewhere the team can find it (LAUNCH-CHECKLIST.md, "Enquiries and the
+newsletter"), and take people off it when they ask.
 
 ### Jobs
 
