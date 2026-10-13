@@ -20,7 +20,7 @@ build/menu-data.json.
                        untouched), _redirects, favicon.svg, pixel.js
 """
 import os, re, sys, json, stat, shutil, hashlib, subprocess, base64, argparse, html as _html
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from html.parser import HTMLParser
 from urllib.parse import quote, unquote, urljoin, urlsplit
 
@@ -478,7 +478,7 @@ def buttons(options):
 # events: build/events-data.json (Eclipse, Sol's popup series)
 # --------------------------------------------------------------------------
 EVENTS_DATA = json.loads(read(os.path.join(HERE, 'events-data.json')))
-EV_SERIES = t('Eclipse is Sol’s popup series.', 'Eclipse là chuỗi sự kiện pop-up của Sol.')
+EV_SERIES = t('Eclipse is Sol’s pop-up series.', 'Eclipse là chuỗi sự kiện pop-up của Sol.')
 ORDINALS = [('First', 'nhất'), ('Second', 'hai'), ('Third', 'ba'), ('Fourth', 'tư'), ('Fifth', 'năm'),
             ('Sixth', 'sáu'), ('Seventh', 'bảy'), ('Eighth', 'tám'), ('Ninth', 'chín'), ('Tenth', 'mười')]
 
@@ -500,12 +500,21 @@ def _events():
         assert len(e['menu_en']) == len(e['menu_vi']), 'events-data.json: %s: menu_en and menu_vi, as many each' % sl
         assert all(c.get('name') and c.get('line_en') and c.get('line_vi') for c in e['chefs']), \
             'events-data.json: %s: each chef has name, line_en and line_vi' % sl
-        assert e['price'] is None or (isinstance(e['price'], int) and e['price'] > 0), \
+        assert e['price'] is None or (type(e['price']) is int and e['price'] > 0), \
             'events-data.json: %s: price in đồng (a whole number) or null' % sl
         assert not e['booking'] or e['booking'].startswith('https://'), \
             'events-data.json: %s: booking is an https:// address or ""' % sl
-        out.append(dict(e, days=days, until=datetime.fromisoformat('%sT23:59:59+07:00' % days[-1]),
-                        path='/events/%s/' % sl, ready=bool(e['summary_en'])))
+        # It's over at the end of its last night: 23:59 that day, or its closing time the
+        # next morning if it runs past midnight (18:00–01:00)
+        until = datetime.fromisoformat('%sT23:59:59+07:00' % days[-1])
+        if e['times']:
+            a, b = e['times'].split('–')
+            if b < a:
+                until = datetime.fromisoformat('%sT%s:00+07:00' % (days[-1] + timedelta(days=1), b))
+        out.append(dict(e, days=days, until=until, path='/events/%s/' % sl, ready=bool(e['summary_en'])))
+    out.sort(key=lambda e: e['days'][0])
+    numbers = [e['edition'] for e in out]
+    assert len(set(numbers)) == len(numbers), 'events-data.json: each edition has its own number'
     return out
 
 
@@ -533,7 +542,8 @@ def ev_dates(e, year=True):
     en = [('%s %d' % (EN_DAYS[d.weekday()], d.day)) if (d.month, d.year) == (days[-1].month, days[-1].year)
           else '%s %d %s' % (EN_DAYS[d.weekday()], d.day, EN_MONTHS[d.month - 1]) for d in days]
     en = en_list(en) + ' %s%s' % (EN_MONTHS[days[-1].month - 1], ' %d' % days[-1].year if year else '')
-    vi = ' và '.join('%s %02d/%02d' % (VI_DAYS_CAP[d.weekday()], d.day, d.month) for d in days)
+    vi = ['%s %02d/%02d' % (VI_DAYS_CAP[d.weekday()], d.day, d.month) for d in days]
+    vi = vi[0] if len(vi) == 1 else ', '.join(vi[:-1]) + ' và ' + vi[-1]
     return t(en, vi + ('/%d' % days[-1].year if year else ''))
 
 
@@ -542,11 +552,17 @@ def ev_upcoming():
     return [e for e in EVENTS if e['until'] > NOW]
 
 
+def ev_over(e):
+    """Over when the site was built: shown as past without the browser's help."""
+    return e['until'] <= NOW
+
+
 # The head script marks each edition that has ended (html.past-<slug>), and says
 # whether any are still to come (ev-none-up when none) or over (ev-some-past): these
 # rules show the right copy of each, so an edition moves to Past on time.
 EV_STYLE = ''.join('html.past-%s .ev-up[data-ev="%s"],html:not(.past-%s) .ev-past[data-ev="%s"]{display:none}'
-                   % ((e['slug'],) * 4) for e in EVENTS)
+                   'html.next-%s .next-ev[data-ev="%s"]{display:block}'
+                   % ((e['slug'],) * 6) for e in ev_upcoming())
 
 
 # --------------------------------------------------------------------------
@@ -775,12 +791,13 @@ def _head_script():
       banner's wording has changed since), which shows the banner (site.css).
     - opening day: html.is-open from OPENING_AT (by_state()).
     - announcements: html.ann-<id> for the one showing now, unless it was dismissed.
-    - events: html.past-<slug> for each edition that has ended; ev-none-up when none is
-      still to come, ev-some-past when any has ended (EV_STYLE)."""
+    - events: html.past-<slug> for each edition that has ended since the build, next-<slug>
+      for the first still to come; ev-none-up when none is, ev-some-past when any has
+      ended (EV_STYLE). Editions over at build time are written as past already."""
     ann = ','.join('["%s",%d,%d]' % (a['id'], datetime.fromisoformat(a['show_from']).timestamp() * 1000,
                                      datetime.fromisoformat(a['show_until']).timestamp() * 1000)
                    for a in ANNOUNCEMENTS)
-    evs = ','.join('["%s",%d]' % (e['slug'], e['until'].timestamp() * 1000) for e in EVENTS)
+    evs = ','.join('["%s",%d]' % (e['slug'], e['until'].timestamp() * 1000) for e in ev_upcoming())
     return ("(function(){var d=document.documentElement,l=location,n=Date.now(),s=null;d.className+=' js';"
             "try{s=window.localStorage}catch(e){}"
             "function g(k){try{return s.getItem(k)}catch(e){return null}}"
@@ -794,7 +811,8 @@ def _head_script():
             "if(!c||c.v!==%d||!(n-Date.parse(c.t)<31536e6))d.className+=' consent-ask';"
             "%s"
             "[%s].forEach(function(x){if(n>=x[1]&&n<x[2]&&!g('sol-ann-'+x[0]))d.className+=' ann-'+x[0]});"
-            "var u=0,o=0;[%s].forEach(function(x){if(n>x[1]){d.className+=' past-'+x[0];o++}else u++});"
+            "var u=0,o=0;[%s].forEach(function(x){if(n>x[1]){d.className+=' past-'+x[0];o++}"
+            "else if(!u++)d.className+=' next-'+x[0]});"
             "if(!u)d.className+=' ev-none-up';if(o)d.className+=' ev-some-past'"
             "})();"
             % (CONSENT_VERSION,
@@ -897,7 +915,7 @@ OG_CARDS = {  # name: ((English eyebrow, title), (Vietnamese eyebrow, title))
               ('Tuyển dụng · Tây Hồ, Hà Nội', 'Cùng xây dựng<br>Sol mới.')),
     'private-dining': (('Private dining · Tây Hồ, Hanoi', 'Groups and<br>private dining.'),
                        ('Tiệc riêng · Tây Hồ, Hà Nội', 'Nhóm đông<br>và tiệc riêng.')),
-    'events': (('Events · Tây Hồ, Hanoi', 'Eclipse,<br>Sol’s popup series.'),
+    'events': (('Events · Tây Hồ, Hanoi', 'Eclipse,<br>Sol’s pop-up series.'),
                ('Sự kiện · Tây Hồ, Hà Nội', 'Eclipse, chuỗi<br>pop-up của Sol.')),
 }
 OG_DIR = os.path.join(HERE, 'og')
@@ -1050,17 +1068,19 @@ def footer(news=True):
             + ([('/booking/', t('Booking', 'Đặt bàn'))] if live('booking') else [])
             + [(href, name) for href, name in (('/press/', t('Press', 'Báo chí')),
                                                ('/gift-cards/', t('Gift cards', 'Thẻ quà tặng'))) if not hidden(href)]
-            + [('/jobs/', JOBS_TAB), ('/privacy/', t('Privacy', 'Bảo mật')),
-               ('/privacy/cookies/', t('Cookies', 'Cookie'))]
-            + [(href, name) for href, name in (('/privacy/guests/', t('Guest privacy', 'Bảo mật cho khách')),
-                                               ('/accessibility/', t('Accessibility', 'Hỗ trợ tiếp cận')))
-               if not hidden(href)])
+            + [('/jobs/', JOBS_TAB)]
+            # Privacy: the guests' notice once it's public, the applicants' beside it
+            + ([('/privacy/guests/', t('Privacy', 'Quyền riêng tư')),
+                ('/privacy/', t('Applicant privacy', 'Bảo mật cho ứng viên'))] if not hidden('/privacy/guests/')
+               else [('/privacy/', t('Privacy', 'Bảo mật'))])
+            + [('/privacy/cookies/', t('Cookies', 'Cookie'))]
+            + ([('/accessibility/', t('Accessibility', 'Hỗ trợ tiếp cận'))] if not hidden('/accessibility/') else []))
     return """<footer class="site-footer">
   <div class="wrap"><div class="footer-inner">
     <a class="footer-logo" href="/" {home}>{logo}</a>
     {news}
     <div class="footer-cols"><section><h2>{find}</h2><p>{addr}</p><p><a href="{maps}">{maps_t}</a></p></section><section><h2>{open}</h2><p>{days}</p><p>{hours}</p>{last}{closed}</section><section><h2>{talk}</h2><p><a href="{tel}">{phone}</a></p><p><a href="mailto:{email}">{email}</a></p><p>{insta}</p>{social}</section><nav {more_l}><h2>{more_h}</h2><ul>{more}</ul></nav></div>
-    <p class="legal">{legal} · <button class="linkish" type="button" data-consent-open>{settings}</button></p>
+    <p class="legal">{legal}<span class="legal-settings"> · <button class="linkish" type="button" data-consent-open>{settings}</button></span></p>
   </div></div>
 </footer>
 """.format(home=HOME_LABEL, logo=logo(91, 32), find=t('Find us', 'Tìm chúng tôi'),
@@ -1182,11 +1202,13 @@ def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website
     body += nbsp('<a class="skip" href="#main">%s</a>\n' % t('Skip to content', 'Chuyển đến nội dung chính')
                  + consent_banner() + announcement_bars() + header(cur, en_href, vi_href))
     body += main if verbatim else nbsp(main)
+    body += nbsp(footer(news) + (actionbar() if bar else ''))
     bad = re.search(r'="[^"<>]*<span data-l=', body)
     if bad:
         raise SystemExit('%s: t() inside an attribute (use label(), or one element per language): …%s…'
                          % (path, body[max(0, bad.start() - 60):bad.end() + 40]))
-    body += nbsp(footer(news) + (actionbar() if bar else ''))
+    for words in title + desc:              # they go into attributes (content="…") as they are
+        assert '"' not in words and '<' not in words, '%s: a title or description with " or <: %s' % (path, words)
     body += '</body>\n</html>\n'
     rec = dict(path=path, kitchen=False, title=title, desc=desc, og=og, ogtype=ogtype, extra=extra,
                index=index, og_text=og_text, body=body, hidden=hidden(path))
@@ -1459,7 +1481,7 @@ RESTAURANT = {
     },
     'hasMenu': 'https://sol.pizza/menu/',
     'acceptsReservations': 'https://sol.pizza/booking/#book',
-    'sameAs': [INSTAGRAM],
+    'sameAs': [INSTAGRAM] + [u for _, u in SOCIAL],
     'parentOrganization': {'@type': 'Organization', 'name': COMPANY_VI},
 }
 # Opening hours from HOURS: once open, or from the opening day once it is set; none before.
@@ -1528,18 +1550,21 @@ def home_paths():
 
 
 def next_event():
-    """The next Eclipse, after dark, while one is coming up (it goes when it ends: ev-up)."""
-    up = ev_upcoming()
-    if not live('events') or not up:
+    """The next Eclipse, after dark: a block for each edition still to come, the head script
+    showing the first that isn't over (html.next-<slug>; without JavaScript, the first)."""
+    if not live('events'):
         return ''
-    e = up[0]
-    line = t(esc(e['summary_en']), esc(e['summary_vi'])) if e['ready'] else '%s %s' % (
-        EV_SERIES, t('Details soon.', 'Thông tin chi tiết sẽ sớm được cập nhật.'))
-    href = e['path'] if (e['ready'] or FULL) else '/events/'
-    return ('<section class="after-dark next-ev ev-up" data-ev="%s" aria-labelledby="s-next-ev"><div class="wrap measure">'
-            '<p class="eyebrow">Eclipse · %s</p><h2 class="h-lg" id="s-next-ev">%s</h2><p>%s</p>'
-            '<div class="actions"><a class="btn btn-red" href="%s">%s</a></div></div></section>'
-            % (e['slug'], ev_name(e), ev_dates(e), line, href, t('More on Eclipse', 'Xem thêm về Eclipse')))
+    blocks = []
+    for n, e in enumerate(ev_upcoming()):
+        line = t(esc(e['summary_en']), esc(e['summary_vi'])) if e['ready'] else '%s %s' % (
+            EV_SERIES, t('Details soon.', 'Thông tin chi tiết sẽ sớm được cập nhật.'))
+        href = e['path'] if (e['ready'] or FULL) else '/events/'
+        blocks.append('<section class="after-dark next-ev%s" data-ev="%s" aria-labelledby="s-next-%s"><div class="wrap '
+                      'measure"><p class="eyebrow">Eclipse · %s</p><h2 class="h-lg" id="s-next-%s">%s</h2><p>%s</p>'
+                      '<div class="actions"><a class="btn btn-red" href="%s">%s</a></div></div></section>'
+                      % (' is-next' if n == 0 else '', e['slug'], e['slug'], ev_name(e), e['slug'], ev_dates(e), line,
+                         href, t('More on Eclipse', 'Xem thêm về Eclipse')))
+    return '\n'.join(blocks)
 
 
 def build_home():
@@ -1662,12 +1687,14 @@ def note_box(label_html, text):
 MENU_UPDATED = date.fromisoformat(MENU['updated']) if MENU.get('updated') else None
 for _sec in [x for k in ('food', 'bar') for x in MENU[k]['sections']]:
     for _d in _sec['items']:
-        assert _d.get('price') is None or (isinstance(_d['price'], int) and _d['price'] > 0), \
+        assert _d.get('price') is None or (type(_d['price']) is int and _d['price'] > 0), \
             'menu-data.json: %s: price is whole đồng (185000)' % _d['name']
 for _sec in MENU['wine']['sections']:
     for _w in _sec['items']:
-        assert all(_w.get(k) is None or (isinstance(_w[k], int) and _w[k] > 0) for k in ('glass', 'bottle')), \
+        assert all(_w.get(k) is None or (type(_w[k]) is int and _w[k] > 0) for k in ('glass', 'bottle')), \
             'menu-data.json: %s: glass and bottle are whole đồng' % _w['name']
+        assert not _w.get('glass') or 'glass' in _w['marks'], \
+            'menu-data.json: %s: a glass price, but it isn\'t marked "glass"' % _w['name']
 
 
 def price_tag(d):
@@ -1703,9 +1730,13 @@ def menu_section(sec, sun_n, body):
 
 
 def item(name, desc, desc_vi, after_name='', cls='', price='', price_line=''):
-    """A dish, drink or wine. price: after the name (price_tag()); price_line: under the
-    details (wine_price())."""
-    li = '<li%s><p class="item-name">%s%s%s</p>' % (cls, price, esc(name), after_name)
+    """A dish, drink or wine. price: after the name and its marks (price_tag()), at the
+    line's end; price_line: under the details (wine_price())."""
+    if price:
+        li = ('<li%s><p class="item-name has-price"><span>%s%s</span> %s</p>'
+              % (cls, esc(name), after_name, price))
+    else:
+        li = '<li%s><p class="item-name">%s%s</p>' % (cls, esc(name), after_name)
     if desc:
         li += '<p class="item-desc">%s</p>' % t(esc(desc), esc(desc_vi or desc))
     return li + price_line + '</li>'
@@ -1754,10 +1785,10 @@ def build_food():
     if not every:
         parts.append(note_box(t('A first draft', 'Bản nháp đầu tiên'),
                  t('These are the dishes we cooked at Sol Pizza, and they’re where Sol starts. Expect '
-                   'changes as the new kitchen settles in, and prices here once they’re set.',
+                   'changes as the new kitchen settles in%s.' % ('' if some else ', and prices here once they’re set'),
                    'Đây là những món chúng tôi từng nấu tại Sol Pizza, và là điểm khởi đầu của Sol. '
-                   'Các món sẽ còn thay đổi khi căn bếp mới đi vào nếp, và giá sẽ được đăng ở đây '
-                   'khi đã chốt.')))
+                   'Các món sẽ còn thay đổi khi căn bếp mới đi vào nếp%s.'
+                   % ('' if some else ', và giá sẽ được đăng ở đây khi đã chốt'))))
     for i, sec in enumerate(food['sections']):
         items = ''.join(
             item(d['name'], d['description'], d.get('description_vi'),
@@ -1830,9 +1861,9 @@ def build_wine():
         '<section class="closing"><h2>%s</h2><p>%s</p></section>'
         % (t('Can’t see what you like?', 'Chưa thấy chai bạn thích?'),
            t('Tell us what you drink and roughly what you’d like to spend, and we’ll find you '
-             'something.%s' % ('' if some else ' Prices are on the printed list in the room.'),
+             'something.%s' % ('' if every else ' Prices are on the printed list in the room.'),
              'Hãy cho chúng tôi biết bạn thích uống gì và tầm giá mong muốn, chúng tôi sẽ tìm cho '
-             'bạn một chai phù hợp.%s' % ('' if some else ' Giá có trên danh sách in tại nhà hàng.'))),
+             'bạn một chai phù hợp.%s' % ('' if every else ' Giá có trên danh sách in tại nhà hàng.'))),
         good_to_know(drinks=True),
     ]
     return menu_page('/menu/wine/', 'wine', 'page-menu-wine',
@@ -1854,7 +1885,8 @@ def build_bar():
                           'bạn cứ gọi món mình thích.')),
              currency_note() if some else '', band('menu-bar')]
     for i, sec in enumerate(bar['sections']):
-        if all(not d['description'] for d in sec['items']) and sec['name'] == 'Soft drinks' and not some:
+        if all(not d['description'] for d in sec['items']) and sec['name'] == 'Soft drinks' \
+                and not any(d.get('price') for d in sec['items']):
             body = '<p class="inline-list">%s</p>' % ' · '.join(esc(d['name']) for d in sec['items'])
         else:
             body = '<ul class="menu-grid">%s</ul>' % ''.join(
@@ -2258,8 +2290,9 @@ def ev_item(e, cls):
             if e['ready'] or FULL else '')
     line = (t(esc(e['summary_en']), esc(e['summary_vi'])) if e['ready']
             else t('Details soon.', 'Thông tin chi tiết sẽ sớm được cập nhật.') if cls == 'ev-up' else '')
-    return ('<li class="ev %s" data-ev="%s"><p class="label">Eclipse · %s</p><h3>%s</h3>%s%s</li>'
-            % (cls, e['slug'], ev_name(e), ev_dates(e), '<p>%s</p>' % line if line else '', more))
+    switch = '' if (cls == 'ev-past' and ev_over(e)) else ' data-ev="%s"' % e['slug']
+    return ('<li class="ev %s"%s><p class="label">Eclipse · %s</p><h3>%s</h3>%s%s</li>'
+            % (cls, switch, ev_name(e), ev_dates(e), '<p>%s</p>' % line if line else '', more))
 
 
 def build_events():
@@ -2268,7 +2301,8 @@ def build_events():
     # Coming up: the editions still to come at build time; each also sits in Past,
     # hidden until it ends (EV_STYLE).
     upcoming = ''.join(ev_item(e, 'ev-up') for e in up)
-    past = ''.join(ev_item(e, 'ev-past') for e in reversed(EVENTS))       # the latest first
+    past = ''.join(ev_item(e, 'ev-past') for e in reversed(EVENTS))       # the latest first; those still to
+                                                                          # come show here once over
     main = '\n'.join([
         '<main id="main">',
         '<div class="wrap">%s</div>' % page_title(t('Events', 'Sự kiện'), 'Eclipse', EV_SERIES),
@@ -2283,7 +2317,7 @@ def build_events():
         % (' has-past' if past_now else '', t('Past editions', 'Các lần trước'), past),
         '</main>', ''])
     return page('/events/', 'page-events', ('Events — Sol, Tây Hồ', 'Sự kiện — Sol, Tây Hồ'),
-                ('Eclipse, Sol’s popup series, at No 7, Lane 88 Quang An, Tây Hồ, Hanoi: what’s coming up, and '
+                ('Eclipse, Sol’s pop-up series, at No 7, Lane 88 Quang An, Tây Hồ, Hanoi: what’s coming up, and '
                  'what’s been.',
                  'Eclipse, chuỗi sự kiện pop-up của Sol tại số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội: những gì sắp '
                  'diễn ra và đã diễn ra.'),
@@ -2304,10 +2338,11 @@ def build_event(e):
         facts.append((t('Price', 'Giá'), per_person(e['price'])))
     summary = t(esc(e['summary_en']), esc(e['summary_vi'])) if e['ready'] else t('[to come]', '[sẽ cập nhật]')
     if e['booking']:
-        book = '<a class="btn btn-red" href="%s" data-track="book_click">%s</a>' % (esc_attr(e['booking']), BOOK)
+        book = ('<a class="btn btn-red" href="%s" data-track="book_click" data-booking="%s">%s</a>'
+                % (esc_attr(e['booking']), e['slug'], t('Book', 'Đặt chỗ')))
     else:
-        book = ('<a class="btn btn-red" href="%s" data-track="book_click">%s</a>'
-                % (mailto(ENQUIRIES, '%s — ' % name, ''), t('Book by email', 'Đặt chỗ qua email')))
+        book = ('<a class="btn btn-red" href="%s" data-track="book_click" data-booking="%s">%s</a>'
+                % (mailto(ENQUIRIES, name, ''), e['slug'], t('Book by email', 'Đặt chỗ qua email')))
     pic = PHOTO_BY_KEY.get(e['image'])
     parts = [
         '<main id="main">',
@@ -2323,17 +2358,21 @@ def build_event(e):
         parts.append(prose_section('s-menu', 5, t('The menu', 'Thực đơn'), [
             '<ul class="ev-menu">%s</ul>' % ''.join('<li>%s</li>' % t(esc(en), esc(vi))
                                                     for en, vi in zip(e['menu_en'], e['menu_vi']))]))
-    parts += [
-        '<div class="wrap"><section class="offer ev-up" data-ev="%s" aria-labelledby="s-ev-book"><h2 id="s-ev-book">%s'
-        '</h2><p>%s</p>%s</section>' % (e['slug'], t('Book', 'Đặt chỗ'), when, book),
-        '<p class="ev-past ev-over" data-ev="%s">%s <a href="/events/">%s</a></p></div>'
-        % (e['slug'], t('This edition is over.', 'Lần này đã kết thúc.'), t('All editions', 'Tất cả các lần')),
-        '</main>', '']
+    over = '%s <a href="/events/">%s</a>' % (t('This edition is over.', 'Eclipse lần này đã kết thúc.'),
+                                             t('All editions', 'Xem tất cả các lần Eclipse'))
+    if ev_over(e):          # over when built: just that
+        parts += ['<div class="wrap"><p class="ev-over">%s</p></div>' % over, '</main>', '']
+    else:                   # the Book box until it's over, then the note (the head script)
+        parts += [
+            '<div class="wrap"><section class="offer ev-up" data-ev="%s" aria-labelledby="s-ev-book"><h2 id="s-ev-book">'
+            '%s</h2><p>%s</p>%s</section>' % (e['slug'], t('Book', 'Đặt chỗ'), when, book),
+            '<p class="ev-past ev-over" data-ev="%s">%s</p></div>' % (e['slug'], over),
+            '</main>', '']
     return page(e['path'], 'page-event', ('%s — Sol, Tây Hồ' % name, '%s — Sol, Tây Hồ' % name),
-                ('%s, %s. %s' % (name, re.sub('<[^>]+>', '', _keep_lang(ev_dates(e), 'en')), e['summary_en'] or
-                                 'Sol’s popup series.'),
-                 '%s, %s. %s' % (name, re.sub('<[^>]+>', '', _keep_lang(ev_dates(e), 'vi')), e['summary_vi'] or
-                                 'Chuỗi sự kiện pop-up của Sol.')),
+                ('%s, %s. %s' % (name, re.sub('<[^>]+>', '', _keep_lang(ev_dates(e), 'en')),
+                                 esc_attr(e['summary_en']) or 'Sol’s pop-up series.'),
+                 '%s, %s. %s' % (name, re.sub('<[^>]+>', '', _keep_lang(ev_dates(e), 'vi')),
+                                 esc_attr(e['summary_vi']) or 'Chuỗi sự kiện pop-up của Sol.')),
                 '\n'.join(parts), cur='events', og='events')
 
 
@@ -2347,7 +2386,7 @@ VISIT_FAQ = [
     ('visit-getting-here', 'motorbike and car parking, and where Grab drops off',
      t('Getting here and parking', 'Đường đến và chỗ gửi xe'), None),
     ('visit-access', 'the lift, steps, and the toilets: step-free or not',
-     t('Step-free access and the lift', 'Lối đi không bậc và thang máy'), None),
+     t('Step-free access and the lift', 'Lối vào không bậc thềm và thang máy'), None),
     ('visit-payment', 'how guests can pay: cash, which cards, transfer, e-wallets',
      t('Paying', 'Thanh toán'), None),
     ('visit-corkage', 'whether guests can bring their own wine, and the corkage fee',
@@ -2355,7 +2394,7 @@ VISIT_FAQ = [
     ('visit-dress', 'whether there is a dress code',
      t('What to wear', 'Trang phục'), None),
     ('visit-dogs', 'whether dogs are welcome, inside or out',
-     t('Dogs', 'Thú cưng'), None),
+     t('Dogs', 'Mang theo chó'), None),
     ('visit-smoking', 'whether there is anywhere to smoke',
      t('Smoking', 'Hút thuốc'), None),
 ]
@@ -3142,13 +3181,13 @@ def build_guest_privacy():
             t('Allergies and dietary needs', 'Dị ứng và chế độ ăn'),
             t('If you tell us about an allergy or a dietary need, we use it only to prepare your meal safely, and '
               'share it only with the team looking after you that night. Information about your health is '
-              'sensitive personal data: by telling us, you agree to our using it this way, and you can ask us to '
+              'sensitive personal data: we ask for your consent before we record it, and you can ask us to '
               'delete it at any time.',
               'Nếu bạn cho chúng tôi biết về một loại dị ứng hay chế độ ăn, chúng tôi chỉ dùng thông tin đó để chuẩn '
               'bị món ăn an toàn cho bạn, và chỉ chia sẻ với những người phục vụ bạn tối hôm đó. Thông tin về sức '
-              'khỏe là dữ liệu cá nhân nhạy cảm: khi cho chúng tôi biết, bạn đồng ý để chúng tôi sử dụng như vậy, '
-              'và bạn có thể yêu cầu xoá bất cứ lúc nào.')),
-        '<h2>%s</h2><p>%s</p><ul>%s</ul><p>%s</p>' % (
+              'khỏe là dữ liệu cá nhân nhạy cảm: chúng tôi hỏi ý kiến đồng ý của bạn trước khi ghi lại, và bạn có '
+              'thể yêu cầu xoá bất cứ lúc nào.')),
+        '<h2>%s</h2><p>%s</p><ul>%s</ul><p>%s</p><p>%s</p>' % (
             t('Who handles it for us', 'Ai xử lý thông tin cho chúng tôi'),
             t('These companies store or process it on our behalf, and only as we ask:',
               'Các công ty sau lưu trữ hoặc xử lý thông tin thay mặt chúng tôi, và chỉ theo yêu cầu của chúng tôi:'),
@@ -3156,12 +3195,15 @@ def build_guest_privacy():
                 t('ResDiary: our booking system', 'ResDiary: hệ thống đặt bàn của chúng tôi'),
                 t('Google Workspace: our email', 'Google Workspace: hộp thư của chúng tôi'),
                 t('Cloudflare: serves this website', 'Cloudflare: vận hành máy chủ cho trang web này'),
-                t('Adobe Fonts: the website’s typefaces (it sees your browser’s internet address when they load)',
-                  'Adobe Fonts: phông chữ của trang web (dịch vụ này thấy địa chỉ internet của trình duyệt khi '
-                  'tải phông chữ)'),
-                t('Google Analytics and Meta: only if you say yes to them (the cookie notice)',
-                  'Google Analytics và Meta: chỉ khi bạn đồng ý (xem thông báo về cookie)'),
+                t('Adobe Fonts: the website’s typefaces (when they load, it sees your browser’s internet address '
+                  'and counts the page view)',
+                  'Adobe Fonts: phông chữ của trang web (khi tải phông chữ, dịch vụ này thấy địa chỉ internet của '
+                  'trình duyệt và đếm lượt xem trang)'),
             ]),
+            t('If you say yes to them in the cookie banner, Google Analytics and Meta also receive information '
+              'about your visit: the <a href="/privacy/cookies/">cookie notice</a> explains.',
+              'Nếu bạn đồng ý trong bảng chọn cookie, Google Analytics và Meta cũng nhận thông tin về lượt truy '
+              'cập của bạn: <a href="/privacy/cookies/">thông báo về cookie</a> giải thích rõ.'),
             t('Some of them keep data outside Vietnam.', 'Một số công ty lưu dữ liệu ở ngoài Việt Nam.')),
         '<h2>%s</h2><ul>%s</ul>' % (
             t('How long we keep it', 'Chúng tôi lưu trong bao lâu'),
@@ -3192,7 +3234,7 @@ def build_guest_privacy():
     ]
     return legal_page('/privacy/guests/', t('Privacy', 'Bảo mật'),
                       t('Your privacy as our guest', 'Quyền riêng tư của khách'), sections,
-                      ('Guest privacy — Sol', 'Bảo mật cho khách — Sol'),
+                      ('Guest privacy — Sol', 'Quyền riêng tư của khách — Sol'),
                       ('What Sol keeps when you book, write to us or sign up for news, and your rights.',
                        'Những gì Sol lưu khi bạn đặt bàn, viết cho chúng tôi hoặc đăng ký nhận tin, và quyền của bạn.'))
 
@@ -3204,14 +3246,13 @@ def build_accessibility():
                         'Chúng tôi muốn ai cũng có thể sử dụng sol.pizza và đến Sol. Bản tuyên bố này nói về cả hai.'),
         '<h2>%s</h2><p>%s</p><p>%s</p>' % (
             t('The website', 'Trang web'),
-            t('We aim to meet the Web Content Accessibility Guidelines (WCAG) 2.2 at level AA. Every page, in '
-              'English and Vietnamese, on a phone and a computer, goes through an automated accessibility test '
-              '(axe) each time the site changes, and its menus, forms and cookie choices are tested with a '
-              'keyboard.',
-              'Chúng tôi hướng tới đáp ứng Hướng dẫn về khả năng tiếp cận nội dung web (WCAG) 2.2, mức AA. Mỗi '
-              'trang, bằng tiếng Anh và tiếng Việt, trên điện thoại và máy tính, đều được kiểm tra tự động về khả '
-              'năng tiếp cận (axe) mỗi khi trang web thay đổi, còn các menu, biểu mẫu và lựa chọn cookie được kiểm '
-              'tra bằng bàn phím.'),
+            t('We aim to meet the Web Content Accessibility Guidelines (WCAG) 2.2 at level AA. We test every '
+              'page, in English and Vietnamese, on a phone and a computer, with an automated accessibility '
+              'checker (axe), and check the menu, the cookie choices and the enquiry forms with a keyboard.',
+              'Chúng tôi hướng tới đáp ứng Hướng dẫn về khả năng tiếp cận nội dung web (WCAG) 2.2, mức AA. Chúng '
+              'tôi kiểm tra mọi trang, bằng tiếng Anh và tiếng Việt, trên điện thoại và máy tính, bằng công cụ '
+              'kiểm tra khả năng tiếp cận tự động (axe), và kiểm tra menu, lựa chọn cookie và các biểu mẫu bằng '
+              'bàn phím.'),
             t('The site works the same whether or not you accept cookies, and moves less when your device asks '
               'for less motion.',
               'Trang web hoạt động như nhau dù bạn có chấp nhận cookie hay không, và hạn chế chuyển động khi thiết '
@@ -3222,11 +3263,15 @@ def build_accessibility():
               '%s or write to <a href="mailto:%s">%s</a>, and we’ll book for you.' % (PHONE, EMAIL, EMAIL),
               'Biểu mẫu đặt bàn là của ResDiary, nằm trong trang của chúng tôi. Nếu bạn gặp khó khăn, hãy gọi '
               '%s hoặc viết cho chúng tôi qua <a href="mailto:%s">%s</a>, chúng tôi sẽ đặt bàn giúp bạn.'
-              % (PHONE, EMAIL, EMAIL))),
+              % (PHONE, EMAIL, EMAIL)) if RESDIARY_URL else
+            t('To book, call us on %s or write to <a href="mailto:%s">%s</a>, and we’ll look after the rest.'
+              % (PHONE, EMAIL, EMAIL),
+              'Để đặt bàn, hãy gọi %s hoặc viết cho chúng tôi qua <a href="mailto:%s">%s</a>, chúng tôi sẽ lo '
+              'phần còn lại.' % (PHONE, EMAIL, EMAIL))),
         '<h2>%s</h2><p>%s</p>' % (
             t('The restaurant', 'Nhà hàng'),
             t('Step-free access, the lift and the toilets: %s' % TO_COME,
-              'Lối đi không bậc, thang máy và nhà vệ sinh: %s' % TO_COME)),
+              'Lối vào không bậc thềm, thang máy và nhà vệ sinh: %s' % TO_COME)),
         '<h2>%s</h2><p>%s</p>' % (
             t('Tell us', 'Hãy cho chúng tôi biết'),
             t('If something on the site or at the restaurant gets in your way, tell us: '
@@ -3282,13 +3327,14 @@ def press_photos():
 
 def build_press():
     opening = t('%s %d' % (en_date(OPENING_DAY), OPENING_DAY.year) if OPENING_DAY else 'Soon',
-                vi_date(OPENING_DAY, year=True) if OPENING_DAY else 'Sắp tới')
+                vi_date(OPENING_DAY, year=True)[0].upper() + vi_date(OPENING_DAY, year=True)[1:]
+                if OPENING_DAY else 'Sắp tới')
     facts = [
         (t('Name', 'Tên'), 'Sol'),
         (t('What it is', 'Sol là gì'),
          t('An Italian-American restaurant: pizza from a wood-fired oven, pasta made in-house, and %d wines, %d '
            'of them by the glass.' % (WINES_TOTAL, WINES_GLASS),
-           'Nhà hàng Ý–Mỹ: pizza lò củi, mì Ý làm tại nhà hàng, và %d loại vang, %d loại có phục vụ theo ly.'
+           'Nhà hàng Ý–Mỹ: pizza lò củi, mì Ý làm tại nhà hàng và %d loại vang, %d loại có phục vụ theo ly.'
            % (WINES_TOTAL, WINES_GLASS))),
         (t('Where', 'Địa chỉ'), t(ADDRESS_EN, ADDRESS_VI)),
     ] + ([(t('Opening', 'Khai trương'), opening, 'when-pre')] if SITE_STATE != 'open' else []) + [
@@ -3310,7 +3356,7 @@ def build_press():
         '<main id="main">',
         '<div class="wrap">%s</div>' % page_title(t('Press', 'Báo chí'), t('For the press', 'Dành cho báo chí'),
                                                   t('The facts, the logo, and who to ask.',
-                                                    'Thông tin, logo, và đầu mối liên hệ.')),
+                                                    'Thông tin, logo và đầu mối liên hệ.')),
         '<section class="prose-section wrap" aria-labelledby="s-facts"><header class="section-head">%s<h2 id="s-facts">%s'
         '</h2></header><dl class="gtk-items">%s</dl></section>'
         % (sun(1), t('The facts', 'Thông tin'), ''.join(
@@ -3333,8 +3379,8 @@ def build_press():
     return page('/press/', 'page-press', ('Press — Sol, Tây Hồ', 'Báo chí — Sol, Tây Hồ'),
                 ('Sol for the press: the facts, the logo, and who to ask. An Italian-American restaurant at No 7, '
                  'Lane 88 Quang An, Tây Hồ, Hanoi.',
-                 'Sol dành cho báo chí: thông tin, logo, và đầu mối liên hệ. Nhà hàng Ý–Mỹ tại số 7, ngõ 88 Quảng '
-                 'An, Tây Hồ, Hà Nội.'), main, og='home')
+                 'Thông tin về Sol dành cho báo chí: thông tin, logo và đầu mối liên hệ. Nhà hàng Ý–Mỹ tại số 7, '
+                 'ngõ 88 Quảng An, Tây Hồ, Hà Nội.'), main, og='home')
 
 
 # ==========================================================================
@@ -3895,8 +3941,8 @@ def build_404():
     main = ('<main id="main" class="wrap">\n<header class="page-title"><h1>%s</h1><p class="page-lead">%s</p></header>\n'
             '<div class="actions">%s</div>\n<ul class="paths-404">%s</ul>\n'
             '</main>\n' % (t('We can’t find that page.', 'Chúng tôi không tìm thấy trang này.'),
-                           t('It may have moved. Try one of these:', 'Có thể trang đã được chuyển. Bạn thử một trong '
-                                                                       'những trang sau:'),
+                           t('It may have moved. Try one of these:', 'Có thể trang đã được chuyển. Bạn hãy thử một '
+                                                                       'trong những trang sau:'),
                            buttons(options),
                            ''.join('<li><a class="link-sc" href="%s">%s</a></li>' % p for p in paths)))
     # Workers serve the nearest 404.html: /vi/404.html for a missing /vi/… address, in
@@ -4353,7 +4399,7 @@ def check_languages():
         problems.append('dist/vi/dough/: the kitchen has no Vietnamese copy (it would skip the password)')
     listed = read(os.path.join(ROOT, 'CONTENT-NEEDED.md'))
     problems += ['gate %r ("%s") is not in CONTENT-NEEDED.md' % (k, w) for k, w in sorted(GATES.items())
-                 if '`%s`' % k not in listed]
+                 if '`%s`' % k not in listed and not (k.startswith('event-') and '`event-<slug>`' in listed)]
     if problems:
         raise SystemExit('Language check failed:\n  ' + '\n  '.join(problems))
     print('language check: %d pages, each in English and Vietnamese; %d sections waiting for content'

@@ -150,8 +150,10 @@ with its nights, and once we have them its line, times, chefs, menu, price and h
 book (the file explains each field). `/events/` lists the editions coming up, then the
 past ones; the home page shows the next one, after dark. An edition counts as coming up
 until 23:59 on its last night, Hanoi time, and the browser moves it to Past then, so
-nothing waits for a rebuild. Its own page, `/events/<slug>/`, goes live once its line
-(`summary_en`, `summary_vi`) is in; until then it's listed with its dates.
+nothing waits for a rebuild (an edition that runs past midnight, `18:00–01:00`, ends at
+its closing time). Its own page, `/events/<slug>/`, goes live once its line (`summary_en`,
+`summary_vi`) is in; until then it's listed with its dates. A new edition is just a new
+entry: nothing else to change.
 
 ### Photographs
 
@@ -197,7 +199,8 @@ English pages and `185.000` on Vietnamese ones, with "Prices in Vietnamese đồ
 once under the title; a page's "A first draft" note goes when every item on it has its
 price. `"updated"` (`YYYY-MM-DD`) puts "Menu updated …" at the foot of each menu page.
 The Food page explains its marks (Veg: vegetarian); add a mark only once the kitchen
-confirms it, with its meaning in both languages (`tag_meaning`, `tag_meaning_vi`).
+confirms it, with its Vietnamese name (`tag_labels_vi`) and its meaning in both languages
+(`tag_meaning`, `tag_meaning_vi`).
 The menus print cleanly: no bars, banners or buttons on paper.
 
 The wine and bar pages end with the line on alcohol (`drinks` in the data: "We don't

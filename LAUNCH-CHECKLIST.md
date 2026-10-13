@@ -217,8 +217,8 @@ No Worker binding is needed: the bucket is reached over its own address.
 
 ### 15. The legal pages: the lawyer's review
 
-Drafts waiting in the full preview (`/privacy/guests/`, `/accessibility/`; the booking
-terms on `/booking/`), each marked "Draft":
+Drafts waiting in the full preview, each marked "Draft": `/privacy/guests/` and
+`/accessibility/`. (The booking terms on `/booking/` wait for their content first.)
 
 - [ ] The guest privacy notice: the retention periods, the list of companies that handle
       guests' data, and the wording. Once approved, delete its line in `WAITING`
