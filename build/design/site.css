@@ -170,7 +170,9 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
 .role-links { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 20px; margin-top: 22px; }
 .role .role-links .link-sc { margin-top: 0; }
 @media (min-width: 901px) {
-  .role-list-3 { grid-template-columns: repeat(3, 1fr); }
+  /* minmax(0, …): a long Vietnamese line wraps in its card instead of widening the page */
+  .role-list-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .role-list-3 .role { overflow-wrap: break-word; }
   .role-list-3 .role { display: flex; flex-direction: column; }
   .role-list-3 .role-links { margin-top: auto; padding-top: 22px; }
 }
