@@ -77,6 +77,13 @@ const LIMITS = {'largest-contentful-paint': 2500, 'total-blocking-time': 200, 'c
     }
     const botScript = JSON.stringify(lhr.audits.deprecations.details || {}).includes('/cdn-cgi/challenge-platform/');
     if (misses.length && botScript) console.log('     (Cloudflare\'s bot script, on sol.pizza only: LAUNCH-CHECKLIST.md §6)');
+    // Cloudflare answers in HTTP/2 or 3; a network that fetches it in HTTP/1.1 (a proxy that
+    // opens the encryption) makes Lighthouse count many more connections, and slower loads
+    const doc = (lhr.audits['network-requests'].details.items || []).find(r => r.resourceType === 'Document');
+    if (doc && doc.protocol === 'http/1.1' && !/^http:\/\/localhost/.test(base)) {
+      console.log('     (fetched over HTTP/1.1 here, through a proxy or an old network: the timings are pessimistic.' +
+                  ' Google\'s own measurement: https://pagespeed.web.dev/)');
+    }
     if (misses.length) failed++;
   }
   await ctx.close();

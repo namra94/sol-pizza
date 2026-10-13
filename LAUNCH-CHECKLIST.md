@@ -270,6 +270,7 @@ age check. The site isn't an e-commerce platform: booking a table needs no notif
        this makes it permanent and tells search engines.)
 2. [ ] ResDiary live, and `RESDIARY_URL` set.
 3. [ ] Google Business Profile: open.
-4. [ ] `npm run check -- https://sol.pizza` after the deploy.
+4. [ ] `npm run check -- https://sol.pizza` after the deploy, and Google's own measurement:
+       https://pagespeed.web.dev/ on `https://sol.pizza/`, `/menu/` and `/booking/` (Mobile).
 5. [ ] On a phone: the home page says it's open, **Book** reaches the booking form, and a
        test booking goes through (`MANUAL-TESTS.md`, "Once ResDiary is live").
