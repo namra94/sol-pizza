@@ -80,7 +80,8 @@ and Trade notification for online booking). The drinks offers stay as they are.
 
 | What | Where it goes | Format | Who has it |
 | --- | --- | --- | --- |
-| The guest privacy notice's facts | `/privacy/guests/`: how long booking and enquiry details are kept, and who processes them (ResDiary, Google Workspace, Cloudflare, Google Analytics, Meta, Adobe Fonts) | Retention periods; any processor missing from the list | Arman, the lawyer |
+| The guest privacy notice's facts | `/privacy/guests/`: how long booking and enquiry details are kept, and who processes them (ResDiary, Google Workspace, Cloudflare, Adobe Fonts; Google Analytics and Meta with a yes to cookies) | Retention periods; any processor missing from the list | Arman, the lawyer |
+| Allergies (health data) | `/privacy/guests/` says the team asks a guest's consent before recording an allergy or dietary need: is that how it will work, and is that consent enough under Law 91/2025? | Yes or what to change | Arman, the lawyer |
 
 ## Gated sections
 
@@ -93,22 +94,22 @@ Each key below is a section the public build leaves out until its content arrive
 | `private-dining-menus` | `/private-dining/`, "Set menus": menus for groups and their prices |
 | `private-dining-minimum` | `/private-dining/`, "Minimum spend" for a private space |
 | `visit-last-orders` | `/visit-us/`, under the hours: last orders (Last orders, above) |
-| `visit-capacity` | `/visit-us/`, Good to know, "Big groups": how many seats in all, the largest table (Large groups, below) |
-| `visit-getting-here` | `/visit-us/`, "Getting here and parking": motorbike and car parking, where Grab drops off (Getting here, below) |
-| `visit-access` | `/visit-us/`, "Step-free access and the lift": the lift, steps, the toilets (Getting here, below) |
-| `visit-payment` | `/visit-us/`, "Paying": cash, which cards, transfer, e-wallets (Payment methods, below) |
-| `visit-corkage` | `/visit-us/`, "Bringing your own wine": whether guests can, and the corkage fee (Getting here, below) |
-| `visit-dress` | `/visit-us/`, "What to wear": whether there's a dress code (Getting here, below) |
-| `visit-dogs` | `/visit-us/`, "Dogs": whether dogs are welcome, inside or out (Getting here, below) |
-| `visit-smoking` | `/visit-us/`, "Smoking": whether there's anywhere to smoke (Getting here, below) |
-| `about-closing` | `/about/`, Sol Pizza: a line or two on what closing it meant to you and the team (Sol Pizza to Sol, below) |
+| `visit-capacity` | `/visit-us/`, Good to know, "Big groups": how many seats in all, the largest table (Large groups, above) |
+| `visit-getting-here` | `/visit-us/`, "Getting here and parking": motorbike and car parking, where Grab drops off (Getting here, above) |
+| `visit-access` | `/visit-us/`, "Step-free access and the lift": the lift, steps, the toilets (Getting here, above) |
+| `visit-payment` | `/visit-us/`, "Paying": cash, which cards, transfer, e-wallets (Payment methods, above) |
+| `visit-corkage` | `/visit-us/`, "Bringing your own wine": whether guests can, and the corkage fee (Getting here, above) |
+| `visit-dress` | `/visit-us/`, "What to wear": whether there's a dress code (Getting here, above) |
+| `visit-dogs` | `/visit-us/`, "Dogs": whether dogs are welcome, inside or out (Getting here, above) |
+| `visit-smoking` | `/visit-us/`, "Smoking": whether there's anywhere to smoke (Getting here, above) |
+| `about-closing` | `/about/`, Sol Pizza: a line or two on what closing it meant to you and the team (Sol Pizza to Sol, above) |
 | `about-dough` | `/about/`, "The dough": its flours, how long it ferments, how it's baked, in the kitchen's words |
-| `about-team` | `/about/`, "The team": a portrait and two or three lines on each person (The team, below) |
-| `company-tax-code` | The footer's last line: the tax code (`TAX_CODE` in `build/gen.py`; Tax code, below) |
-| `press-contact` | `/press/`, "Who to ask": a name and an email (`PRESS_CONTACT`; Press contact, below). Until then it says hello@sol.pizza |
-| `press-photos` | `/press/`: approved photographs to download, with their credits (Photography, below) |
-| `home-press` | The home page: press or review quotes (Press and review quotes, below) |
-| `event-eclipse-1` | The whole page `/events/eclipse-1/`: its line (Eclipse, above). It goes live by itself once `summary_en` and `summary_vi` are in `build/events-data.json` |
-| `gift-cards` | The whole page `/gift-cards/`: the values, how long a card lasts, how to buy one (Gift cards, below). To publish it, delete its line in `WAITING` in `build/gen.py` |
-| `legal-guest-privacy` | The whole page `/privacy/guests/`, the guest privacy notice: the lawyer's approval, and the retention periods (Legal, below). Then delete its line in `WAITING` |
-| `legal-accessibility` | The whole page `/accessibility/`, the accessibility statement: the lawyer's approval, and the building's access facts (Getting here, below). Then delete its line in `WAITING` |
+| `about-team` | `/about/`, "The team": a portrait and two or three lines on each person (The team, above) |
+| `company-tax-code` | The footer's last line: the tax code (`TAX_CODE` in `build/gen.py`; Tax code, above) |
+| `press-contact` | `/press/`, "Who to ask": a name and an email (`PRESS_CONTACT`; Press contact, above). Until then it says hello@sol.pizza |
+| `press-photos` | `/press/`: approved photographs to download, with their credits (Photography, above) |
+| `home-press` | The home page: press or review quotes (Press and review quotes, above) |
+| `event-<slug>` | The whole page of each Eclipse edition, `/events/<slug>/` (today `event-eclipse-1`): its line (Eclipse, above). It goes live by itself once `summary_en` and `summary_vi` are in `build/events-data.json`; a new edition needs nothing here |
+| `gift-cards` | The whole page `/gift-cards/`: the values, how long a card lasts, how to buy one (Gift cards, above). To publish it, delete its line in `WAITING` in `build/gen.py` |
+| `legal-guest-privacy` | The whole page `/privacy/guests/`, the guest privacy notice: the lawyer's approval, and the retention periods (Legal, above). Then delete its line in `WAITING` |
+| `legal-accessibility` | The whole page `/accessibility/`, the accessibility statement: the lawyer's approval, and the building's access facts (Getting here, above). Then delete its line in `WAITING` |

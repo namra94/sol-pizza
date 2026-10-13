@@ -344,6 +344,7 @@
     if (!name) return;
     var params = {link_location: where(a)};
     if (name === 'email_click') params.address = href.replace(/^mailto:/, '').split('?')[0];
+    if (a.getAttribute('data-booking')) params.booking_for = a.getAttribute('data-booking');   // an Eclipse edition
     track(name, params);
   }, true);
 

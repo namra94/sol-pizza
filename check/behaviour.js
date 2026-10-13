@@ -259,6 +259,46 @@ async function main() {
     await ctx.close();
   }
 
+  console.log('Keyboard');
+  {
+    // The cookie choices, the menu and the enquiry forms work from the keyboard alone
+    const {ctx, page} = await visitor({width: 390, height: 844});
+    await page.goto(base + '/about/', {waitUntil: 'load'});
+    let reached = false;
+    for (let i = 0; i < 80 && !reached; i++) {
+      await page.keyboard.press('Tab');
+      reached = await page.evaluate(() => !!(document.activeElement && document.activeElement.closest('#consent')));
+    }
+    ok(reached, 'Tab reaches the cookie banner');
+    await page.focus('#consent [data-consent="none"]');
+    await page.keyboard.press('Enter');
+    ok(!(await page.isVisible('#consent')), 'Enter on Reject all closes the banner');
+    await page.focus('[data-sheet-open]');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(150);
+    const inside = await page.evaluate(() => !!document.activeElement.closest('#navsheet'));
+    ok((await page.isVisible('#navsheet')) && inside, 'Enter on the menu button opens the menu, with the focus in it');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(150);
+    ok(!(await page.isVisible('#navsheet')) &&
+       await page.evaluate(() => document.activeElement.matches('[data-sheet-open]')),
+       'Escape closes it, and the focus goes back to the button');
+    if (await page.goto(base + '/private-dining/').then(() => page.$('#enquire form'))) {
+      const soon = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
+      await page.focus('#f-private-dining-name');
+      await page.keyboard.type('Lan');
+      await page.keyboard.press('Tab'); await page.keyboard.type('0900000000');
+      await page.keyboard.press('Tab');                              // email (optional)
+      await page.keyboard.press('Tab'); await page.fill('#f-private-dining-date', soon);
+      await page.focus('#f-private-dining-guests');                   // (Tab steps through the date's parts)
+      await page.keyboard.type('8');
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(300);
+      ok(await page.isVisible('#enquire .mailform-done'), 'an enquiry form fills and sends from the keyboard');
+    }
+    await ctx.close();
+  }
+
   console.log('Pages: events, the home page, 404');
   {
     const {ctx, page} = await visitor({width: 1280, height: 900});

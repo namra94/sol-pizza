@@ -428,7 +428,9 @@ html:not(.is-open) .when-open, html.is-open .when-pre { display: none !important
 span.gated { display: inline; margin: 0; padding: 2px 4px; }      /* inside a line of text */
 span.gated .gated-label { margin: 0 6px 0 0; padding: 0 6px; }
 .gated-page { display: block; margin-top: 24px; }
-.team-cards { list-style: none; padding: 0; }
+.prose .team-cards { list-style: none; padding: 0; }
+.prose .team-cards li + li { margin-top: 0; }
+.prose .team-cards h4 { text-transform: none; letter-spacing: 0; }
 .card h4 { font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
 .gated-label { display: inline-block; margin-bottom: 12px; padding: 4px 10px; background: var(--sun); color: var(--wood);
   font-family: var(--serif); font-size: var(--fs-label); line-height: 18px; letter-spacing: .06em; }
@@ -512,8 +514,12 @@ html:not(.js) .mailform-fields, html:not(.js) .mailform .actions { display: none
 .ev-none-msg.is-shown, html.ev-none-up .ev-none-msg { display: block; }
 .ev-past-section { display: none; }
 .ev-past-section.has-past, html.ev-some-past .ev-past-section { display: block; }
-.ev-menu { list-style: none; padding: 0; text-align: center; }
-.ev-menu li + li { margin-top: 10px; }
+.prose .ev-menu { list-style: none; padding: 0; text-align: center; }
+.prose .ev-menu li + li { margin-top: 10px; }
+/* The home page's next Eclipse: one block per edition to come, the first not over showing
+   (html.next-<slug>, EV_STYLE); without JavaScript, the first. */
+.next-ev { display: none; }
+html:not(.js) .next-ev.is-next { display: block; }
 .ev-over { margin-top: 48px; text-align: center; }
 .ev-over a { color: var(--sol-red); border-bottom: 1px solid currentColor; }
 @media (max-width: 760.98px) { .ev-section { margin-top: 56px; } .ev { flex-basis: 100%; } }
@@ -542,7 +548,8 @@ html:not(.js) .mailform-fields, html:not(.js) .mailform .actions { display: none
 /* ------------------------------------------------------------------ menu prices
    menu-data.json: a dish's price after its name, a wine's by the glass and the bottle
    under its details; the currency once, under the page title. */
-.item-name .price { float: right; margin-left: 16px; font-variant-numeric: tabular-nums; color: var(--wood); }
+.item-name.has-price { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.item-name .price { flex: none; font-variant-numeric: tabular-nums; color: var(--wood); }
 .item-price { margin-top: 3px; font-size: var(--fs-small); line-height: 1.5; font-variant-numeric: tabular-nums; color: var(--wood); }
 .currency { margin-top: 14px; text-align: center; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
 .menu-updated { margin-top: 18px; text-align: center; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
@@ -552,7 +559,7 @@ html:not(.js) .mailform-fields, html:not(.js) .mailform .actions { display: none
    bars, banners or buttons, nothing faded or dark. */
 @media print {
   .mbar, .sitebar, .sitebar-mark, .subnav-static, .navsheet, .actionbar, .consent, .ann, .skip,
-  .footer-news, .footer-cols nav, .legal .linkish, .home-news, .actions, .btn, .gated { display: none !important; }
+  .footer-news, .footer-cols nav, .legal-settings, .home-news, .actions, .btn, .gated { display: none !important; }
   .masthead { display: flex !important; justify-content: center; }
   html, body { background: #fff !important; }
   body { padding: 0 !important; }
