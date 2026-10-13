@@ -1568,7 +1568,7 @@ def mailform(kind, subject, fields, submit):
     """A form that writes an email, for an enquiry (no server keeps it): the guest's email
     app opens with the details filled in, to ENQUIRIES, the subject in English (the inbox
     is sorted by it) and the details in the page's language (site.js builds it, and fires
-    enquiry_submit). Without JavaScript the browser sends the form as the email's text.
+    enquiry_submit). Without JavaScript, just the address to write to.
     The address is always on the form too, for a computer with no email app, and after
     Send the message is on the page to copy.
     fields: (name, label, type, required); type is an <input> type or 'textarea'."""
@@ -1585,17 +1585,18 @@ def mailform(kind, subject, fields, submit):
                        '' if required else ' <span class="opt">%s</span>' % t('(optional)', '(không bắt buộc)'),
                        control))
     mail = '<a href="mailto:%s">%s</a>' % (ENQUIRIES, ENQUIRIES)
-    # Without JavaScript (rare) the fields stay hidden and the note gives the address
-    # (site.css: html:not(.js)); browsers send a form as an email unreliably.
-    return ('<form class="mailform" action="mailto:%s?subject=%s" method="post" enctype="text/plain" '
+    # No action: site.js writes the email. (A mailto: action is "mixed content" to
+    # browsers, and sends forms garbled.) Without JavaScript (rare) the fields stay
+    # hidden and the note gives the address (site.css: html:not(.js)); onsubmit stops a
+    # form ever sending itself to the page, should site.js fail to load.
+    return ('<form class="mailform" onsubmit="return false" '
             'data-mailform="%s" data-category="%s" data-to="%s" data-subject="%s">'
             '<div class="mailform-fields">%s</div>'
             '<div class="actions"><button class="btn btn-red" type="submit">%s</button></div>'
             '<p class="mailform-note">%s</p>'
             '<div class="mailform-done" hidden><p tabindex="-1">%s</p><textarea readonly rows="8" %s></textarea></div>'
             '</form>'
-            % (ENQUIRIES, encode_uri_component(subject.strip()), kind, esc_attr(subject.rstrip(' —')), ENQUIRIES,
-               esc_attr(subject), ''.join(rows), submit,
+            % (kind, esc_attr(subject.rstrip(' —')), ENQUIRIES, esc_attr(subject), ''.join(rows), submit,
                t('This opens your email app with the details filled in: send it from there. Or write to us at %s.' % mail,
                  'Nút này mở ứng dụng email với nội dung đã điền sẵn: bạn chỉ cần gửi đi. Hoặc viết cho chúng tôi '
                  'qua %s.' % mail),
