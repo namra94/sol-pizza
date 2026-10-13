@@ -1,6 +1,7 @@
 // Renders the share cards: build/og/html/*.html (written by `npm run build`) to
 // build/og/png/*.png at 1200 × 630, in the site's own fonts, and notes in
-// build/og/cards.json what each was rendered from (the build checks it).
+// build/og/cards.json what each was rendered from; `npm run pack-assets` then adds
+// the hash of the PNG that ships. The build checks both.
 //   npm run build && npm run og && npm run pack-assets      (from the repo's root)
 // The cards load http://localhost:8897/assets/fonts.css; this answers that address
 // from build/ itself (build/fonts.css, build/fonts/, build/brand/), so no server runs.
@@ -45,7 +46,7 @@ function fontFile(p) {
     if (missing) throw new Error(card + ': the font ' + missing + ' did not load (run `npm ci` and `npm run build` first)');
     const png = card.replace(/\.html$/, '.png');
     await page.screenshot({path: path.join(OG, 'png', png)});
-    record[png] = crypto.createHash('sha1').update(html).digest('hex');
+    record[png] = {from: crypto.createHash('sha1').update(html).digest('hex')};   // pack-assets adds png
     console.log('rendered', png);
   }
   await browser.close();

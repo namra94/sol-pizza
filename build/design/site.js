@@ -106,13 +106,15 @@
   }
 
   /* 2. EN · VI ---------------------------------------------------------- */
-  document.addEventListener('click', function (e) {
+  function langChoice(e) {
     var a = e.target.closest && e.target.closest('[data-lang-link]');
     if (a) put('sol-lang', a.getAttribute('data-lang-link'));
-  });
+  }
+  document.addEventListener('click', langChoice);
+  document.addEventListener('auxclick', langChoice);      // opened in a new tab
 
   /* 3. Cookies ---------------------------------------------------------- */
-  var CONSENT_VERSION = 1;            // build/gen.py CONSENT_VERSION: the head script checks it too
+  var CONSENT_VERSION = Number('__CONSENT_VERSION__');   // build/gen.py CONSENT_VERSION fills it in
   var GA = '__GA_ID__', PIXEL = '__FB_PIXEL__';
   var debugParam = /[?&]debug_analytics=([01])(?:&|$)/.exec(location.search);
   if (debugParam) { if (debugParam[1] === '1') put('sol-debug', '1'); else drop('sol-debug'); }
@@ -182,7 +184,8 @@
     queued.forEach(function (e) { send(e[0], e[1]); });
   }
 
-  // Taking a yes back: remove what the tool left in the browser, then reload without it.
+  // Saying no: remove what the tool left in the browser (from a yes now taken back, an
+  // older one that ran out, or the days before the banner).
   function forget(analytics, ads) {
     var names = document.cookie.split(';').map(function (c) { return c.split('=')[0].trim(); });
     var host = location.hostname.split('.');
@@ -203,6 +206,17 @@
   var settings = document.getElementById('consent-settings');
   var opener = null;
 
+  // While the banner is up, the page keeps room for it below the footer and scrolls
+  // whatever has the focus clear of it (site.css, --consent-h).
+  function roomForBanner() {
+    if (banner) root.style.setProperty('--consent-h', banner.offsetHeight + 'px');
+  }
+  if (banner) {
+    if ('ResizeObserver' in window) new ResizeObserver(roomForBanner).observe(banner);
+    else window.addEventListener('resize', roomForBanner);
+    roomForBanner();
+  }
+
   function showSettings(show) {
     if (!banner || !settings) return;
     settings.hidden = !show;
@@ -217,16 +231,15 @@
   }
 
   function choose(analytics, ads) {
-    var before = consent;
     consent = {v: CONSENT_VERSION, t: new Date().toISOString(), analytics: !!analytics, ads: !!ads};
     put('sol-consent', JSON.stringify(consent));
     var hadFocus = banner && banner.contains(document.activeElement);
     root.classList.remove('consent-ask', 'consent-open');
     showSettings(false);
     if (debug) console.log('[sol] cookie choice', JSON.stringify(consent));
-    var withdrawn = before && ((before.analytics && !consent.analytics) || (before.ads && !consent.ads));
-    if (withdrawn) {
-      forget(before.analytics && !consent.analytics, before.ads && !consent.ads);
+    forget(!consent.analytics, !consent.ads);
+    // A tool already running on this page would only set its cookies again: reload without it
+    if ((started.ga && !consent.analytics) || (started.px && !consent.ads)) {
       location.reload();
       return;
     }
@@ -375,6 +388,9 @@
     var id = b.getAttribute('data-ann-close');
     put('sol-ann-' + id, '1');
     root.classList.remove('ann-' + id);
+    // the focus was on the button just hidden: on to the next thing, the logo
+    var next = document.querySelector(wide.matches ? '.masthead a' : '.mbar a');
+    if (next) next.focus({preventScroll: true});
   });
 
   /* 6. Slow fades ------------------------------------------------------- */

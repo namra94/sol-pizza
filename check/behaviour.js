@@ -82,6 +82,13 @@ async function main() {
     r = await page.goto(base + '/no-such-page/');
     h = await html(page);
     ok(r.status() === 404 && h.lang === 'en', 'a missing address: the English 404');
+    await page.goto(base + '/vi/jobs/sous-chef');
+    ok(await page.$eval('.vi-note', el => el.closest('[lang]').getAttribute('lang')) === 'vi',
+       'a filled role: its Vietnamese note is marked Vietnamese inside the English description');
+    await page.goto(base + '/vi//example.com/#en');
+    await page.waitForTimeout(300);
+    ok(new URL(page.url()).origin === new URL(base).origin,
+       '/vi//example.com/#en stays on this site (' + page.url() + ')');
     await ctx.close();
   }
 
@@ -122,6 +129,26 @@ async function main() {
     await page.waitForTimeout(1500);
     ok(tools.some(u => /googletagmanager/.test(u)) && tools.some(u => /connect\.facebook\.net/.test(u)),
        'Accept all loads both');
+    await ctx.close();
+  }
+  {
+    // A visitor from before the banner (or with a yes that has run out) still has the
+    // tools' cookies: a no removes them.
+    const {ctx, page} = await visitor({width: 1280, height: 800});
+    const host = new URL(base).hostname;
+    await ctx.addCookies(['_ga', '_ga_SLBWDVH550', '_fbp'].map(name => ({name, value: 'GA1.1.123.456', domain: host, path: '/'})));
+    await page.goto(base + '/about/', {waitUntil: 'load'});
+    // the banner never hides what has the focus: the footer's last control, focused,
+    // sits clear of it
+    await page.focus('.site-footer [data-consent-open]');
+    await page.waitForTimeout(200);
+    const gap = await page.evaluate(() => document.querySelector('#consent').getBoundingClientRect().top -
+                                          document.querySelector('.site-footer [data-consent-open]').getBoundingClientRect().bottom);
+    ok(gap >= 0, 'the banner never covers the focus: Cookie settings sits ' + Math.round(gap) + 'px above it');
+    await page.click('[data-consent="none"]');
+    await page.waitForTimeout(300);
+    const left = (await ctx.cookies()).map(c => c.name).filter(n => /^_ga|^_fbp/.test(n));
+    ok(left.length === 0, 'Reject all removes cookies from before the banner (' + (left.join(', ') || 'none left') + ')');
     await ctx.close();
   }
   {

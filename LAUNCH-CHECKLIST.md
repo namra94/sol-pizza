@@ -77,15 +77,22 @@ understand:
 ```
 (http.host eq "sol.pizza" and http.request.uri.query contains "lang=vi"
  and not starts_with(http.request.uri.path, "/vi/")
+ and http.request.uri.path ne "/vi"
+ and not http.request.uri.path contains "."
  and not starts_with(http.request.uri.path, "/dough")
  and not starts_with(http.request.uri.path, "/api/")
- and not starts_with(http.request.uri.path, "/assets/"))
+ and not starts_with(http.request.uri.path, "/careers")
+ and not http.request.uri.path in {"/story" "/story/" "/visit" "/visit/" "/wine" "/wine/"
+   "/wines" "/wine-list" "/winelist" "/drinks" "/book" "/book/" "/reservations" "/reservations/"})
 ```
 
 Then: **Dynamic**, `concat("https://sol.pizza/vi", http.request.uri.path)`, **301**,
 **Preserve query string** on. Check: `https://sol.pizza/about/?lang=vi` goes to
-`https://sol.pizza/vi/about/?lang=vi`. (The kitchen, `/dough/`, is left out: it has no
-Vietnamese address.)
+`https://sol.pizza/vi/about/?lang=vi`, and `https://sol.pizza/story/?lang=vi` still
+reaches `/vi/about/`. Left out: the kitchen (`/dough/`, no Vietnamese address), files
+(addresses with a dot), and the old addresses in `src/_redirects`: those go to their new
+page first, which then opens in Vietnamese. If `src/_redirects` gains an address, add it
+to the list in braces.
 
 ### 6. Cloudflare's bot script (decide)
 

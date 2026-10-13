@@ -149,7 +149,6 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
 
 /* role pages: the Vietnamese note above an English-only description */
 .prose .vi-note { color: var(--ink-muted); }
-html:not([lang="vi"]) .prose .vi-note + p { margin-top: 0; }   /* the hidden note is still a sibling */
 
 /* links in the "Recently filled" list on /jobs/ */
 .filled a { border-bottom: 1px solid var(--line-brand); }
@@ -303,6 +302,11 @@ html:not([lang="vi"]) .prose .vi-note + p { margin-top: 0; }   /* the hidden not
 }
 .consent::before { content: ""; display: block; height: 4px; border-bottom: 1px solid var(--line-brand); }
 .consent-ask .consent, .consent-open .consent { display: block; }
+/* While it's up, the page keeps room for it below the footer, and whatever has the focus
+   scrolls clear of it (site.js sets --consent-h to its height; the phone bar is hidden). */
+html.consent-ask, html.consent-open { scroll-padding-bottom: calc(var(--consent-h, 0px) + 16px); }
+html.consent-ask body, html.consent-open body,
+html.consent-ask body.has-actionbar, html.consent-open body.has-actionbar { padding-bottom: var(--consent-h, 0px); }
 .consent-in { display: grid; gap: 10px; padding-top: 14px; padding-bottom: 16px; }
 .consent-text { max-width: 760px; font-size: var(--fs-small); line-height: 1.5; }
 .consent-text a { color: var(--sol-red); border-bottom: 1px solid currentColor; }
