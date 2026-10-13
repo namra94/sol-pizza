@@ -472,7 +472,7 @@ def announcement_bars():
 # --------------------------------------------------------------------------
 LANGS = ('en', 'vi')
 OG_LOCALE = {'en': 'en_GB', 'vi': 'vi_VN'}
-CONSENT_VERSION = 1           # raise it when the banner's wording changes: everyone is asked again
+CONSENT_VERSION = 1           # raise it when the banner's wording changes: everyone is asked again (head script, site.js)
 FONT_PRELOADS = {             # above the fold: the heading face and the text face
     'en': [BN_ARORA_URL, '/assets/fonts/eb-garamond-latin-400-normal.woff2'],
     'vi': ['/assets/fonts/philosopher-latin-400-normal.woff2', '/assets/fonts/philosopher-vietnamese-400-normal.woff2',
@@ -490,6 +490,8 @@ def _head_script():
     - language: an old ?lang=vi link (remembered, as it always was) or a #vi / #en link
       (such as /privacy/#vi) opens the page in that language; on the home page, the
       choice made with the EN · VI switch last time. Nothing reads the browser's language.
+      The address it goes to always stays on this site: /vi//example.com/#en goes to
+      /example.com/, never to //example.com/ (another site).
     - cookies: html.consent-ask while there is no choice (or it is a year old, or the
       banner's wording has changed since), which shows the banner (site.css).
     - opening day: html.is-open from OPENING_AT (by_state()).
@@ -504,7 +506,7 @@ def _head_script():
             "var a=l.pathname,v=/^\\/vi(\\/|$)/.test(a),q=/[?&]lang=(en|vi)(?:&|$)/.exec(l.search),"
             "h=/^#(en|vi)$/.exec(l.hash),w=q?q[1]:h?h[1]:null;"
             "if(q)p('sol-lang',q[1]);if(!w&&a==='/')w=g('sol-lang');"
-            "if(w&&(w==='vi')!==v){l.replace((w==='vi'?'/vi'+a:a.slice(3)||'/')"
+            "if(w&&(w==='vi')!==v){l.replace((w==='vi'?'/vi'+a:a.slice(3).replace(/^\\/+/,'/')||'/')"
             "+l.search.replace(/([?&])lang=(en|vi)(&|$)/,'$1').replace(/[?&]$/,'')+(h?'':l.hash));return}"
             "var c=null;try{c=JSON.parse(g('sol-consent'))}catch(e){}"
             "if(!c||c.v!==%d||!(n-Date.parse(c.t)<31536e6))d.className+=' consent-ask';"
@@ -614,7 +616,8 @@ OG_DIR = os.path.join(HERE, 'og')
 
 def og_cards():
     """Write each card's page into build/og/html/ for `npm run og`, and stop if a card in
-    build/og/png/ was rendered from other words (build/og/cards.json)."""
+    build/og/png/ was rendered from other words, or isn't the one packed after rendering
+    (build/og/cards.json: what each was rendered from, and the hash of its PNG)."""
     template = read(os.path.join(OG_DIR, 'card.html'))
     rendered = json.loads(read(os.path.join(OG_DIR, 'cards.json'))) \
         if os.path.exists(os.path.join(OG_DIR, 'cards.json')) else {}
@@ -627,13 +630,17 @@ def og_cards():
                                    else '"Philosopher",Georgia,serif',
                                    title_size=100 if lang == 'en' else 88)
             write(os.path.join(OG_DIR, 'html', card + '.html'), html)
-            if rendered.get(card + '.png') != hashlib.sha1(html.encode('utf-8')).hexdigest() or \
-                    not os.path.exists(os.path.join(OG_DIR, 'png', card + '.png')):
+            png = os.path.join(OG_DIR, 'png', card + '.png')
+            note = rendered.get(card + '.png')
+            note = note if isinstance(note, dict) else {}
+            if note.get('from') != hashlib.sha1(html.encode('utf-8')).hexdigest() or not os.path.exists(png) \
+                    or note.get('png') != hashlib.sha1(open(png, 'rb').read()).hexdigest():
                 stale.append(card + '.png')
     if stale:
-        raise SystemExit('Share cards out of date (their words or design changed since they were rendered): %s. '
-                         'Run `npm run og`, then `npm run pack-assets`, and commit build/assets.b64.json and '
-                         'build/og/cards.json (build/README.md, "Share cards").' % ', '.join(stale))
+        raise SystemExit('Share cards out of date (their words or design changed since they were rendered, or '
+                         'they were rendered and not packed): %s. Run `npm run og`, then `npm run pack-assets`, '
+                         'and commit build/assets.b64.json and build/og/cards.json (build/README.md, "Share '
+                         'cards").' % ', '.join(stale))
 
 
 CARET  = ('<svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" '
@@ -710,7 +717,7 @@ def header(cur, en_href, vi_href):
   <div class="wrap sitebar-in">
     <a class="sitebar-logo" href="/" {home}>{logo_xs}</a>
     <ul class="nav-links">{tabs}</ul>
-    <div class="sitebar-end">{sw}<a class="btn btn-red btn-sm" href="/booking/#book" data-track="book_click">{book}</a></div>
+    <div class="sitebar-end">{sw}{book}</div>
   </div>
 {dropdown}</nav>
 {static}<div class="navsheet" id="navsheet" role="dialog" aria-modal="true" {sheet_l} tabindex="-1" hidden>
@@ -718,13 +725,18 @@ def header(cur, en_href, vi_href):
     <button class="navsheet-close" type="button" {close_l} data-sheet-close>{close}</button></div>
   <ul class="navsheet-pages">{sheet_tabs}</ul>
   <div class="navsheet-foot">
-    <a class="btn btn-red" href="/booking/#book" data-track="book_click">{book_long}</a>
+    {book_long}
     <div class="navsheet-meta"><span>{hours}</span>{sw}</div>
   </div>
 </div>
 """.format(sw=sw, home=HOME_LABEL, logo_s=logo(74, 26), logo_l=logo(165, 58), logo_xs=logo(60, 21),
            open_l=label('Open navigation', 'Mở menu điều hướng'), burger=BURGER,
-           main_l=label('Main', 'Điều hướng chính'), tabs=tabs(True), book=BOOK_SHORT, book_long=BOOK,
+           main_l=label('Main', 'Điều hướng chính'), tabs=tabs(True),
+           # Book: only while the booking page is public (HIDDEN)
+           book=('<a class="btn btn-red btn-sm" href="/booking/#book" data-track="book_click">%s</a>' % BOOK_SHORT
+                 if live('booking') else ''),
+           book_long=('<a class="btn btn-red" href="/booking/#book" data-track="book_click">%s</a>' % BOOK
+                      if live('booking') else ''),
            dropdown=('  ' + subnav(' subnav-drop') + '\n') if live('menu') and not menu_page else '',
            static=(subnav(' subnav-static') + '\n') if menu_page else '',
            sheet_l=label('Navigation', 'Điều hướng'), sheet_tabs=tabs(False),
@@ -756,14 +768,15 @@ def footer():
 
 
 def actionbar():
-    """The phone bar (narrow screens): Book, then Call once online booking is live
-    (CONTACT_LIVE), then Directions. Not on /booking/ (it is the booking page) or the role
-    pages (they have the Apply bar)."""
+    """The phone bar (narrow screens): Book (while the booking page is public), then Call
+    once online booking is live (CONTACT_LIVE), then Directions. Not on /booking/ (it is
+    the booking page) or the role pages (they have the Apply bar)."""
+    book = ('<a class="btn btn-red" href="/booking/#book" data-track="book_click">%s</a>' % BOOK_SHORT
+            if live('booking') else '')
     call = ('<a class="btn btn-outline" href="%s" data-track="call_click">%s</a>' % (PHONE_TEL, t('Call', 'Gọi'))
             if CONTACT_LIVE else '')
-    return ('<nav class="actionbar" %s><a class="btn btn-red" href="/booking/#book" data-track="book_click">%s</a>%s'
-            '<a class="btn btn-outline" href="%s" data-track="directions_click">%s</a></nav>\n'
-            % (label('Quick actions', 'Thao tác nhanh'), BOOK_SHORT, call, DIRECTIONS_URL, DIRECTIONS))
+    return ('<nav class="actionbar" %s>%s%s<a class="btn btn-outline" href="%s" data-track="directions_click">%s</a>'
+            '</nav>\n' % (label('Quick actions', 'Thao tác nhanh'), book, call, DIRECTIONS_URL, DIRECTIONS))
 
 
 def consent_banner():
@@ -872,7 +885,8 @@ def _keep_lang(html, lang):
         if tag == 'span' and attrs.strip() == 'lang="%s"' % el_lang:
             out.append(inner)
         else:
-            attrs = attrs.replace(' lang="%s"' % lang, '')        # the page's own language
+            # A block keeps its lang: it may sit inside one in the other language (the
+            # Vietnamese note above an English job description).
             out.append('<%s%s>%s%s' % (tag, attrs, inner, html[close_at:i]))
 
 
@@ -1498,11 +1512,15 @@ def build_booking():
                   'style="display:block;width:100%%;min-height:640px;margin-top:26px;border:0"></iframe>\n  '
                   % (RESDIARY_URL, label('Book a table at Sol', 'Đặt bàn tại Sol')))
     else:
-        booking_p = t('Online booking opens closer to the day we open. Until then, call or email us '
-                      'and we’ll hold you a table for opening week.',
-                      'Chúng tôi sẽ mở đặt bàn trực tuyến khi gần đến ngày khai trương. Từ nay đến lúc '
-                      'đó, bạn cứ gọi điện hoặc gửi email, chúng tôi sẽ giữ bàn cho bạn trong tuần '
-                      'khai trương.')
+        # Before opening, and from opening day (by_state(): in the browser on the day)
+        booking_p = by_state(
+            t('Online booking opens closer to the day we open. Until then, call or email us '
+              'and we’ll hold you a table for opening week.',
+              'Chúng tôi sẽ mở đặt bàn trực tuyến khi gần đến ngày khai trương. Từ nay đến lúc '
+              'đó, bạn cứ gọi điện hoặc gửi email, chúng tôi sẽ giữ bàn cho bạn trong tuần '
+              'khai trương.'),
+            t('Call or email us and we’ll hold you a table.',
+              'Hãy gọi điện hoặc gửi email, chúng tôi sẽ giữ bàn cho bạn.'))
         widget = '<!-- ResDiary: set RESDIARY_URL in build/gen.py and its widget appears here. -->\n  '
     # Until online booking is live: the number and address as text to copy, not buttons
     # that open another app (Linh, 23 Sep). The Instagram handle as text too, for guests
@@ -1520,7 +1538,7 @@ def build_booking():
   {widget}<dl class="book-contact"><div><dt>{l_phone}</dt><dd>{phone}</dd></div><div><dt>Email</dt><dd>{email}</dd></div><div><dt>Instagram</dt><dd>{insta}</dd></div></dl>
   <p class="offer-note">{groups}</p>
 </div></div>
-<div class="wrap"><p class="booking-visit">{hours} · {addr}<br><a class="link-sc" href="/visit-us/">{visit}</a></p></div>
+<div class="wrap"><p class="booking-visit">{hours} · {addr}{visit}</p></div>
 </main>
 """.format(
         title=page_title(t('Reservations', 'Đặt chỗ'), BOOK, booking_p).replace(
@@ -1528,9 +1546,10 @@ def build_booking():
         widget=widget, l_phone=t('Phone', 'Điện thoại'), phone=phone, email=email, insta=insta,
         groups=t('Seven or more? Email us and we’ll look after you personally.',
                  'Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn.'),
-        hours=t('%s%s' % (HOURS_PLAIN[0], frm[0]), '%s%s' % (HOURS_PLAIN[1], frm[1])),
+        hours=t(*HOURS_PLAIN) + by_state(t(', from the day we open', ', kể từ ngày khai trương'), ''),
         addr=t(ADDRESS_EN, ADDRESS_VI),
-        visit=t('Hours, address and getting here', 'Giờ mở cửa, địa chỉ và đường đến'),
+        visit=('<br><a class="link-sc" href="/visit-us/">%s</a>'
+               % t('Hours, address and getting here', 'Giờ mở cửa, địa chỉ và đường đến') if live('visit') else ''),
     )
     how = ('Book online, or call or email us.', 'Đặt bàn trực tuyến, hoặc gọi điện hay gửi email.') if RESDIARY_URL \
         else ('Call or email to hold a table.', 'Gọi điện hoặc gửi email để giữ bàn.')
@@ -1556,8 +1575,7 @@ def build_visit():
   <section aria-labelledby="v-contact"><h2 class="label" id="v-contact">{l_talk}</h2><p><a href="{tel}">{phone}</a><br><a href="mailto:{email}">{email}</a><br>{insta}</p></section>
 </div></div>
 <section class="prose-section wrap" aria-labelledby="s-gtk"><header class="section-head">{sun}<h2 id="s-gtk">{gtk}</h2></header><dl class="gtk-items"><div><dt>{children}</dt><dd>{children_d}</dd></div></dl></section>
-<div class="wrap"><section class="offer" aria-labelledby="s-book"><h2 id="s-book">{book}</h2><p>{book_p}</p><a class="btn btn-red" href="/booking/#book" data-track="book_click">{book}</a></section></div>
-</main>
+{book_box}</main>
 """.format(
         # HIDE until supplied (CONTENT-NEEDED.md): large groups (seat count), getting here, parking.
         title=page_title(t('Visit', 'Ghé thăm'), t('Find us', 'Tìm chúng tôi'),
@@ -1567,7 +1585,8 @@ def build_visit():
                            % by_state(' Chúng tôi sắp khai trương.', ''))),
         l_hours=t('Opening hours', 'Giờ mở cửa'), hours_rows=hours_rows,
         last='<p class="small">%s</p>' % LAST_ORDERS if LAST_ORDERS else '',
-        from_open=by_state('<p class="small">%s</p>' % t('From the day we open.', 'Từ ngày chúng tôi khai trương.'), ''),
+        from_open=by_state('<p class="small">%s</p>' % t('From the day we open.', 'Từ ngày chúng tôi khai trương.'), '',
+                           tag='div'),
         l_addr=t('Address', 'Địa chỉ'), addr=t(ADDRESS_EN, ADDRESS_VI),
         maps=MAPS_URL, maps_t=MAPS_LINK_TEXT,
         l_talk=t('Talk to us', 'Liên hệ'), tel=PHONE_TEL, phone=PHONE, email=EMAIL, insta=INSTA_LINK,
@@ -1575,9 +1594,12 @@ def build_visit():
         children=t('Children', 'Trẻ em'),
         children_d=t('Very welcome. We have high chairs, and the kitchen will happily make something plain.',
                      'Rất hoan nghênh. Có ghế ăn cho bé, và bếp sẵn sàng làm món đơn giản.'),
-        book=BOOK,
-        book_p=t('Seven or more? Email us and we’ll look after you personally.',
-                 'Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn.'),
+        # Book a table: while the booking page is public (HIDDEN)
+        book_box=('<div class="wrap"><section class="offer" aria-labelledby="s-book"><h2 id="s-book">%s</h2><p>%s</p>'
+                  '<a class="btn btn-red" href="/booking/#book" data-track="book_click">%s</a></section></div>\n' % (
+                      BOOK, t('Seven or more? Email us and we’ll look after you personally.',
+                              'Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn.'),
+                      BOOK) if live('booking') else ''),
     )
     return page('/visit-us/', 'page-visit',
                 ('Visit — Sol, Tây Hồ', 'Ghé thăm — Sol, Tây Hồ'),
@@ -2943,9 +2965,12 @@ def copy_existing():
     os.makedirs(assets, exist_ok=True)
     for f in ('tokens.css', 'printed-menu.css', 'site.css', 'dough.js', 'dough-log.js'):
         shutil.copy2(os.path.join(DESIGN, f), os.path.join(assets, f))
-    # the guest pages' script, with the analytics IDs from the top of this file
-    write(os.path.join(assets, 'site.js'), read(os.path.join(DESIGN, 'site.js'))
-          .replace('__GA_ID__', GA_ID).replace('__FB_PIXEL__', FB_PIX))
+    # the guest pages' script, with the analytics IDs from the top of this file and the
+    # consent version the head script checks too
+    js = (read(os.path.join(DESIGN, 'site.js')).replace('__GA_ID__', GA_ID).replace('__FB_PIXEL__', FB_PIX)
+          .replace('__CONSENT_VERSION__', str(CONSENT_VERSION)))
+    assert not re.search(r'__[A-Z_]+__', js), 'site.js: a __PLACEHOLDER__ gen.py doesn\'t fill in'
+    write(os.path.join(assets, 'site.js'), js)
     for f in ('kitchen.css', 'kitchen.js'):                         # the kitchen's frozen shell
         shutil.copy2(os.path.join(DESIGN, 'kitchen', f), os.path.join(assets, f))
     for f in os.listdir(ASSETS):

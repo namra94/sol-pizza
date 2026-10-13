@@ -12,7 +12,8 @@ section still waiting for content, with `noindex`; see "Build modes" below. Eith
 2. **Share cards and BN Arora.** Unpacks the PNGs and the BN Arora font in
    `assets.b64.json` if they're missing, writes each share card's page into
    `og/html/` (for `npm run og`), and stops if a card's words have changed since its
-   PNG was rendered (`og/cards.json`; "Share cards" below).
+   PNG was rendered, or the PNG isn't the one packed after (`og/cards.json`; "Share
+   cards" below).
 3. **Pages.** Home, About, the three menu pages (from `menu-data.json`), Visit,
    Booking, Jobs and the opening-team role pages (from `jobs-data.json` and
    `jobs/*.md`), the filled role pages and the applicant privacy notice (re-wrapped
@@ -143,11 +144,13 @@ To change one: edit `OG_CARDS` (or the template), then from the repo's root
 ```
 npm run build          # writes each card's page into build/og/html/ (and stops: the card is out of date)
 npm run og             # renders build/og/png/, notes what each was rendered from in og/cards.json
-npm run pack-assets    # packs the PNGs into assets.b64.json (reduced to 96 colours with Pillow)
+npm run pack-assets    # reduces the PNGs to 96 colours (Pillow), packs them into assets.b64.json,
+                       # and notes each one's hash in og/cards.json
 npm run build          # passes again
 ```
 
 and commit `build/assets.b64.json` and `build/og/cards.json`. `npm run og` needs the
 check package (`npm --prefix check ci`); it answers the cards' font requests
 (`localhost:8897`) from `build/` itself, so no server runs. The build stops while any card
-was rendered from words that have since changed, so a stale card can't reach sol.pizza.
+was rendered from words that have since changed, or was rendered but not packed (the PNG
+it unpacks isn't the one `og/cards.json` names), so a stale card can't reach sol.pizza.

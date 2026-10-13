@@ -1,14 +1,50 @@
 {
- "og-home-vi.png": "7d77c7a8125454e374fbccb4226b0cd2e98954fd",
- "og-home.png": "828890cfd2208a969cb8299f1398004478dbe986",
- "og-jobs-vi.png": "7c172ea5ad8022b9a53b91a1977e0bb3d6743551",
- "og-jobs.png": "599f224b3c3019838a2e567d72e542ac7faec5f1",
- "og-menu-vi.png": "1e5f942ed1e16cc7360d18980d03bb7134016b5a",
- "og-menu.png": "472fbe24236704c44dc75bc817b75dcdf4811c58",
- "og-story-vi.png": "ab43c5e624fb77873304e43a1a454560946b5c1d",
- "og-story.png": "eac79ba8323627cc1868534f0233956fbb7460a1",
- "og-visit-vi.png": "1438e5b8a09f142f35ce0866f0628b63df6af6b0",
- "og-visit.png": "f8a30c5b22a0b44b3f1f69525b2a8329e0e10b4a",
- "og-wine-vi.png": "f1813d0ce9dd410c7ad524e7dbbd77d09367298f",
- "og-wine.png": "0d427468efb6a51fae066c8017c7d24b5e8fb968"
+ "og-home-vi.png": {
+  "from": "7d77c7a8125454e374fbccb4226b0cd2e98954fd",
+  "png": "d9fde45d9d3ac66685c060c9eb867668b354a9d4"
+ },
+ "og-home.png": {
+  "from": "828890cfd2208a969cb8299f1398004478dbe986",
+  "png": "9abf1066f0d291307f0bb0be05365056df4023a7"
+ },
+ "og-jobs-vi.png": {
+  "from": "7c172ea5ad8022b9a53b91a1977e0bb3d6743551",
+  "png": "a7c9d2040f9e0e957104cfe7cb28c0b9e7bb0eaa"
+ },
+ "og-jobs.png": {
+  "from": "599f224b3c3019838a2e567d72e542ac7faec5f1",
+  "png": "2add4dc566b684a10a674bda51bebff58b14b56f"
+ },
+ "og-menu-vi.png": {
+  "from": "1e5f942ed1e16cc7360d18980d03bb7134016b5a",
+  "png": "ef8f0e3592e1a839da4c8726bd92eef46832cfc3"
+ },
+ "og-menu.png": {
+  "from": "472fbe24236704c44dc75bc817b75dcdf4811c58",
+  "png": "31dd5678e9e77659b4a3b52b630f3cad4cd70cc2"
+ },
+ "og-story-vi.png": {
+  "from": "ab43c5e624fb77873304e43a1a454560946b5c1d",
+  "png": "96bb7e17b412bd4d11161d12d12ea3fe110001d8"
+ },
+ "og-story.png": {
+  "from": "eac79ba8323627cc1868534f0233956fbb7460a1",
+  "png": "985a74b5e3d03fd1af5e5af0290883ce4664847c"
+ },
+ "og-visit-vi.png": {
+  "from": "1438e5b8a09f142f35ce0866f0628b63df6af6b0",
+  "png": "839d7106ebac271cb1c28524aa4973f5675b9039"
+ },
+ "og-visit.png": {
+  "from": "f8a30c5b22a0b44b3f1f69525b2a8329e0e10b4a",
+  "png": "ea7b68dba5e501865f9fd305e15f8cf798f87caa"
+ },
+ "og-wine-vi.png": {
+  "from": "f1813d0ce9dd410c7ad524e7dbbd77d09367298f",
+  "png": "ce0edec70b5ed27557b6b957820a709ba20fd4f8"
+ },
+ "og-wine.png": {
+  "from": "0d427468efb6a51fae066c8017c7d24b5e8fb968",
+  "png": "a32234e889c974d5ca5d25c6c7da62453530de62"
+ }
 }
