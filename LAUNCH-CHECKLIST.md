@@ -96,14 +96,16 @@ to the list in braces.
 
 ### 6. Cloudflare's bot script (decide)
 
-On sol.pizza (not on previews) Cloudflare adds a bot-detection script to every page. On
-a phone it costs about half a second of the browser's time before the page responds, and
-a deprecated browser feature in it costs Lighthouse "Best Practices" points; it also sets
-the `cf_clearance` cookie (listed in the cookie notice). The site has no guest forms or
+On sol.pizza (not on previews) Cloudflare adds a bot-detection script to the first page
+of every visit. Measured on a phone (Lighthouse, 13 October): it blocks the page for
+170–260 ms, against a budget of 200 ms and 0–20 ms without it, and a deprecated browser
+feature in it takes Best Practices from 100 to 81 (the budget is 95). It also sets the
+`cf_clearance` cookie (listed in the cookie notice). The site has no guest forms or
 logins for bots to attack (the kitchen's sign-in limits tries itself). To switch it off:
 **Security** → **Bots** → **JavaScript Detections** off (and **Bot Fight Mode** off, if
-it's on). Keep it if you'd rather have the protection; the budgets are measured both ways
-(`npm run check -- https://sol.pizza`).
+it's on). Keep it if you'd rather have the protection: `npm run check -- https://sol.pizza`
+then reports those two budgets as missed on every page, naming this section, while a
+preview shows the same pages without it.
 
 ### 7. Previews: who can see them (optional)
 
@@ -138,9 +140,9 @@ The listing is "Sol Hanoi" and still carries Sol Pizza's reviews.
       Vietnamese, then **Embed Code** → copy the widget's URL into `RESDIARY_URL` in
       `build/gen.py` (CONTENT-NEEDED.md). The widget appears on `/booking/`, and the
       phone number, Call and Zalo become tappable across the site.
-- [ ] Deposits: if guests pay a deposit inside the widget, say so: the site has to
-      allow payment in the widget's frame (and ask ResDiary whether the payment step
-      comes from another address, which needs allowing too).
+- [ ] Deposits: if guests pay a deposit inside the widget, set `RESDIARY_PAYMENTS = True`
+      in `build/gen.py`: the site then allows payment in the widget's frame. Ask ResDiary
+      whether the payment step comes from another address, which needs allowing too.
 - [ ] Languages: ask whether the widget can open in Vietnamese (a separate widget
       address, or a setting). If it's a separate address, it goes in `RESDIARY_URL_VI`.
 - [ ] Analytics: the site already counts clicks on Book (`book_click`), after a yes to
@@ -194,7 +196,14 @@ Minh`, `Newsletter`):
 - [ ] Workers → sol-pizza → **Settings** → **Builds** → **Branch control**: builds for
       non-production branches stay on for every branch (the `full/…` previews need it).
 
+### The manual tests
+
+- [ ] `MANUAL-TESTS.md`, on sol.pizza: a real iPhone and Android phone, the browsers
+      inside Zalo, Facebook and Instagram, the keyboard, VoiceOver, the printed menu.
+
 ---
+
+## As they arrive: the photographs and the lawyer's drafts
 
 ### 14. Photographs: the bucket and the resizing (once, before the first photo)
 
@@ -241,6 +250,15 @@ Drafts waiting in the full preview, each marked "Draft": `/privacy/guests/` and
 - [ ] Once the guest notice is live, link it from the enquiry forms and the newsletter
       sign-up.
 
+Already signed off by the lawyer (13 October 2026): the cookie banner and the cookie
+notice, the line on alcohol on the wine and bar pages, Happy hour and Wine night, and no
+age check. The site isn't an e-commerce platform: booking a table needs no notification.
+
+- [ ] **Before selling anything on the site** (gift cards bought online, Eclipse tickets
+      paid on sol.pizza): the notification to the Ministry of Industry and Trade
+      (online.gov.vn) first, and the lawyer's view. If guests will pay deposits inside
+      ResDiary's widget, ask the lawyer whether that changes anything.
+
 ---
 
 ## Opening day
@@ -252,4 +270,7 @@ Drafts waiting in the full preview, each marked "Draft": `/privacy/guests/` and
        this makes it permanent and tells search engines.)
 2. [ ] ResDiary live, and `RESDIARY_URL` set.
 3. [ ] Google Business Profile: open.
-4. [ ] `npm run check -- https://sol.pizza` after the deploy.
+4. [ ] `npm run check -- https://sol.pizza` after the deploy, and Google's own measurement:
+       https://pagespeed.web.dev/ on `https://sol.pizza/`, `/menu/` and `/booking/` (Mobile).
+5. [ ] On a phone: the home page says it's open, **Book** reaches the booking form, and a
+       test booking goes through (`MANUAL-TESTS.md`, "Once ResDiary is live").

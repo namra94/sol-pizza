@@ -7,6 +7,8 @@
 //   with a URL (npm run check -- https://…): behaviour and axe there too,
 //   Lighthouse against the budgets (lighthouse.js), and every photo in
 //   build/media.json loading from R2 and through Cloudflare (media.js)
+//   4. screenshots at 360, 390, 768, 1,024 and 1,440 px in both languages, of the URL
+//      or of dist/ (screens.js; out/screens/index.html)
 // The public build is left in dist/ at the end. Nothing here is committed: reports go
 // to check/out/. First time: npm --prefix check ci (and, outside Claude's cloud,
 // npx --prefix check playwright install chromium).
@@ -27,6 +29,8 @@ if (url) {
              ['Lighthouse at ' + url, 'node', ['lighthouse.js', url], __dirname],
              ['photos online', 'node', ['media.js'], __dirname]);
 }
+// screenshots at five widths in both languages: of the URL if there is one, else of dist/
+steps.push(['screenshots' + (url ? ' of ' + url : ''), 'node', ['screens.js'].concat(url ? [url] : []), __dirname]);
 const results = [];
 for (const [name, cmd, args, cwd] of steps) {
   console.log('\n== ' + name);

@@ -48,7 +48,8 @@ in `build/gen.py`), EN · VI and the red **Book** button, which goes to the
 booking page in the same language. On phones and tablets (below 1024px wide): a slim bar
 with EN · VI, the logo and the menu button, and at the foot of the window a bar with Book
 and Directions (and, once online booking is live, Call on English pages and Zalo on
-Vietnamese ones), hidden on the booking page and the role pages. Menu keeps its Food /
+Vietnamese ones), hidden on the booking page, and on the role pages while a hiring round
+is open (they have the Apply bar then). Menu keeps its Food /
 Wine / Bar tabs. The footer has the newsletter sign-up (on the home page it's in the
 page instead), Instagram and any other address in `SOCIAL`, and lists the pages, Press,
 Work with us, Privacy, Cookies and **Cookie settings**; its last line is the company, with
@@ -78,8 +79,21 @@ npm run deploy         # builds the public site, then deploys it; see README-DEP
 
 npm --prefix check ci  # once, for the two below: Playwright, axe and Lighthouse, in check/
 npm run og             # re-render the share cards (then npm run pack-assets)
-npm run check          # both builds, behaviour, accessibility; add -- <URL> for Lighthouse there too
+npm run check          # both builds, behaviour, accessibility, screenshots; add -- <URL> to check
+                       # that address too (Lighthouse against the budgets, the photos online),
+                       # and to take the screenshots there instead of from dist/
 ```
+
+`npm run check -- <Preview URL>` before merging a pull request, and `npm run check --
+https://sol.pizza` after: the budgets (cookies rejected, a phone) are Performance 90+,
+Accessibility 100, Best Practices 95+, SEO 100, LCP 2.5 s or less, CLS under 0.1, TBT
+200 ms or less, for Home, Menu and Booking, each run three times as a guest's first page
+(the median counts). On sol.pizza, Cloudflare's bot script costs every first page Best
+Practices points and some blocking time (LAUNCH-CHECKLIST.md §6); previews don't have it.
+Screenshots of 15 pages at 360, 390, 768, 1,024 and 1,440 px in both
+languages land in `check/out/screens/` (open its `index.html`); a page that scrolls
+sideways fails the check. What only people can check (real phones, the apps' own
+browsers, a screen reader, paper) is in `MANUAL-TESTS.md`.
 
 The two build modes are described in `build/README.md`. `check/` has its own
 `package.json`: Workers Builds installs only the root one, so the site's build never
@@ -464,13 +478,16 @@ build/og/               share cards: card.html (the template), cards.json (what 
                         was rendered from); the words are OG_CARDS in gen.py
 build/assets.b64.json   the share-card PNGs and BN Arora, as text (see build/pack_assets.py)
 check/                  the checks and tools that need a browser (own package.json):
-                        og.js, behaviour.js, axe.js, lighthouse.js, media.js, check.js
+                        og.js, behaviour.js, axe.js, lighthouse.js, media.js, screens.js,
+                        check.js; consent.js (the cookie choice they store, in the
+                        build's CONSENT_VERSION)
 src/jobs/ src/privacy/  role pages and the privacy notice, re-wrapped at build time
 src/_redirects          copied to dist/ as it is, or rewritten while HIDDEN lists a
                         page (public build, see build/README.md); Cloudflare applies it
 src/favicon.svg src/pixel.js
 CONTENT-NEEDED.md       everything the site is waiting for, and who has it
 LAUNCH-CHECKLIST.md     what's done outside the repo: DNS, Cloudflare, Google, ResDiary
+MANUAL-TESTS.md         what to test by hand: phones, in-app browsers, keyboard, VoiceOver, print
 ```
 
 The repo is text-only: fonts come from npm or Adobe Fonts, and the share-card

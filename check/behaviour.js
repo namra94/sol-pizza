@@ -6,6 +6,7 @@
 const {chromium} = require('playwright');
 const path = require('path');
 const serve = require('./serve.js');
+const consent = require('./consent.js');
 
 const TOOLS = /googletagmanager\.com|google-analytics\.com|connect\.facebook\.net|facebook\.com\/tr/;
 let failures = 0;
@@ -22,6 +23,7 @@ async function main() {
     base = 'http://localhost:8899';
   }
   base = base.replace(/\/$/, '');
+  const V = await consent.versionAt(base);       // the cookie choice's version this site asks for
   const browser = await chromium.launch(process.env.CHROME_PATH ? {executablePath: process.env.CHROME_PATH} : {});
 
   // A fresh visitor: records every request to an analytics or advertising host,
@@ -164,7 +166,7 @@ async function main() {
   console.log('Header and phone bar');
   {
     const {ctx, page} = await visitor();
-    await ctx.addInitScript(() => localStorage.setItem('sol-consent', JSON.stringify({v: 1, t: new Date().toISOString(), analytics: false, ads: false})));
+    await ctx.addInitScript(consent.store, consent.choice({}, V));
     await page.goto(base + '/about/');
     ok(!(await page.isVisible('.sitebar-logo img')), 'the bar has no small logo at the top of the page');
     await page.mouse.wheel(0, 900);
@@ -178,7 +180,7 @@ async function main() {
   }
   {
     const {ctx, page} = await visitor({width: 390, height: 844});
-    await ctx.addInitScript(() => localStorage.setItem('sol-consent', JSON.stringify({v: 1, t: new Date().toISOString(), analytics: false, ads: false})));
+    await ctx.addInitScript(consent.store, consent.choice({}, V));
     await page.goto(base + '/vi/menu/');
     ok(await page.isVisible('.actionbar') && (await page.textContent('.actionbar .btn-red')).trim() === 'Đặt bàn',
        'phones: the Vietnamese phone bar with Đặt bàn');
@@ -189,15 +191,32 @@ async function main() {
     ok(!(await page.isVisible('#navsheet')), 'Escape closes it');
     await page.goto(base + '/vi/booking/');
     ok((await page.$('.actionbar')) === null, 'no phone bar on the booking page');
-    await page.goto(base + '/jobs/host/');
-    ok((await page.$('.actionbar')) === null, 'no phone bar on a role page (it has the Apply bar)');
     await ctx.close();
+  }
+  {
+    // A role page: the Apply buttons while its round is open, the phone bar (Book) once it
+    // has closed. Built after the closing instant, the page is closed as it comes; built
+    // before, the head script closes it at that instant (tested on the clock both sides).
+    const closes = new Date(require('../build/jobs-data.json').round.closes);
+    const html = await (await fetch(base + '/jobs/host/')).text();
+    const builtClosed = /<html[^>]*class="[^"]*round-closed/.test(html);
+    for (const [when, closedNow] of builtClosed ? [[null, true]] : [[closes.getTime() - 3600e3, false], [closes.getTime() + 3600e3, true]]) {
+      const {ctx, page} = await visitor({width: 390, height: 844});
+      await ctx.addInitScript(consent.store, consent.choice({}, V));
+      if (when) await page.clock.setFixedTime(new Date(when));
+      await page.goto(base + '/jobs/host/');
+      const bar = await page.isVisible('.actionbar'), apply = await page.locator('.apply-btn:visible').count();
+      ok(closedNow ? bar && apply === 0 : !bar && apply > 0,
+         'a role page, ' + (builtClosed ? 'built after its round closed' : closedNow ? 'after its round closes' :
+         'while its round is open') + ': ' + (closedNow ? 'the phone bar, no Apply button' : 'Apply, no phone bar'));
+      await ctx.close();
+    }
   }
 
   console.log('Events');
   {
     const {ctx, page} = await visitor();
-    await ctx.addInitScript(() => localStorage.setItem('sol-consent', JSON.stringify({v: 1, t: new Date().toISOString(), analytics: true, ads: true})));
+    await ctx.addInitScript(consent.store, consent.choice({analytics: true, ads: true}, V));
     await page.goto(base + '/menu/wine/', {waitUntil: 'load'});
     await page.waitForTimeout(500);
     const events = () => page.evaluate(() => (window.dataLayer || []).filter(e => e[0] === 'event').map(e => e[1]));
@@ -217,7 +236,7 @@ async function main() {
   console.log('Enquiry forms and the newsletter');
   {
     const {ctx, page} = await visitor({width: 390, height: 844});
-    await ctx.addInitScript(() => localStorage.setItem('sol-consent', JSON.stringify({v: 1, t: new Date().toISOString(), analytics: true, ads: false})));
+    await ctx.addInitScript(consent.store, consent.choice({analytics: true}, V));
     const events = () => page.evaluate(() => (window.dataLayer || []).filter(e => e[0] === 'event').map(e => [e[1], e[2] || {}]));
     await page.goto(base + '/vi/private-dining/', {waitUntil: 'load'});
     if (!(await page.$('#enquire form'))) {
@@ -302,7 +321,7 @@ async function main() {
   console.log('Pages: events, the home page, 404');
   {
     const {ctx, page} = await visitor({width: 1280, height: 900});
-    await ctx.addInitScript(() => localStorage.setItem('sol-consent', JSON.stringify({v: 1, t: new Date().toISOString(), analytics: false, ads: false})));
+    await ctx.addInitScript(consent.store, consent.choice({}, V));
     const r = await page.goto(base + '/events/', {waitUntil: 'load'});
     if (r.status() !== 200) {
       console.log('  (no /events/ in this build: not checked)');

@@ -8,6 +8,7 @@ const {chromium} = require('playwright');
 const AxeBuilder = require('@axe-core/playwright').default;
 const fs = require('fs'), path = require('path');
 const serve = require('./serve.js');
+const consent = require('./consent.js');
 
 const DIST = path.resolve(__dirname, '..', 'dist');
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -31,6 +32,7 @@ function pages() {
   let base = process.argv[2], server = null;
   if (!base) { server = await serve(DIST, 8898); base = 'http://localhost:8898'; }
   base = base.replace(/\/$/, '');
+  const V = await consent.versionAt(base);
   const browser = await chromium.launch(process.env.CHROME_PATH ? {executablePath: process.env.CHROME_PATH} : {});
   const list = pages();
   let violations = 0, practice = 0, runs = 0;
@@ -39,8 +41,7 @@ function pages() {
                                             ['laptop, after a choice', {width: 1280, height: 900}, 'none']]) {
     const ctx = await browser.newContext({viewport});
     await ctx.route(/googletagmanager|google-analytics|facebook|typekit/, r => r.fulfill({status: 204, body: ''}));
-    if (choice) await ctx.addInitScript(() => localStorage.setItem('sol-consent', JSON.stringify(
-      {v: 1, t: new Date().toISOString(), analytics: false, ads: false})));
+    if (choice) await ctx.addInitScript(consent.store, consent.choice({}, V));
     const page = await ctx.newPage();
     for (const p of list) {
       await page.goto(base + p, {waitUntil: 'load'});

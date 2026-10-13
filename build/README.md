@@ -59,9 +59,13 @@ announcements' dates (`announcements.json`), and the settings (`SITE_STATE`,
 `OPENING_DATE`).
 
 `npm run check` (in `check/`, its own package) runs both builds, then what a browser
-can check: the behaviour (languages, cookie banner, header, phone bar, events,
-`behaviour.js`), accessibility with axe on every page in both languages (`axe.js`), and,
-given a URL, Lighthouse against the budgets (`lighthouse.js`).
+can check: the behaviour (languages, cookie banner, header, phone bar, analytics events,
+forms, Eclipse's dates, the keyboard, structured data: `behaviour.js`), accessibility
+with axe on every page in both languages (`axe.js`), and screenshots at five widths in
+both languages (`screens.js`, of the URL when there is one); given a URL, also Lighthouse
+against the budgets
+(`lighthouse.js`: Home, Menu and Booking, the median of three first visits each) and
+every photo online (`media.js`).
 
 ## Build modes
 
@@ -74,10 +78,10 @@ changes then. Every build prints its mode on its first line.
 | | Public (the default) | Full |
 | --- | --- | --- |
 | Run by | `npm run build`, `npm run deploy` (`--public`), Workers Builds on `main` and on every other branch (pull request previews) | `npm run build:full` (`--full`), Workers Builds on the `full-site` branch and on the `full/…` branches (`WORKERS_CI_BRANCH`), each pull request's full preview |
-| Pages | Every page not in `HIDDEN` (now all of them), in both languages. A hidden page isn't written, and neither are the share cards and illustrations only it uses | Every page, in both languages, and the components page |
+| Pages | Every page not in `HIDDEN` (now all of them) or `WAITING` (gift cards, the legal drafts, an Eclipse edition without its details), in both languages. A hidden page isn't written, and neither are the share cards and illustrations only it uses | Every page, in both languages, and the components page |
 | Sections waiting for content (`gate()`) | Left out | Shown, with a yellow "Content needed" label and the key in `CONTENT-NEEDED.md` |
-| Header | The public tabs whose pages exist (`BUILT`), plus Work with us while anything is hidden; no Food / Wine / Bar tabs while Menu is hidden. Now Menu · About · Visit | The same, whatever `HIDDEN` says |
-| Footer "More" | The public tabs, Booking, Work with us, Privacy, Cookies | The same, whatever `HIDDEN` says |
+| Header | The public tabs whose pages exist (`BUILT`), plus Work with us while anything is hidden; no Food / Wine / Bar tabs while Menu is hidden. Now Menu · About · Events · Private dining · Visit | The same, whatever `HIDDEN` says |
+| Footer "More" | The public tabs, Booking, Press, Work with us, Privacy, Cookies (and the waiting pages once they're public) | The same, whatever `HIDDEN` says, with the waiting pages |
 | Home buttons | The first two of Book a table, See the menu, See open roles and @solhanoi on Instagram whose page is public (red, then outline): now Book a table and See the menu | Book a table, See the menu |
 | 404 buttons | The first two of Menu, Booking, Home and See open roles whose page is public: now Menu and Booking | Menu, Booking |
 | Home JSON-LD | `hasMenu` and `acceptsReservations` only while Menu and Booking are public (now both) | Both |

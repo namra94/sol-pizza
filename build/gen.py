@@ -883,8 +883,9 @@ def head(rec, lang):
     url = SITE + lang_path(path, lang)
     lines = [
         '<!DOCTYPE html>',
-        '<html lang="%s" data-brand-fonts="%s"%s>' % (lang, BRAND_FONTS,
-                                                      ' class="is-open"' if SITE_STATE == 'open' else ''),
+        '<html lang="%s" data-brand-fonts="%s"%s>' % (lang, BRAND_FONTS, (' class="%s"' % ' '.join(
+            c for c, on in (('is-open', SITE_STATE == 'open'), ('round-closed', ROUND_OVER)) if on)
+            if SITE_STATE == 'open' or ROUND_OVER else '')),
         '<head>',
         '<meta charset="utf-8">',
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">',
@@ -1190,7 +1191,8 @@ def actionbar():
     """The phone bar (narrow screens): Book (while the booking page is public), then, once
     online booking is live (CONTACT_LIVE), Call on English pages and Zalo on Vietnamese
     ones (Call until there's a Zalo number), then Directions. Not on /booking/ (it is the
-    booking page) or the role pages (they have the Apply bar)."""
+    booking page), and on a role page only once its hiring round has closed (until then it
+    has the Apply bar)."""
     book = ('<a class="btn btn-red" href="/booking/#book" data-track="book_click">%s</a>' % BOOK_SHORT
             if live('booking') else '')
     call = ''
@@ -2705,6 +2707,9 @@ JOBS = json.loads(read(os.path.join(HERE, 'jobs-data.json')))
 ROUND = JOBS['round']
 JOBS_EMAIL = 'jobs@sol.pizza'
 CLOSES = datetime.fromisoformat(ROUND['closes'])       # Hanoi time, with its offset
+# Built after the closing instant: the pages are closed as built (<html class="round-closed">,
+# no Apply buttons), not only once ROUND_SCRIPT runs
+ROUND_OVER = datetime.now().astimezone() >= CLOSES
 STARTS = date.fromisoformat(ROUND['starts'])
 SERVICE = ROUND['service_charge']
 
@@ -2925,6 +2930,10 @@ def named(en, vi, r):
 
 
 def apply_button(r, cls='btn btn-red', label=None):
+    """An Apply button, while the round is open (ROUND_SCRIPT hides it at the closing
+    instant; a build after it leaves it out)."""
+    if ROUND_OVER:
+        return ''
     return '<a class="%s apply-btn" %s>%s</a>' % (cls, apply_attrs(r), label or t('Apply', 'Ứng tuyển'))
 
 
@@ -3123,7 +3132,8 @@ def build_open_role(r):
          (esc_attr(fit(desc_en, 200)), esc_attr(fit(desc_vi, 200))), main, cur='role', og='jobs',
          # The Vietnamese page's share card speaks to the ads' Vietnamese readers
          og_text=((esc_attr('%s — Sol, Tây Hồ' % r['name_en']), esc_attr(desc_en)),
-                  (esc_attr(og_title), esc_attr(og_desc))), bar=False,
+                  (esc_attr(og_title), esc_attr(og_desc))),
+         # the phone bar too: hidden while the round is open (the Apply bar), there after
          extra=ROUND_SCRIPT + '\n' + ld,
          body_attrs=' data-page="role" data-role="%s" data-slug="%s"' % (esc_attr(r['name_en']), r['slug']))
 
@@ -3179,7 +3189,7 @@ def build_role(r):
         titles = (title, '%s — Sol, Tây Hồ' % r['name_vi'])
         descs = (desc, 'Mô tả công việc %s tại Sol, Tây Hồ, Hà Nội.' % r['name_vi'].lower())
     page(role_path(r), 'page-role', titles, descs,
-         main, cur='role', og='%s/jobs/og-%s.png' % (SITE, r['slug']), bar=False,
+         main, cur='role', og='%s/jobs/og-%s.png' % (SITE, r['slug']),
          extra='<meta name="robots" content="noindex,follow">' if filled else '',
          body_attrs=' data-page="%s" data-role="%s" data-slug="%s"'
                     % ('role-filled' if filled else 'role', r['name_en'], r['slug']))
