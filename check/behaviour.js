@@ -259,6 +259,45 @@ async function main() {
     await ctx.close();
   }
 
+  console.log('Pages: events, the home page, 404');
+  {
+    const {ctx, page} = await visitor({width: 1280, height: 900});
+    await ctx.addInitScript(() => localStorage.setItem('sol-consent', JSON.stringify({v: 1, t: new Date().toISOString(), analytics: false, ads: false})));
+    const r = await page.goto(base + '/events/', {waitUntil: 'load'});
+    if (r.status() !== 200) {
+      console.log('  (no /events/ in this build: not checked)');
+    } else {
+      // Each edition in the list carries its last night; the check moves the clock past it
+      const eds = await page.$$eval('.ev-up[data-ev]', els => els.map(e => e.getAttribute('data-ev')));
+      const upNow = await page.$$eval('.ev-up[data-ev]', els => els.filter(e => e.offsetParent).length);
+      ok(eds.length === 0 || upNow === eds.length, 'events: what is coming up shows under Coming up (' + upNow + ')');
+      if (eds.length) {
+        const ctx2 = await browser.newContext({viewport: {width: 1280, height: 900}});
+        await ctx2.route(/googletagmanager|google-analytics|facebook|typekit/, x => x.fulfill({status: 204, body: ''}));
+        const later = await ctx2.newPage();
+        await later.clock.setFixedTime(new Date('2031-01-01T00:00:00+07:00'));
+        await later.goto(base + '/events/', {waitUntil: 'load'});
+        const state = await later.evaluate(() => ({
+          up: [...document.querySelectorAll('.ev-up[data-ev]')].filter(e => e.offsetParent).length,
+          past: [...document.querySelectorAll('.ev-past[data-ev]')].filter(e => e.offsetParent).length,
+          none: !!document.querySelector('.ev-none-msg') && !!document.querySelector('.ev-none-msg').offsetParent}));
+        ok(state.up === 0 && state.past >= eds.length && state.none,
+           'events: once over, an edition moves to Past by itself, and "nothing announced" shows (' + JSON.stringify(state) + ')');
+        await later.goto(base + '/', {waitUntil: 'load'});
+        ok(!(await later.isVisible('.next-ev')), 'the home page drops the next Eclipse once it is over');
+        await ctx2.close();
+      }
+    }
+    await page.goto(base + '/', {waitUntil: 'load'});
+    const cards = await page.$$eval('.home-paths .card a', as => as.map(a => a.getAttribute('href')));
+    ok(cards.length === 3, 'home: three ways in (' + cards.join(' ') + ')');
+    ok(await page.isVisible('.today'), 'home: the opening date or today\'s hours under the buttons');
+    await page.goto(base + '/no-such-page/');
+    const paths = await page.$$eval('.paths-404 a', as => as.map(a => a.getAttribute('href')));
+    ok(paths.length >= 3 && paths.includes('/'), '404: the main pages to go to (' + paths.join(' ') + ')');
+    await ctx.close();
+  }
+
   await browser.close();
   if (server) server.close();
   console.log(failures ? failures + ' failed' : 'all passed');

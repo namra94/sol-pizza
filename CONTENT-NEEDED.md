@@ -29,7 +29,7 @@ Last updated 13 October 2026.
 | Inbox for enquiries | Where the private dining form, the opening-week form and the newsletter sign-up send their email (`ENQUIRIES` in `build/gen.py`) | An address (hello@sol.pizza unless you say otherwise) | Arman |
 | The map pin | The Directions button and the structured data. The Google listing "Sol Hanoi" carries Sol Pizza's reviews: say whether its pin is on the new building | Latitude and longitude, or the Google Maps link to the right place | Arman |
 | Holiday and Tết hours | `build/announcements.json`: the bar at the top of every page, and Visit | Dates, and a line in English and Vietnamese | Arman, Supervisor |
-| Eclipse, 23–24 October | An Eclipse page under `/events/` | Title, dates and times, guest chef(s) and a line on each, the menu, the price, how to book, artwork | Arman |
+| Eclipse, 23–24 October | `build/events-data.json`, the first edition: `/events/` lists it with its dates now; its own page, `/events/eclipse-1/`, goes live once it has its line (`summary_en`, `summary_vi`) | A line or two on what it is, the times, guest chef(s) and a line on each, the menu, the price, how to book (a link, or by email), artwork | Arman |
 
 ## The menu
 
@@ -46,15 +46,16 @@ Last updated 13 October 2026.
 | Private dining | `/private-dining/`: the spaces on each floor and how many each seats, set menus, minimum spend | Figures, a line on each space, English and Vietnamese | Arman |
 | Large groups | Visit and Private dining: how many seats in all, the largest table | Figures | Supervisor |
 | The team | `/about/`: portraits and a few lines on each person (Ngọc runs the kitchen; should "and Long runs the floor" be added?) | 2–3 lines each, English and Vietnamese, a portrait | Arman |
+| The dough | `/about/`, "The dough": the flours, how long it ferments, how it's baked | A few lines, English and Vietnamese | The kitchen |
 | Sol Pizza to Sol | `/about/`: one line on what closing Sol Pizza meant to you and the team | A line or two | Arman |
 | The terrace | `/about/` says "a terrace for when the weather behaves": is there one? | Yes or no | Arman |
 | Getting here | Visit & FAQ: motorbike and car parking, where Grab drops off, the lift and step-free access, dress code, corkage, payment methods, dogs, smoking | A line each, English and Vietnamese | Supervisor |
 | Press and review quotes | The home page | The quote, who said it, where and when, and their OK to use it | Arman |
-| Press contact | `/press/` | Name and email | Arman |
-| Gift cards | `/gift-cards/`: values, how long they last, how to buy (at the restaurant or by email for now; online sales would need the Ministry of Industry and Trade notification first) | Values in đồng, a few lines | Arman |
+| Press contact | `PRESS_CONTACT` in `build/gen.py`: `/press/`, which is live with the facts and the logo, and says hello@sol.pizza until then | Name and email | Arman |
+| Gift cards | `/gift-cards/`, built and waiting: values, how long a card lasts; how to buy is "at the restaurant, or by email" (online sales would need the Ministry of Industry and Trade notification first) | Values in đồng, how long a card lasts | Arman |
 | Takeaway and delivery | An Order page, only if you want one: which apps carry Sol (the Host job description mentions ordering platforms) | App names and links | Arman |
-| Social links | The footer and the structured data (Instagram is there) | Facebook, TikTok, Zalo OA… addresses | Arman |
-| Tax code | The footer, beside Công ty TNHH Aurelian | Mã số thuế | The accountant |
+| Social links | `SOCIAL` in `build/gen.py`: the footer and the structured data (Instagram is there) | Facebook, TikTok, Zalo OA… addresses | Arman |
+| Tax code | `TAX_CODE` in `build/gen.py`: the footer, beside Công ty TNHH Aurelian; and `REGISTERED_ADDRESS` if the company's registered address isn't the restaurant's | Mã số thuế; the registered address | The accountant |
 | The public name | The structured data and Google: "Sol" with "Sol Hanoi" as its other name, until you decide | Sol or Sol Hanoi | Arman |
 
 ## Photography
@@ -91,3 +92,23 @@ Each key below is a section the public build leaves out until its content arrive
 | `private-dining-spaces` | `/private-dining/`, "The spaces": each floor and the whole restaurant, and how many each seats (Private dining, above) |
 | `private-dining-menus` | `/private-dining/`, "Set menus": menus for groups and their prices |
 | `private-dining-minimum` | `/private-dining/`, "Minimum spend" for a private space |
+| `visit-last-orders` | `/visit-us/`, under the hours: last orders (Last orders, above) |
+| `visit-capacity` | `/visit-us/`, Good to know, "Big groups": how many seats in all, the largest table (Large groups, below) |
+| `visit-getting-here` | `/visit-us/`, "Getting here and parking": motorbike and car parking, where Grab drops off (Getting here, below) |
+| `visit-access` | `/visit-us/`, "Step-free access and the lift": the lift, steps, the toilets (Getting here, below) |
+| `visit-payment` | `/visit-us/`, "Paying": cash, which cards, transfer, e-wallets (Payment methods, below) |
+| `visit-corkage` | `/visit-us/`, "Bringing your own wine": whether guests can, and the corkage fee (Getting here, below) |
+| `visit-dress` | `/visit-us/`, "What to wear": whether there's a dress code (Getting here, below) |
+| `visit-dogs` | `/visit-us/`, "Dogs": whether dogs are welcome, inside or out (Getting here, below) |
+| `visit-smoking` | `/visit-us/`, "Smoking": whether there's anywhere to smoke (Getting here, below) |
+| `about-closing` | `/about/`, Sol Pizza: a line or two on what closing it meant to you and the team (Sol Pizza to Sol, below) |
+| `about-dough` | `/about/`, "The dough": its flours, how long it ferments, how it's baked, in the kitchen's words |
+| `about-team` | `/about/`, "The team": a portrait and two or three lines on each person (The team, below) |
+| `company-tax-code` | The footer's last line: the tax code (`TAX_CODE` in `build/gen.py`; Tax code, below) |
+| `press-contact` | `/press/`, "Who to ask": a name and an email (`PRESS_CONTACT`; Press contact, below). Until then it says hello@sol.pizza |
+| `press-photos` | `/press/`: approved photographs to download, with their credits (Photography, below) |
+| `home-press` | The home page: press or review quotes (Press and review quotes, below) |
+| `event-eclipse-1` | The whole page `/events/eclipse-1/`: its line (Eclipse, above). It goes live by itself once `summary_en` and `summary_vi` are in `build/events-data.json` |
+| `gift-cards` | The whole page `/gift-cards/`: the values, how long a card lasts, how to buy one (Gift cards, below). To publish it, delete its line in `WAITING` in `build/gen.py` |
+| `legal-guest-privacy` | The whole page `/privacy/guests/`, the guest privacy notice: the lawyer's approval, and the retention periods (Legal, below). Then delete its line in `WAITING` |
+| `legal-accessibility` | The whole page `/accessibility/`, the accessibility statement: the lawyer's approval, and the building's access facts (Getting here, below). Then delete its line in `WAITING` |

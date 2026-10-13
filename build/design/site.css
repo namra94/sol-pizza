@@ -425,6 +425,11 @@ html:not(.is-open) .when-open, html.is-open .when-pre { display: none !important
 
 /* Waiting for content (gate() in gen.py): only in the full build, never on sol.pizza. */
 .gated { position: relative; margin-top: 48px; padding: 18px; outline: 2px dashed var(--sol-red); outline-offset: 0; }
+span.gated { display: inline; margin: 0; padding: 2px 4px; }      /* inside a line of text */
+span.gated .gated-label { margin: 0 6px 0 0; padding: 0 6px; }
+.gated-page { display: block; margin-top: 24px; }
+.team-cards { list-style: none; padding: 0; }
+.card h4 { font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
 .gated-label { display: inline-block; margin-bottom: 12px; padding: 4px 10px; background: var(--sun); color: var(--wood);
   font-family: var(--serif); font-size: var(--fs-label); line-height: 18px; letter-spacing: .06em; }
 .gated-label code { font-size: inherit; }
@@ -492,3 +497,77 @@ html:not(.js) .mailform-fields, html:not(.js) .mailform .actions { display: none
 }
 .footer-news p { margin-top: 8px; font-size: var(--fs-small); line-height: 1.5; }
 .footer-news .btn { margin-top: 14px; }
+
+/* ------------------------------------------------------------------ events
+   /events/, an edition's page and the home page's next edition (events-data.json).
+   An edition is in Coming up until its last night ends, then in Past: the head script
+   marks it (html.past-<slug>, EV_STYLE in gen.py), so it moves on time. */
+.ev-section { margin-top: 84px; }
+.ev-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; margin-top: 30px; }
+.ev { flex: 0 1 340px; padding: 26px 26px 28px; border: 1px solid var(--line-brand); text-align: center; }
+.ev h3 { margin-top: 8px; font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); text-wrap: balance; }
+.ev p:not(.label) { margin-top: 10px; }
+.ev .link-sc { display: inline-block; margin-top: 16px; }
+.ev-none-msg { display: none; max-width: 600px; margin: 30px auto 0; text-align: center; }
+.ev-none-msg.is-shown, html.ev-none-up .ev-none-msg { display: block; }
+.ev-past-section { display: none; }
+.ev-past-section.has-past, html.ev-some-past .ev-past-section { display: block; }
+.ev-menu { list-style: none; padding: 0; text-align: center; }
+.ev-menu li + li { margin-top: 10px; }
+.ev-over { margin-top: 48px; text-align: center; }
+.ev-over a { color: var(--sol-red); border-bottom: 1px solid currentColor; }
+@media (max-width: 760.98px) { .ev-section { margin-top: 56px; } .ev { flex-basis: 100%; } }
+
+/* ------------------------------------------------------------------ the home page
+   The hero, the opening date or today's hours, three ways in, the story, the next
+   Eclipse (after dark), press quotes, the newsletter and the visit block. */
+.today { margin-top: 26px; font-size: var(--fs-label); line-height: 18px; letter-spacing: .1em; text-transform: uppercase; color: var(--sol-red); }
+.home-paths { margin-top: 96px; }
+.card h2 { font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.home-story { margin-top: 96px; }
+.home-story .section-intro .sun { margin-bottom: 6px; }
+.home-story-link { margin-top: 18px; text-align: center; }
+.next-ev .measure { text-align: center; }
+.next-ev .h-lg { margin-top: 12px; text-wrap: balance; }
+.next-ev p:not(.eyebrow) { margin-top: 14px; }
+.home-news h2 { font-family: var(--display); font-size: var(--fs-h2); line-height: 1.05; color: var(--sol-red); }
+.home-news .btn { margin-top: 26px; }
+.home-visit { margin-top: 96px; }
+.home-visit .facts { margin-top: 30px; }
+.home-visit .actions { margin-top: 18px; }
+@media (max-width: 760.98px) {
+  .home-paths, .home-story, .home-visit { margin-top: 64px; }
+}
+
+/* ------------------------------------------------------------------ menu prices
+   menu-data.json: a dish's price after its name, a wine's by the glass and the bottle
+   under its details; the currency once, under the page title. */
+.item-name .price { float: right; margin-left: 16px; font-variant-numeric: tabular-nums; color: var(--wood); }
+.item-price { margin-top: 3px; font-size: var(--fs-small); line-height: 1.5; font-variant-numeric: tabular-nums; color: var(--wood); }
+.currency { margin-top: 14px; text-align: center; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+.menu-updated { margin-top: 18px; text-align: center; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+
+/* ------------------------------------------------------------------ print
+   A menu (or any page) on paper: the big logo and the content, none of the screen's
+   bars, banners or buttons, nothing faded or dark. */
+@media print {
+  .mbar, .sitebar, .sitebar-mark, .subnav-static, .navsheet, .actionbar, .consent, .ann, .skip,
+  .footer-news, .footer-cols nav, .legal .linkish, .home-news, .actions, .btn, .gated { display: none !important; }
+  .masthead { display: flex !important; justify-content: center; }
+  html, body { background: #fff !important; }
+  body { padding: 0 !important; }
+  .js .reveal { opacity: 1 !important; transform: none !important; }
+  .after-dark { margin-top: 48px; padding: 0; background: none; color: var(--ink); }
+  .after-dark :is(h1, h2, h3, .h-lg, .eyebrow, .label) { color: var(--sol-red); }
+  a { border-bottom: 0 !important; }
+  .menu-section, .menu-grid li, .offer, .good-to-know, .card, .ev, .gtk-items > div { break-inside: avoid; }
+  .menu-section, .prose-section { margin-top: 36px; }
+  .site-footer { margin-top: 36px; }
+}
+
+/* ------------------------------------------------------------------ press, 404 */
+.press-logo { margin-top: 30px; text-align: center; }
+.press-logo img { display: block; margin: 0 auto; width: 240px; height: auto; }
+.press-logo p { max-width: 520px; margin: 18px auto 0; }
+.press-logo .btn { margin-top: 18px; }
+.paths-404 { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; margin-top: 30px; padding: 0; list-style: none; }

@@ -15,7 +15,8 @@
       and, with the Advertising yes, to Meta. ?debug_analytics=1 logs every one to
       the console (and turns on GA4 DebugView); ?debug_analytics=0 stops it. And the
       enquiry forms, which write an email (4b).
-   5. Announcements: closing one keeps it closed (localStorage sol-ann-<id>).
+   5. Announcements: closing one keeps it closed (localStorage sol-ann-<id>). And
+      today's hours on the home page (5b).
    6. Slow fades for .reveal, never for anyone who asks for less motion. */
 (function () {
   'use strict';
@@ -406,6 +407,15 @@
     // the focus was on the button just hidden: on to the next thing, the logo
     var next = document.querySelector(wide.matches ? '.masthead a' : '.mbar a');
     if (next) next.focus({preventScroll: true});
+  });
+
+  /* 5b. Today's hours (the home page, once open): open or closed today, Hanoi time */
+  document.querySelectorAll('[data-today]').forEach(function (el) {
+    var days = el.getAttribute('data-today').split(',').map(Number);
+    var hanoi = new Date(Date.now() + 7 * 36e5);              // UTC+7, no daylight saving
+    var open = days.indexOf((hanoi.getUTCDay() + 6) % 7) >= 0;  // 0 is Monday, as in gen.py
+    el.querySelector('.today-week').hidden = true;
+    el.querySelector(open ? '.today-open' : '.today-closed').hidden = false;
   });
 
   /* 6. Slow fades ------------------------------------------------------- */

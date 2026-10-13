@@ -55,7 +55,7 @@ Zalo keep the old picture until they look again. Once this is on sol.pizza:
 
 1. https://developers.facebook.com/tools/debug/ → paste each address → **Scrape Again**:
    `https://sol.pizza/`, `/vi/`, `/menu/`, `/menu/wine/`, `/about/`, `/booking/`,
-   `/visit-us/`, `/jobs/`.
+   `/visit-us/`, `/private-dining/`, `/events/`, `/press/`, `/jobs/`.
 2. Zalo has no such tool: its previews update by themselves within a few days.
 
 ### 4. Adobe Fonts: show the hand-written line straight away
@@ -186,6 +186,21 @@ Minh`, `Newsletter`):
 
 - [ ] Workers → sol-pizza → **Settings** → **Builds** → **Branch control**: builds for
       non-production branches stay on for every branch (the `full/…` previews need it).
+
+---
+
+### 14. The legal pages: the lawyer's review
+
+Drafts waiting in the full preview (`/privacy/guests/`, `/accessibility/`; the booking
+terms on `/booking/`), each marked "Draft":
+
+- [ ] The guest privacy notice: the retention periods, the list of companies that handle
+      guests' data, and the wording. Once approved, delete its line in `WAITING`
+      (`build/gen.py`) and merge: it goes live, and into the footer.
+- [ ] The accessibility statement: the building's facts (step-free access, the lift, the
+      toilets), then the same.
+- [ ] Once the guest notice is live, link it from the enquiry forms and the newsletter
+      sign-up.
 
 ---
 
