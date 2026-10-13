@@ -23,3 +23,9 @@ cf-*.json
 
 # local secrets for `wrangler dev` (see .dev.vars.example)
 .dev.vars
+
+# share-card pages, written by build/gen.py for npm run og
+build/og/html/
+# the checks (check/): its packages and what it writes
+check/node_modules/
+check/out/

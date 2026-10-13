@@ -1,0 +1,14 @@
+{
+  "name": "sol-pizza-check",
+  "private": true,
+  "description": "Tools for sol.pizza that need a browser: the share cards, the accessibility and Lighthouse checks, screenshots. Not part of the site's build: Workers Builds installs only the root package.json, never this folder.",
+  "scripts": {
+    "og": "node og.js",
+    "check": "node check.js"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "lighthouse": "13.5.0",
+    "playwright": "1.56.1"
+  }
+}

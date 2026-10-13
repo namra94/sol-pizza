@@ -1,9 +1,9 @@
 /* ==========================================================================
    SOL — CUSTOM PIXEL EVENTS
    --------------------------------------------------------------------------
-   The Meta base code (init + PageView) is inlined in the <head> of every
-   page, which is what Meta's detection tools look for. This file only adds
-   the extra events on top of it:
+   Loaded only after a guest says yes to Advertising in the cookie banner:
+   build/design/site.js then starts the Meta base code (init + PageView) and
+   loads this file, which adds the careers events on top of it:
 
      ViewContent  — a job page was opened
      ExpandJD     — someone opened the full job description
@@ -15,8 +15,8 @@
 (function () {
   "use strict";
 
-  // The base code runs first and defines fbq. If it is missing — blocked by
-  // an ad blocker, or the snippet was removed — do nothing rather than error.
+  // The base code runs first and defines fbq. If it is missing (no yes to
+  // Advertising, or blocked by an ad blocker) do nothing rather than error.
   if (typeof window.fbq !== "function") return;
 
   var body = document.body || {};

@@ -1,3 +1,7 @@
+/* Sol — the kitchen's header script (/dough/, /dough/log/, /dough/login/), frozen:
+   build/design/printed-menu.js as it was on 12 Oct 2026, unchanged below this note.
+   Guest pages use build/design/site.js; this keeps the kitchen's header, nav sheet and
+   in-page EN / VI switch exactly as they were. */
 /* Sol — "Printed menu" header behaviour. No dependencies; load with `defer`.
    1. Desktop: pointing at (or tabbing to) "Menu" shows the Food / Wine / Bar tabs
       under the nav bar. On menu pages (<body class="section-menu">) the tabs are

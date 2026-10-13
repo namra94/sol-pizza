@@ -1,0 +1,1101 @@
+/* Sol — the kitchen's stylesheet (/dough/, /dough/log/, /dough/login/), frozen.
+   These three pages are the kitchen's tools, not guest pages: they keep the site's
+   look as it was on 12 Oct 2026 (the header with About · Menu · Booking, the footer,
+   the in-page EN / VI switch, the calculator and the log), whatever the guest pages
+   do next. This file is tokens.css, printed-menu.css and site.css as they were then,
+   one after the other, unchanged. Edit it only for a change to the kitchen itself;
+   guest pages never load it (build/gen.py, kitchen_page()). */
+
+/* Sol — design tokens for the Printed menu site.
+   Colours come from the Sol brand standards (June 2025).
+
+   TYPE (simplified 23 Sep 2026, after "too many fonts and font sizes"):
+   two typefaces and seven sizes.
+     --display  headings only
+     --serif    everything else: text, menu items, and the small labels in capitals
+   The small caps faces (Gryphius MVB Small Caps, Alegreya SC) are not used.
+
+   BODY TEXT (24 Sep 2026): EB Garamond in both languages. Gryphius MVB read
+   badly on screen, and it has no Vietnamese letters anyway, so --serif is
+   EB Garamond everywhere, for running copy and the labels alike.
+
+   FONTS: the brand faces are opt-in. <html data-brand-fonts="…"> lists the ones
+   loaded on the page:
+     display → BN Arora       (self-hosted, licensed for web use)
+   Live today: data-brand-fonts="display".
+   Anything not listed renders in the free, Vietnamese-complete faces below
+   (Philosopher, EB Garamond — on npm as @fontsource packages).
+   --hand, the one hand-written phrase per section (.hand), is Plunct, upright,
+   from Sol's Adobe Fonts kit (umo0non).
+   Vietnamese pages (<html lang="vi">, matched with :lang(vi)) always use the free
+   faces: the brand fonts don't include the Vietnamese letters. There, headings
+   are Philosopher and .hand is EB Garamond italic. */
+
+:root {
+  /* brand colours */
+  --sol-red: #a72024;
+  --wood: #4e2428;
+  --sun: #f2cc73;
+  --cream: #f9e9d3;
+  --basil: #506d55;
+  --white: #ffffff;
+
+  /* roles (names and values from Sol's design system) */
+  --surface: var(--cream);
+  --surface-raised: #ffffff;  /* panels on the page; unused since 6 Oct 2026 (the /about/ boxes are on cream) */
+  --ink: var(--wood);
+  --ink-muted: #6b4448;   /* 6.9:1 on cream */
+  --ink-brand: var(--sol-red);
+  --ink-on-brand: #f2cc73;    /* type on a red fill (primary button): 4.75:1 */
+  --ink-on-sun: #a72024;      /* type on a yellow fill (primary button, hover): 4.75:1 */
+  --line: #e3cdb0;        /* quiet hairline */
+  --line-brand: var(--sol-red);
+  --focus: #a72024;       /* focus ring: 2px solid, 2px offset */
+
+  /* type: free faces by default */
+  --display: "Philosopher", Georgia, serif;
+  --serif: "EB Garamond", Georgia, serif;
+  --ds: 0.9;              /* display size factor: Philosopher runs wider than BN Arora */
+  --hand: var(--serif);   /* the hand-written phrase */
+  --hand-style: italic;
+
+  /* type scale: the only sizes on the site (mobile values below) */
+  --fs-label: 13px;       /* capitals: eyebrows, nav, buttons, tags */
+  --fs-small: 16px;       /* menu descriptions, notes, footer */
+  --fs-body: 19px;        /* text */
+  --fs-lead: 22px;        /* intro paragraphs, menu item names */
+  --fs-h3: calc(var(--ds) * 32px);                            /* card and block titles */
+  --fs-h2: calc(var(--ds) * clamp(36px, 1.8vw + 29px, 54px));  /* section titles */
+  --fs-h1: calc(var(--ds) * clamp(48px, 4vw + 30px, 84px));    /* page titles */
+
+  /* layout */
+  --wrap: 1040px;
+  --gutter: 24px;
+}
+
+/* brand faces, per licence (English pages only) */
+html[data-brand-fonts~="display"]:not(:lang(vi)) {
+  --display: "BN Arora", "Philosopher", Georgia, serif;
+  --ds: 1;
+}
+html:not(:lang(vi)) {
+  /* family name as the Adobe Fonts kit (use.typekit.net/umo0non.css) defines it */
+  --hand: "plunct", "EB Garamond", Georgia, serif;
+  --hand-style: normal;
+}
+
+@media (max-width: 760.98px) {
+  :root {
+    --gutter: 20px;
+    --fs-label: 12px;
+    --fs-small: 15px;
+    --fs-body: 17px;
+    --fs-lead: 19px;
+    --fs-h3: calc(var(--ds) * 28px);
+  }
+}
+
+/* Sol — "Printed menu" layout.
+   Cream paper, centred type, red rules: the site reads like a trattoria menu card.
+   Load after tokens.css. One stylesheet for every page; mobile layout below 761px.
+   No shadows, no rounded cards: hard corners and 1px rules only.
+   sol.pizza repo: so a bilingual label keeps its look, three descendant-span
+   selectors below skip [data-l] (the English / Vietnamese spans), and
+   .filled li span + span is now a child selector (.filled li > span + span).
+   Type, after the first review (23 Sep 2026): two typefaces and seven sizes.
+   Headings are the display face; everything else is the text serif. Every
+   small label shares one style (the "labels" rule below): the serif in
+   capitals, not small caps; the footer column headings are the one exception,
+   in SemiBold. Sizes come from the --fs-* tokens in tokens.css.
+   Website feedback (24 Sep 2026): the focus ring is 2px in --focus with a 2px
+   offset; the buttons take the --ink-on-* tokens; .hand takes --hand (Plunct
+   on English pages); the three boxes have no illustrations (.trio-art is
+   gone); .book-contact dt joins the labels rule; the footer column headings
+   are EB Garamond SemiBold (600), the one 600 weight on the site.
+   Website feedback (6 Oct 2026): the home facts row (.facts) has no rules. */
+
+/* ------------------------------------------------------------------ base */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+p, h1, h2, h3, h4, ul, ol, dl, dd, figure, blockquote { margin: 0; }
+h1, h2, h3, h4 { font-weight: 400; text-wrap: balance; }
+p, li, dd { text-wrap: pretty; }
+blockquote p { text-wrap: balance; }
+ul, ol { padding: 0; list-style: none; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+.wrap { width: 100%; max-width: calc(var(--wrap) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
+.skip { position: absolute; left: -9999px; top: 0; }
+.skip:focus { left: 16px; top: 16px; z-index: 100; padding: 8px 14px; background: var(--cream); border: 1px solid var(--sol-red); }
+.nowrap { white-space: nowrap; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ------------------------------------------------------------------ shared type */
+/* labels: one style for every small line of capitals */
+.eyebrow, .label, .link-sc, .btn, .lang, .nav-links,
+.subnav a span:not([data-l]), .navsheet-label, .navsheet-menu a span:not([data-l]), .navsheet-meta,
+.facts dt, .menu-card-sub, .visit-grid dt, .legend b, .marks, .tag, .gtk-items dt, .role-meta, .footer-cols h2,
+.prose h4, .prose summary, .prose thead th, .book-contact dt {
+  /* the text serif, not the heading face: Philosopher's capital I reads as an l
+     in capitals ("VI" became "Vl") */
+  font-family: var(--serif);
+  font-size: var(--fs-label);
+  line-height: 18px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-variant-numeric: lining-nums;   /* EB Garamond's default figures are old-style */
+}
+.eyebrow, .label { color: var(--sol-red); }
+/* the hand-written phrase: one per section (Plunct in English, EB Garamond italic in Vietnamese) */
+.hand {
+  font-family: var(--hand);
+  font-style: var(--hand-style);
+  font-weight: 400;
+  font-size: var(--fs-h3);
+  line-height: 1.25;
+  color: var(--wood);
+}
+.h-lg {
+  font-family: var(--display);
+  font-size: var(--fs-h2);
+  line-height: 1.05;
+  color: var(--sol-red);
+}
+.link-sc {
+  display: inline-block;
+  color: var(--sol-red);
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 1px;
+}
+.link-sc:hover { color: var(--wood); }
+.link-sc::after {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 9px;
+  margin-left: 8px;
+  vertical-align: 1px;
+  background: currentColor;
+  -webkit-mask: var(--arrow) no-repeat center / contain;
+  mask: var(--arrow) no-repeat center / contain;
+}
+:root { --arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 10'%3E%3Cpath d='M0 5h14.5M10.5 1l4 4-4 4' fill='none' stroke='%23000' stroke-width='1.3'/%3E%3C/svg%3E"); }
+.sun { color: var(--sol-red); width: 28px; height: 28px; margin: 0 auto; }
+
+/* ------------------------------------------------------------------ buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 12px 24px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  white-space: nowrap;
+  transition: background-color .12s linear, color .12s linear, border-color .12s linear;
+}
+.btn-red { background: var(--sol-red); border-color: var(--sol-red); color: var(--ink-on-brand); }
+.btn-red:hover { background: var(--sun); color: var(--ink-on-sun); }
+.btn-outline { border-color: var(--line-brand); color: var(--sol-red); }
+.btn-outline:hover { background: var(--sol-red); color: var(--ink-on-brand); }
+.btn-sm { min-height: 38px; padding: 8px 16px; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 34px; }
+
+/* ------------------------------------------------------------------ header (desktop) */
+.site-header { position: relative; z-index: 20; }
+.masthead { padding-top: 44px; display: flex; justify-content: center; }
+.masthead img { height: 58px; width: auto; }
+.navbar {
+  margin-top: 26px;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  border-top: 1px solid var(--line-brand);
+  border-bottom: 1px solid var(--line-brand);
+}
+.lang { display: flex; align-items: center; gap: 6px; justify-self: start; }
+.lang button { min-width: 24px; padding: 10px 2px; letter-spacing: inherit; }
+.lang button[aria-pressed="true"] { color: var(--sol-red); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+.lang button:hover { color: var(--sol-red); }
+.nav-links { display: flex; align-items: center; color: var(--wood); }
+.nav-links li { display: flex; align-items: center; }
+.nav-links li + li::before {
+  content: "";
+  width: 4px; height: 4px;
+  margin: 0 16px;
+  border-radius: 50%;
+  background: var(--sol-red);
+}
+.nav-links a { display: inline-flex; align-items: center; gap: 6px; padding: 12px 0; }
+.nav-links a:hover, .nav-links a[aria-current] { color: var(--sol-red); }
+.caret { width: 12px; height: 12px; transition: transform .15s; }
+.site-header.is-open .caret, .section-menu .caret { transform: rotate(180deg); color: var(--sol-red); }
+.navbar > .btn { justify-self: end; }
+
+/* the Food / Wine / Bar tabs */
+.subnav { display: none; background: var(--surface); }
+.section-menu .subnav { display: block; }
+.site-header.is-open .subnav {
+  display: block;
+  position: absolute;
+  left: 0; right: 0; top: 100%;
+}
+.subnav ul { display: flex; justify-content: center; gap: 56px; padding-top: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+.site-header.is-open .subnav ul { border-bottom-color: var(--line-brand); }
+.subnav a {
+  display: block;
+  padding-bottom: 6px;
+  border-bottom: 2px solid transparent;
+  font-family: var(--display);
+  font-size: var(--fs-h3);
+  line-height: 34px;
+  color: var(--wood);
+  text-align: center;
+}
+.subnav a span:not([data-l]) {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-muted);
+}
+.subnav a:hover { color: var(--sol-red); }
+.subnav a[aria-current="page"] { color: var(--sol-red); border-bottom-color: var(--sol-red); }
+
+/* mobile bar and nav sheet: hidden on desktop */
+.mbar { display: none; }
+
+/* ------------------------------------------------------------------ nav sheet (mobile) */
+.navsheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 0 24px 32px;
+  background: var(--surface);
+  text-align: center;
+}
+.navsheet-top { height: 64px; flex: none; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; }
+.navsheet-top img { height: 26px; width: auto; margin: 0 auto; }
+.navsheet-close { width: 44px; height: 44px; display: grid; place-items: center; color: var(--wood); justify-self: end; }
+.navsheet-label { margin-top: 36px; color: var(--sol-red); }
+.navsheet-menu a, .navsheet-pages a {
+  display: block;
+  font-family: var(--display);
+  font-size: var(--fs-h2);
+  line-height: 48px;
+  color: var(--wood);
+}
+.navsheet-menu a span:not([data-l]) {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ink-muted);
+}
+.navsheet-menu a[aria-current="page"], .navsheet-pages a[aria-current="page"] { color: var(--sol-red); }
+.navsheet-rule { width: auto; margin: 22px 40px; border: 0; border-top: 1px solid var(--line-brand); }
+.navsheet-pages a { line-height: 50px; }
+.navsheet-foot { margin-top: auto; padding-top: 32px; }
+.navsheet-foot .btn { width: 100%; }
+.navsheet-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+html.sheet-open { overflow: hidden; }
+.navsheet:focus { outline: none; }
+
+/* ------------------------------------------------------------------ home */
+.hero { text-align: center; margin-top: 76px; }
+.hero-title {
+  max-width: 900px;
+  margin: 20px auto 18px;
+  font-family: var(--display);
+  font-size: var(--fs-h1);
+  line-height: 1;
+  color: var(--sol-red);
+}
+.hero-lead { max-width: 660px; margin: 24px auto 0; font-size: var(--fs-lead); line-height: 1.5; }
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 72px;
+}
+.facts > div { padding: 26px 16px 28px; text-align: center; }
+.facts dt { color: var(--sol-red); }
+.facts dd { margin-top: 8px; line-height: 1.5; }
+
+.sun-divider { display: flex; justify-content: center; margin: 96px 0; color: var(--wood); }
+.sun-divider img { height: 34px; width: auto; }
+
+.split { display: grid; grid-template-columns: 400px 1fr; gap: 80px; }
+.split .h-lg { margin-top: 16px; }
+.split-body p + p { margin-top: 20px; }
+.split-body .link-sc { margin-top: 26px; }
+
+.trio {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 100px;
+  border-top: 1px solid var(--line-brand);
+  border-bottom: 1px solid var(--line-brand);
+}
+.trio > li { padding: 44px 34px 48px; text-align: center; border-left: 1px solid var(--line-brand); }
+.trio > li:first-child { border-left: 0; }
+.trio h3 { margin-top: 26px; font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.trio p { margin-top: 12px; }
+
+.pullquote { display: flex; align-items: center; justify-content: center; gap: 28px; margin-top: 104px; margin-bottom: 104px; }
+.pullquote .sun { flex: none; width: 30px; height: 30px; margin: 0; }
+.pullquote blockquote p {
+  max-width: 820px;
+  font-family: var(--display);
+  font-size: var(--fs-h2);
+  line-height: 1.12;
+  color: var(--sol-red);
+  text-align: center;
+}
+
+.section-intro { text-align: center; }
+.section-intro .h-lg { margin: 14px 0; }
+.section-intro p:last-child { max-width: 640px; margin: 0 auto; font-size: var(--fs-lead); line-height: 1.5; }
+
+.menu-card {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 52px 8px 0;
+  border: 1px solid var(--line-brand);
+  outline: 1px solid var(--line-brand);
+  outline-offset: 7px;
+}
+.menu-card > div { padding: 40px 30px 36px; text-align: center; border-left: 1px solid var(--line); }
+.menu-card > div:first-child { border-left: 0; }
+.menu-card h3 { font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.menu-card-sub { margin-top: 6px; color: var(--ink-muted); }
+.menu-card li { margin-top: 22px; }
+.menu-card .n { display: block; font-size: var(--fs-lead); line-height: 1.3; }
+.menu-card .x { display: block; margin-top: 2px; font-size: var(--fs-small); line-height: 1.45; color: var(--ink-muted); }
+.menu-card .link-sc { margin-top: 28px; }
+
+.visit-band { margin-top: 120px; text-align: center; }
+.visit-band .h-lg { margin-top: 14px; }
+.visit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 40px; }
+.visit-grid dt { color: var(--sol-red); }
+.visit-grid dd { margin-top: 8px; }
+.visit-grid a:hover { color: var(--sol-red); }
+
+/* ------------------------------------------------------------------ inner pages */
+.page-title { text-align: center; margin-top: 64px; }
+.page-title h1 {
+  margin: 14px 0;
+  font-family: var(--display);
+  font-size: var(--fs-h1);
+  line-height: 1;
+  color: var(--sol-red);
+}
+.page-lead { max-width: 700px; margin: 0 auto; font-size: var(--fs-lead); line-height: 1.5; }
+
+.note-box { max-width: 780px; margin: 40px auto 0; padding: 18px 28px 20px; border: 1px solid var(--line-brand); text-align: center; }
+.note-box p:last-child { margin-top: 6px; }
+
+.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 22px; margin-top: 22px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+.legend b, .marks, .tag { font-weight: 400; color: var(--sol-red); }
+.legend b { margin-right: 6px; }
+
+.section-head { text-align: center; }
+.section-head h2 {
+  margin-top: 8px;
+  font-family: var(--display);
+  font-size: var(--fs-h2);
+  line-height: 1.05;
+  color: var(--sol-red);
+}
+.section-head p { margin-top: 4px; font-style: italic; color: var(--ink-muted); }
+
+.menu-section { margin-top: 84px; }
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 80px; row-gap: 24px; margin-top: 36px; }
+.item-name { font-size: var(--fs-lead); line-height: 1.3; color: var(--wood); }
+.item-name .tag, .item-name .marks { line-height: 0; white-space: nowrap; }
+.item-desc { margin-top: 3px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+.inline-list { max-width: 860px; margin: 30px auto 0; text-align: center; line-height: 1.75; }
+
+.good-to-know {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 96px;
+  border-top: 1px solid var(--line-brand);
+  border-bottom: 1px solid var(--line-brand);
+}
+.good-to-know > div { padding: 36px 40px 38px; }
+.good-to-know > div + div { border-left: 1px solid var(--line-brand); }
+.good-to-know h2 { margin-bottom: 12px; font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.good-to-know ul { padding-left: 20px; list-style: disc; }
+.good-to-know li + li { margin-top: 4px; }
+.good-to-know li::marker { color: var(--sol-red); }
+
+/* double-ruled offer box: wine night, happy hour, calls to action */
+.offer {
+  position: relative;
+  margin: 100px 8px 0;
+  padding: 48px 24px 50px;
+  border-top: 1px solid var(--line-brand);
+  border-bottom: 1px solid var(--line-brand);
+  text-align: center;
+}
+.offer::before, .offer::after { content: ""; position: absolute; left: 0; right: 0; border-top: 1px solid var(--line-brand); }
+.offer::before { top: 5px; }
+.offer::after { bottom: 5px; }
+.offer h2 { font-family: var(--display); font-size: var(--fs-h2); line-height: 1.05; color: var(--sol-red); }
+.offer .hand { margin-top: 6px; }
+.offer p:not(.hand):not(.eyebrow) { max-width: 640px; margin: 14px auto 0; }
+.offer > .btn { margin-top: 26px; }
+.offer .actions { margin-top: 26px; }
+.offer .eyebrow + h2 { margin-top: 12px; }
+.offer-note { font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+
+.closing { margin-top: 72px; text-align: center; }
+.closing h2 { font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.closing p { max-width: 640px; margin: 10px auto 0; }
+
+/* long text: story, privacy, role pages */
+.prose-section { margin-top: 84px; }
+.prose { max-width: 620px; margin: 28px auto 0; }
+.prose p { line-height: 1.65; }
+.prose p + p { margin-top: 18px; }
+.prose h3 { margin-top: 32px; font-family: var(--display); font-size: var(--fs-lead); line-height: 1.3; color: var(--sol-red); }
+.prose ul { margin-top: 14px; padding-left: 22px; list-style: disc; }
+.prose li { line-height: 1.6; }
+.prose li::marker { color: var(--sol-red); }
+.prose a { color: var(--sol-red); border-bottom: 1px solid currentColor; }
+
+/* ------------------------------------------------------------------ visit */
+.visit-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 84px;
+  border-top: 1px solid var(--line-brand);
+  border-bottom: 1px solid var(--line-brand);
+}
+.visit-info > section { padding: 34px 28px 36px; text-align: center; border-left: 1px solid var(--line-brand); }
+.visit-info > section:first-child { border-left: 0; }
+.visit-info p, .hours { margin-top: 10px; }
+.visit-info a:not(.link-sc):hover { color: var(--sol-red); }
+.visit-info .link-sc { margin-top: 14px; }
+.hours > div { display: flex; justify-content: center; gap: 10px; }
+.hours dt::after { content: ":"; }
+.visit-info .small { margin-top: 6px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+.gtk-items { max-width: 680px; margin: 28px auto 0; text-align: center; }
+.gtk-items > div + div { margin-top: 22px; }
+.gtk-items dt { color: var(--sol-red); }
+.gtk-items dd { margin-top: 4px; }
+
+/* ------------------------------------------------------------------ jobs */
+.role-list { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 40px; }
+.role { padding: 34px 32px 32px; border: 1px solid var(--line-brand); }
+.role-meta { color: var(--ink-muted); }
+.role h3 { margin-top: 8px; font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.role p:not(.role-meta) { margin-top: 12px; }
+.role .role-pay { padding-top: 12px; border-top: 1px solid var(--line); }
+/* the Host link is a sentence and wraps: underline each line, not the whole box */
+.role .link-sc {
+  display: block; width: fit-content; margin-top: 18px; padding-bottom: 0; border-bottom: 0;
+  line-height: 24px; text-wrap: balance;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px;
+}
+.filled { max-width: 560px; margin: 48px auto 0; text-align: center; }
+.filled ul { margin-top: 12px; }
+.filled li { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.filled li:first-child { border-top: 1px solid var(--line); }
+.filled li > span + span { color: var(--ink-muted); }
+.split.about { margin-top: 110px; }
+.benefit-list { max-width: 760px; margin: 32px auto 0; }
+.benefit-list li { position: relative; padding: 14px 0 14px 34px; border-bottom: 1px solid var(--line); }
+.benefit-list li:first-child { border-top: 1px solid var(--line); }
+.benefit-list .sun { position: absolute; left: 0; top: 18px; width: 18px; height: 18px; }
+.privacy-links { margin-top: 22px !important; font-size: var(--fs-small); color: var(--ink-muted); }
+.privacy-links a { border-bottom: 1px solid currentColor; }
+.privacy-links [lang="vi"] { font-family: "EB Garamond", Georgia, serif; }
+
+/* ------------------------------------------------------------------ footer */
+.site-footer { margin-top: 120px; text-align: center; }
+.footer-inner { padding-top: 52px; padding-bottom: 40px; border-top: 1px solid var(--line-brand); }
+.footer-logo { display: inline-block; }
+.footer-logo img { height: 32px; width: auto; }
+.footer-cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; margin-top: 40px; }
+.footer-cols h2 { margin-bottom: 10px; font-weight: 600; color: var(--sol-red); }   /* the labels style in SemiBold */
+.footer-cols p, .footer-cols li { font-size: var(--fs-small); line-height: 1.6; }
+.footer-cols a:hover { color: var(--sol-red); }
+.legal { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line); font-size: var(--fs-small); color: var(--ink-muted); }
+
+/* ------------------------------------------------------------------ tablet */
+@media (max-width: 1023px) {
+  .split { grid-template-columns: 1fr 1.3fr; gap: 48px; }
+  .trio > li { padding: 40px 22px 44px; }
+  .menu-card > div { padding: 36px 20px 32px; }
+  .menu-grid { column-gap: 48px; }
+  .subnav ul { gap: 24px; }
+}
+
+@media (max-width: 900px) {
+  .facts { grid-template-columns: repeat(2, 1fr); }
+  .split { grid-template-columns: 1fr; gap: 20px; text-align: center; }
+  .split-body { max-width: 640px; margin: 0 auto; }
+  .trio { grid-template-columns: 1fr; }
+  .trio > li { border-left: 0; }
+  .trio > li + li { border-top: 1px solid var(--line-brand); }
+  .menu-card { grid-template-columns: 1fr; }
+  .menu-card > div { border-left: 0; }
+  .menu-card > div + div { border-top: 1px solid var(--line); }
+  .visit-grid { grid-template-columns: 1fr; gap: 24px; }
+  .visit-info { grid-template-columns: 1fr; }
+  .visit-info > section { border-left: 0; }
+  .visit-info > section + section { border-top: 1px solid var(--line-brand); }
+  .role-list { grid-template-columns: 1fr; }
+  .footer-cols { grid-template-columns: repeat(2, 1fr); row-gap: 36px; }
+}
+
+/* ------------------------------------------------------------------ mobile */
+@media (max-width: 760.98px) {
+  .masthead, .navbar { display: none; }
+  .site-header.is-open .subnav { display: none; }
+  .mbar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    height: 64px;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--line-brand);
+  }
+  .mbar img { height: 26px; width: auto; }
+  .burger { justify-self: end; width: 44px; height: 44px; margin-right: -10px; display: grid; place-items: center; color: var(--wood); }
+
+  .subnav ul { gap: 28px; padding-top: 14px; padding-bottom: 12px; }
+  .subnav a { padding-bottom: 4px; line-height: 30px; }
+  .subnav a span:not([data-l]) { display: none; }
+
+  .hero { margin-top: 36px; }
+  .hero-title { margin: 14px 0 12px; }
+  .hero-lead { margin-top: 16px; }
+  .actions { display: grid; grid-template-columns: min(100%, 320px); gap: 10px; margin-top: 24px; }
+  .facts { margin-top: 40px; }
+  .facts > div { padding: 18px 10px 20px; }
+  .sun-divider { margin: 56px 0; }
+  .sun-divider img { height: 24px; }
+  .trio { margin-top: 64px; }
+  .trio > li { padding: 32px 8px 36px; }
+  .pullquote { gap: 14px; margin-top: 64px; margin-bottom: 64px; }
+  .pullquote .sun { width: 20px; height: 20px; }
+  .menu-card { margin: 36px 7px 0; }
+  .menu-card > div { padding: 30px 18px 28px; }
+  .visit-band { margin-top: 80px; }
+
+  .page-title { margin-top: 30px; }
+  .page-title h1 { margin: 10px 0; }
+  .note-box { margin-top: 28px; padding: 16px 18px 18px; }
+  .legend { gap: 4px 14px; }
+  .menu-section { margin-top: 56px; }
+  .section-head .sun { width: 22px; height: 22px; }
+  .menu-grid { grid-template-columns: 1fr; row-gap: 18px; margin-top: 24px; }
+  .good-to-know { grid-template-columns: 1fr; margin-top: 64px; }
+  .good-to-know > div { padding: 28px 4px 30px; }
+  .good-to-know > div + div { border-left: 0; border-top: 1px solid var(--line-brand); }
+  .offer { margin: 64px 0 0; padding: 36px 8px 38px; }
+  .closing { margin-top: 52px; }
+  .prose-section { margin-top: 56px; }
+  .prose { margin-top: 20px; }
+  .visit-info { margin-top: 56px; }
+  .visit-info > section { padding: 26px 8px 28px; }
+  .role { padding: 26px 20px 24px; }
+  .split.about { margin-top: 72px; }
+  .benefit-list li { padding-left: 30px; }
+  .benefit-list .sun { top: 16px; width: 16px; height: 16px; }
+  .site-footer { margin-top: 80px; }
+  .footer-inner { padding-top: 40px; padding-bottom: 32px; }
+  .footer-cols { grid-template-columns: 1fr; gap: 26px; margin-top: 30px; }
+  .legal { margin-top: 36px; }
+}
+
+@media (min-width: 761px) {
+  .navsheet { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+/* Sol — what the sol.pizza repo adds to the Printed menu design.
+   Load after tokens.css and printed-menu.css. Only rules the design files don't
+   cover: the EN / VI switch, the About · Menu · Booking tabs, the About page, and
+   the long-text pages (privacy notice, role pages) that carry their own markup.
+   Tokens only (tokens.css): no new colours. */
+
+/* ------------------------------------------------------------------ EN / VI
+   Every translated line is in the HTML twice, <span data-l="en" lang="en"> and
+   <span data-l="vi" lang="vi">. <html lang> (set before first paint by the head
+   script, and by printed-menu.js on a click) decides which one shows. */
+html:not([lang="vi"]) [data-l="vi"],
+html[lang="vi"] [data-l="en"] { display: none !important; }
+
+/* ------------------------------------------------------------------ brand faces
+   BN Arora (headings) and Plunct (.hand) come in one weight, upright only: the
+   browser must never fake a bold or an italic. */
+h1, h2, h3, h4, .h-lg, .subnav a, .navsheet-pages a, .pullquote blockquote p, .hand { font-synthesis: none; }
+
+/* A Vietnamese name inside an English heading, marked <span lang="vi">: BN Arora
+   has no Vietnamese letters, so the name is set in Philosopher, sized as --ds
+   sizes Vietnamese headings, rather than mixing the two faces letter by letter. */
+html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="vi"]:not([data-l]) {
+  font-family: "Philosopher", Georgia, serif;
+  font-size: .9em;
+}
+
+/* ------------------------------------------------------------------ tabs
+   About · Menu · Booking in the header and the mobile nav sheet. The current tab
+   (aria-current: "page", or "true" for Menu on Wine and Bar) is underlined. */
+.nav-links a[aria-current],
+.navsheet-pages a[aria-current] {
+  color: var(--sol-red);
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--line-brand);
+  text-underline-offset: 6px;
+}
+.navsheet-pages { margin-top: 36px; }
+.navsheet-pages a[aria-current] { text-underline-offset: 10px; }
+
+/* ------------------------------------------------------------------ about
+   The three boxes and the story, moved from home and /story/. */
+.page-about .page-lead + .page-lead { margin-top: 18px; }
+/* The three boxes sit on the cream page, like the rest of it (6 Oct 2026: the
+   white panel stood out). */
+.trio h2 { font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.story .section-intro { margin-top: 0; }
+.section-head h3 {
+  margin-top: 8px;
+  font-family: var(--display);
+  font-size: var(--fs-h3);
+  line-height: 1.15;
+  color: var(--sol-red);
+}
+.offer h3 { font-family: var(--display); font-size: var(--fs-h2); line-height: 1.05; color: var(--sol-red); }
+/* "Build it with us": no rules, a plain centred call to action (24 Sep feedback:
+   too many lines above the footer). */
+.page-about .offer { border-top: 0; border-bottom: 0; }
+.page-about .offer::before, .page-about .offer::after { content: none; }
+
+/* ------------------------------------------------------------------ characters
+   Fixed-colour SVGs, placed as supplied: never recoloured or stretched, and only
+   on the cream page (never on red or wood brown). The one exception: the Envoy
+   on /about/ is faint (8% opacity) behind the text, Arman's call on 25 Sep 2026.
+   The food characters sit beside the title of the page they show (Food: the
+   tomatoes, Wine: the grape), 32–96px. An empty box as wide as the character on
+   the other side keeps the title centred. */
+.title-art { display: flex; align-items: center; justify-content: center; gap: 28px; }
+.title-art::before { content: ""; flex: none; width: var(--art-w); }
+.title-art h1 { min-width: 0; }
+.title-art img { flex: none; width: var(--art-w); height: auto; margin-block: 8px; }
+
+/* The Solar Envoy, once on /about/: large and faint behind the text about the
+   building and its oven (24 Sep feedback: blend him into the page), clear of the
+   heading. Body text over him is 9.4:1 (measured). */
+.has-envoy { position: relative; isolation: isolate; }
+.has-envoy .envoy {
+  position: absolute; z-index: -1; left: 50%; top: 50%;
+  width: 150px; height: 225px; transform: translate(-50%, -38%);
+  opacity: .08; pointer-events: none;
+}
+@media (max-width: 760.98px) {
+  .has-envoy .envoy { width: 140px; height: 210px; }
+}
+/* phones: the character sits above the title, so the title keeps the full width and stays centred */
+@media (max-width: 760.98px) {
+  .title-art { flex-direction: column; gap: 0; }
+  .title-art::before { display: none; }
+  .title-art img { order: -1; width: calc(var(--art-w) * .7); margin-block: 6px 2px; }
+}
+
+/* ------------------------------------------------------------------ booking
+   The booking box (#book): phone, email and Instagram as plain text to copy,
+   not buttons. */
+.book-contact { margin-top: 26px; }
+.book-contact > div { display: flex; justify-content: center; align-items: baseline; gap: 12px; }
+.book-contact > div + div { margin-top: 6px; }
+.book-contact dt {     /* type: the labels rule in printed-menu.css */
+  min-width: 7.5em;
+  text-align: right;
+  color: var(--sol-red);
+}
+.book-contact dd { min-width: 9.5em; text-align: left; font-size: var(--fs-lead); }
+.book-contact + .offer-note { margin-top: 22px !important; }
+
+/* ------------------------------------------------------------------ long text */
+.prose h2 {
+  margin-top: 48px;
+  font-family: var(--display);
+  font-size: var(--fs-h3);
+  line-height: 1.15;
+  color: var(--sol-red);
+}
+.prose h2 + p, .prose h3 + p, .prose h4 + p, .prose h4 + ul { margin-top: 12px; }
+.prose h4 {             /* type: the labels rule in printed-menu.css */
+  margin-top: 26px;
+  color: var(--sol-red);
+}
+.prose ul + p, .prose .tablewrap + p { margin-top: 18px; }
+.prose li + li { margin-top: 6px; }
+.prose .eyebrow { margin-top: 48px; }
+.prose .eyebrow + p { margin-top: 10px; }
+.prose .updated { color: var(--ink-muted); }
+
+/* the full job description, folded */
+.prose details { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--line-brand); }
+.prose summary {        /* type: the labels rule in printed-menu.css */
+  display: inline-block;
+  cursor: pointer;
+  color: var(--sol-red);
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 1px;
+}
+.prose summary::-webkit-details-marker { display: none; }
+.prose summary:hover { color: var(--wood); }
+
+/* privacy notice tables */
+.tablewrap { margin-top: 18px; overflow-x: auto; }
+.prose table { width: 100%; border-collapse: collapse; font-size: var(--fs-small); line-height: 1.5; }
+.prose th, .prose td { padding: 10px 14px 10px 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.prose thead th {       /* type: the labels rule in printed-menu.css */
+  font-weight: 400;
+  color: var(--sol-red);
+  border-bottom-color: var(--line-brand);
+}
+
+/* role pages: the Vietnamese note above an English-only description */
+.prose .vi-note { color: var(--ink-muted); }
+html:not([lang="vi"]) .prose .vi-note + p { margin-top: 0; }   /* the hidden note is still a sibling */
+
+/* links in the "Recently filled" list on /jobs/ */
+.filled a { border-bottom: 1px solid var(--line-brand); }
+.filled a:hover { color: var(--sol-red); }
+
+/* ------------------------------------------------------------------ opening team
+   /jobs/: a card per role, grouped Front of house / Kitchen, three to a row.
+   /jobs/<slug>/: the role pages, with an Apply button under the title, another
+   at the end, and on phones a slim Apply bar while neither is on screen.
+   After the round closes, <html class="round-closed"> (a head script) shows the
+   closed notes and hides every Apply button. */
+.role-group { margin-top: 48px; }
+.role-group > .label { text-align: center; }
+.role-group .role-list { margin-top: 20px; }
+.role > :first-child { margin-top: 0; }
+.role h4 { margin-top: 8px; font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.role p.role-vi { margin-top: 2px; color: var(--ink-muted); }
+.role .role-dates { font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+.role-links { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 20px; margin-top: 22px; }
+.role .role-links .link-sc { margin-top: 0; }
+@media (min-width: 901px) {
+  .role-list-3 { grid-template-columns: repeat(3, 1fr); }
+  .role-list-3 .role { display: flex; flex-direction: column; }
+  .role-list-3 .role-links { margin-top: auto; padding-top: 22px; }
+}
+@media (min-width: 901px) and (max-width: 1023px) {
+  .role-list-3 .role { padding: 28px 22px 26px; }
+}
+
+.round-note { display: none; }
+.round-closed .round-note { display: block; }
+.role p.round-note { color: var(--sol-red); }
+.round-closed .apply-btn, .round-closed .apply-bar { display: none !important; }
+
+.page-role .role-facts { margin-top: 44px; }
+.page-role .role-facts dd { text-wrap: balance; }
+.page-role .role-end { margin-top: 48px; }
+.apply-bar { display: none; }
+
+@media (max-width: 760.98px) {
+  .prose h2 { margin-top: 40px; }
+  .apply-bar {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 15;
+    padding: 8px var(--gutter) calc(8px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--line-brand);
+    transform: translateY(110%);
+    visibility: hidden;         /* out of the tab order while it's off screen */
+    transition: transform .2s ease, visibility 0s linear .2s;
+  }
+  .apply-bar.is-shown { transform: none; visibility: visible; transition: transform .2s ease; }
+  .apply-bar .btn { width: 100%; }
+}
+
+/* ------------------------------------------------------------------ the kitchen
+   /dough/, /dough/log/ and /dough/login/, behind the kitchen password (build_dough()
+   and the two after it in gen.py; build/design/dough.js and dough-log.js).
+   The calculator: the batch, the formula and its flour, the preferment, the
+   kitchen, the water temperature and the log on the left, the weights on the
+   right (the water beside the temperatures; not sticky: with a preferment and the
+   water it's taller than a laptop screen); on phones one column, the weights
+   straight under the batch. Boxes are white with a 1px red rule and hard corners,
+   like the role cards; figures are lining and tabular, so the weights line up. */
+.dough { display: grid; gap: 44px; max-width: 560px; margin: 48px auto 0; }
+@media (min-width: 901px) {
+  .dough {
+    max-width: none;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: repeat(5, auto) 1fr;  /* spare height goes under the last set, not between */
+    column-gap: 64px;
+    align-items: start;
+  }
+  .dough > * { grid-column: 1; }
+  .dough > .dough-out { grid-column: 2; grid-row: 1 / span 6; }
+}
+.dough-set, .dough-blend { min-width: 0; margin: 0; padding: 0; border: 0; }
+.dough-set > legend, .dough-temp > summary {
+  padding: 0;
+  font-family: var(--display);
+  font-size: var(--fs-h3);
+  line-height: 1.15;
+  color: var(--sol-red);
+}
+.dough-hint { margin-top: 12px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+.dough-set > legend + .dough-hint, .dough-temp > summary + .dough-hint { margin-top: 8px; }
+.dough-hint + .dough-hint { margin-top: 8px; }
+
+/* a number: its label in capitals over a white box with the unit at the right,
+   three to a row (a long label wraps, and the boxes stay in line) */
+.dough-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 16px;
+  align-items: end;
+  margin-top: 16px;
+}
+.dough-field label { display: block; margin-bottom: 6px; }
+.dough-box {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line-brand);
+  border-radius: 2px;
+}
+.dough-box:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.dough-box input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 0 8px 12px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
+  font: inherit;
+  font-size: var(--fs-lead);
+  line-height: 1.2;
+  color: var(--ink);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.dough-box input:focus { outline: none; }        /* the box draws the ring */
+.dough-unit { flex: none; padding: 0 12px 0 6px; font-size: var(--fs-small); color: var(--ink-muted); }
+/* a box that needs a number: a 2px rule and the cream showing through, not colour alone */
+.dough-box.is-invalid { background: var(--surface); box-shadow: inset 0 0 0 1px var(--sol-red); }
+/* pizza flour, worked out from the blend: no box to type in, the same figure */
+.dough-field[data-readout] .dough-box { background: none; border-color: var(--line); }
+.dough-box output {
+  flex: 1;
+  padding: 8px 0 8px 12px;
+  font-size: var(--fs-lead);
+  line-height: 1.2;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.dough-fields-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dough-notes { margin-top: 18px; }
+.dough-notes textarea {
+  display: block;
+  width: 100%;
+  min-height: 96px;
+  padding: 10px 12px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line-brand);
+  border-radius: 2px;
+  font: inherit;
+  line-height: 1.5;
+  color: var(--ink);
+  resize: vertical;
+}
+
+/* the flour blend, inside the formula */
+.dough-blend { margin-top: 26px; }
+.dough-blend legend { padding: 0; }
+.dough-blend .dough-fields { margin-top: 8px; }
+
+/* a choice: radio buttons drawn as one segmented box, the picked one red */
+.dough-set > .dough-seg { margin-top: 16px; }
+.dough-seg { display: flex; background: var(--surface-raised); border: 1px solid var(--line-brand); border-radius: 2px; }
+.dough-seg > label { position: relative; flex: 1 1 0; min-width: 0; }
+.dough-seg > label + label { border-left: 1px solid var(--line-brand); }
+.dough-seg input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.dough-seg input + span {       /* type: the labels rule in printed-menu.css */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: var(--fs-label);
+  line-height: 18px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--sol-red);
+  transition: background-color .12s linear, color .12s linear;
+}
+.dough-seg label:hover input:not(:checked) + span { color: var(--wood); }
+.dough-seg input:checked + span { background: var(--sol-red); color: var(--ink-on-brand); }
+.dough-seg input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Water temperature, folded until it's wanted */
+.dough-temp > summary { display: flex; align-items: center; gap: 10px; width: fit-content; cursor: pointer; list-style: none; }
+.dough-temp > summary::-webkit-details-marker { display: none; }
+.dough-temp > summary:hover { color: var(--wood); }
+.dough-temp > summary .caret { width: 16px; height: 16px; }
+.dough-temp[open] > summary .caret { transform: rotate(180deg); }
+
+/* the weights */
+.dough-out { padding: 26px 28px 28px; background: var(--surface-raised); border: 1px solid var(--line-brand); }
+.dough-sum {
+  margin-top: 6px;
+  font-family: var(--display);
+  font-size: var(--fs-h2);
+  line-height: 1.05;
+  color: var(--sol-red);
+  font-variant-numeric: lining-nums;
+}
+.dough-sub { margin-top: 6px; color: var(--ink-muted); font-variant-numeric: lining-nums; }
+.dough-table {
+  width: 100%;
+  margin-top: 16px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.dough-table th, .dough-table td { padding: 8px 0; font-weight: 400; text-align: left; vertical-align: baseline; }
+.dough-table td { padding-left: 16px; text-align: right; white-space: nowrap; font-size: var(--fs-lead); }
+.dough-table tbody tr + tr > * { border-top: 1px solid var(--line); }
+.dough-group > th {             /* type: the labels rule in printed-menu.css */
+  padding-top: 18px;
+  font-size: var(--fs-label);
+  line-height: 18px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--sol-red);
+}
+.dough-table tbody:first-child .dough-group > th { padding-top: 4px; }
+.dough-table tfoot > tr > * { padding-top: 12px; border-top: 1px solid var(--line-brand); }
+.dough-table tfoot td { font-weight: 600; }
+.dough-water { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line-brand); }
+.dough-water-main { margin-top: 6px; font-size: var(--fs-lead); line-height: 1.35; font-variant-numeric: lining-nums; }
+.dough-water-note { margin-top: 6px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); font-variant-numeric: lining-nums; }
+.dough-warn {
+  margin-top: 14px;
+  padding-left: 12px;
+  border-left: 2px solid var(--sol-red);
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  color: var(--sol-red);
+}
+.dough-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+.dough-note { margin-top: 12px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+.dough-to-log { margin-top: 16px; }
+.dough-status { margin-top: 14px; font-size: var(--fs-small); line-height: 1.5; }
+.dough-status a, .dough-warn a, .log-states a { color: var(--sol-red); border-bottom: 1px solid currentColor; }
+.dough-log .dough-actions { margin-top: 20px; }
+.dough-box input[type="date"] { min-height: 46px; padding-right: 8px; }
+
+/* Calculator · Dough log · Sign out, under the page title */
+.dough-nav ul { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 22px; }
+.dough-nav li { display: flex; align-items: center; }
+.dough-nav li + li::before {
+  content: "";
+  width: 4px; height: 4px;
+  margin: 0 14px;
+  border-radius: 50%;
+  background: var(--sol-red);
+}
+.dough-nav a, .dough-nav button {     /* type: the labels rule in printed-menu.css */
+  padding: 10px 0;
+  font-family: var(--serif);
+  font-size: var(--fs-label);
+  line-height: 18px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--wood);
+}
+.dough-nav a:hover, .dough-nav button:hover, .dough-nav a[aria-current] { color: var(--sol-red); }
+.dough-nav a[aria-current] { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+.dough-nav form { display: contents; }
+
+/* the dough log: a heading per day, a card per batch */
+.log-tools { margin-top: 26px; text-align: center; }
+.log-states { max-width: 640px; margin: 24px auto 0; text-align: center; }
+.log-states .dough-warn { text-align: left; }
+.log-list { max-width: 760px; margin: 0 auto; }
+.log-day { margin-top: 44px; }
+.log-day-h { font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.log-entry { position: relative; margin-top: 16px; padding: 22px 26px 20px; background: var(--surface-raised); border: 1px solid var(--line-brand); }
+.log-batch { font-size: var(--fs-lead); line-height: 1.3; font-variant-numeric: lining-nums; }
+.log-meta { margin-top: 2px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); font-variant-numeric: lining-nums; }
+.log-facts { margin-top: 14px; font-size: var(--fs-small); line-height: 1.5; font-variant-numeric: lining-nums; }
+.log-facts > div { display: grid; grid-template-columns: 11em minmax(0, 1fr); gap: 12px; padding: 7px 0; border-top: 1px solid var(--line); }
+.log-facts dt {         /* type: the labels rule in printed-menu.css */
+  font-size: var(--fs-label);
+  line-height: 22px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--sol-red);
+}
+.log-notes { white-space: pre-wrap; }
+.log-delete {           /* type: the labels rule in printed-menu.css */
+  margin-top: 12px;
+  padding: 6px 0;
+  font-size: var(--fs-label);
+  line-height: 18px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  border-bottom: 1px solid currentColor;
+}
+.log-delete:hover { color: var(--sol-red); }
+.log-delete:disabled { opacity: .5; cursor: default; }
+
+/* sign in */
+.dough-login { max-width: 420px; margin: 40px auto 0; }
+.dough-login .actions { justify-content: flex-start; margin-top: 22px; }
+.dough-login .dough-hint { margin-top: 16px; }
+
+@media (max-width: 760.98px) {
+  .dough { gap: 36px; margin-top: 32px; }
+  .dough-fields { gap: 16px 10px; }
+  .dough-box input { padding-left: 10px; }
+  .dough-unit { padding: 0 10px 0 4px; }
+  .dough-out { padding: 22px 18px 24px; }
+  .dough-actions .btn { flex: 1 1 auto; }
+  .log-entry { padding: 18px 16px 16px; }
+  .log-facts > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .dough-login .actions { display: flex; }
+  .dough-login .btn { width: 100%; }
+}

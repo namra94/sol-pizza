@@ -1,0 +1,40 @@
+# A full preview for every branch Claude works on: copies each push to claude/<name>
+# to full/claude/<name>. Workers Builds builds full/… branches as the full site
+# (build/gen.py: every page, every section still waiting for content with its
+# "Content needed" marker, noindex) on their own Preview URL:
+#   https://full-claude-<name>-sol-pizza.polarized-jar.workers.dev
+# while the pull request's own preview shows the public site, as main would deploy it.
+# full/… branches are mirrors: never commit to them; deleting claude/<name> deletes
+# its mirror.
+name: Full preview for claude/ branches
+
+on:
+  push:
+    branches: ['claude/**']
+  delete:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: full-preview-${{ github.event.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mirror:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Force-push to full/<branch>
+        run: git push --force origin "HEAD:refs/heads/full/${GITHUB_REF_NAME}"
+
+  remove:
+    if: github.event_name == 'delete' && github.event.ref_type == 'branch' && startsWith(github.event.ref, 'claude/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Delete full/<branch>
+        run: git push origin --delete "full/${{ github.event.ref }}" || true

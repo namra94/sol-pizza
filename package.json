@@ -6,7 +6,9 @@
     "build": "python3 build/gen.py",
     "build:full": "python3 build/gen.py --full",
     "deploy": "python3 build/gen.py --public && wrangler deploy",
-    "pack-assets": "python3 build/pack_assets.py"
+    "pack-assets": "python3 build/pack_assets.py",
+    "og": "npm --prefix check run og",
+    "check": "npm --prefix check run check"
   },
   "devDependencies": {
     "@fontsource/eb-garamond": "^5.2.0",
