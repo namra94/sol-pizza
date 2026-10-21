@@ -5,20 +5,5 @@
     "dates: each night it runs, YYYY-MM-DD. times: 'HH:MM–HH:MM' if it's the same every night, or ''. price: per person, in đồng, or null. booking: the address where guests book or buy tickets, or '' to book by email (to ENQUIRIES in build/gen.py). chefs: {name, line_en, line_vi}, the guest chefs. menu_en and menu_vi: the courses in order, as many in each. image: the key of a photo in build/media.json, or ''.",
     "An edition counts as coming up until 23:59 on its last night, Hanoi time (or its closing time the next morning, if its times run past midnight). That switch happens in the browser too, so it moves to Past without a rebuild. A new edition needs nothing else: add its entry, in any order (the build sorts them by date)."
   ],
-  "editions": [
-    {
-      "slug": "eclipse-1",
-      "edition": 1,
-      "dates": ["2026-10-23", "2026-10-24"],
-      "times": "",
-      "summary_en": "",
-      "summary_vi": "",
-      "chefs": [],
-      "menu_en": [],
-      "menu_vi": [],
-      "price": null,
-      "booking": "",
-      "image": ""
-    }
-  ]
+  "editions": []
 }
