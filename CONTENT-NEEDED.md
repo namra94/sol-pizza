@@ -29,7 +29,6 @@ Last updated 13 October 2026.
 | Inbox for enquiries | Where the private dining form, the opening-week form and the newsletter sign-up send their email (`ENQUIRIES` in `build/gen.py`) | An address (hello@sol.pizza unless you say otherwise) | Arman |
 | The map pin | `GEO` in `build/gen.py`: the structured data (and the Directions button follows the Google listing). The Google listing "Sol Hanoi" carries Sol Pizza's reviews: say whether its pin is on the new building | Latitude and longitude, or the Google Maps link to the right place | Arman |
 | Holiday and Tết hours | `build/announcements.json`: the bar at the top of every page, and Visit | Dates, and a line in English and Vietnamese | Arman, Supervisor |
-| Eclipse, 23–24 October | `build/events-data.json`, the first edition: `/events/` lists it with its dates now; its own page, `/events/eclipse-1/`, goes live once it has its line (`summary_en`, `summary_vi`) | A line or two on what it is, the times, guest chef(s) and a line on each, the menu, the price, how to book (a link, or by email), artwork | Arman |
 
 ## The menu
 
@@ -109,7 +108,7 @@ Each key below is a section the public build leaves out until its content arrive
 | `press-contact` | `/press/`, "Who to ask": a name and an email (`PRESS_CONTACT`; Press contact, above). Until then it says hello@sol.pizza |
 | `photography` | Every photograph: the home page (the first picture, the story, the three cards), About (the room, the oven), the menus, Private dining, Visit, each Eclipse edition, and the ones the press may use on `/press/`. Each placeholder on the full preview gives its slot, what to shoot and its shapes; `python3 build/media_tool.py slots` lists them (Photography, above) |
 | `home-press` | The home page: press or review quotes (Press and review quotes, above) |
-| `event-<slug>` | The whole page of each Eclipse edition, `/events/<slug>/` (today `event-eclipse-1`): its line (Eclipse, above). It goes live by itself once `summary_en` and `summary_vi` are in `build/events-data.json`; a new edition needs nothing here |
+| `event-<slug>` | The whole page of each Eclipse edition, `/events/<slug>/`: a line or two on what it is. It goes live by itself once `summary_en` and `summary_vi` are in `build/events-data.json`; a new edition needs nothing here |
 | `gift-cards` | The whole page `/gift-cards/`: the values, how long a card lasts, how to buy one (Gift cards, above). To publish it, delete its line in `WAITING` in `build/gen.py` |
 | `legal-guest-privacy` | The whole page `/privacy/guests/`, the guest privacy notice: the lawyer's approval, and the retention periods (Legal, above). Then delete its line in `WAITING` |
 | `legal-accessibility` | The whole page `/accessibility/`, the accessibility statement: the lawyer's approval, and the building's access facts (Getting here, above). Then delete its line in `WAITING` |
