@@ -1382,6 +1382,7 @@ def write_pages():
 #   build/design/kitchen/kitchen.css. No consent banner, phone bar, announcement bar
 #   or analytics, and no /vi/ copy: a /vi/dough/ page would sit outside the Worker's
 #   password check (run_worker_first), and the build stops if one is ever written.
+#   The back office's pages (office_page()) use the same shell.
 # --------------------------------------------------------------------------
 # Applies the language before first paint: a ?lang=vi link (remembered), a
 # #vi / #en link (this page only), else the saved choice.
@@ -4140,6 +4141,372 @@ def build_dough_login():
 
 
 # ==========================================================================
+# THE BACK OFFICE (/backoffice/)
+# Tools for the team, not pages for guests, behind one shared staff password (the
+# Worker, worker/index.js): its own cookie, so the kitchen's password doesn't open it
+# and its password doesn't open the kitchen. The first tool is the purchase request:
+# the form at /backoffice/purchase/ sends a request to Slack's #supply, where
+# management approves it with reactions (worker/backoffice.js); /backoffice/purchases/
+# lists the last 30. The pages are the kitchen's shell (kitchen_page(): one bilingual
+# page each, noindex, no analytics or consent banner, no /vi/ copy) with the kitchen's
+# form parts (kitchen.css) and build/design/backoffice.css; the scripts are
+# build/design/purchase.js and purchase-list.js. The Order Guide (suppliers, items,
+# prices, the staff's names) comes from the Order Sheet at run time and is never in
+# this repo.
+# ==========================================================================
+OFFICE_EYEBROW = t('Back office', 'Nội bộ')
+
+
+def office_nav(cur):
+    """Back office · Purchase request · Recent requests · Sign out, under the page title."""
+    links = [('home', '/backoffice/', t('Back office', 'Nội bộ')),
+             ('purchase', '/backoffice/purchase/', t('Purchase request', 'Yêu cầu mua hàng')),
+             ('purchases', '/backoffice/purchases/', t('Recent requests', 'Yêu cầu gần đây'))]
+    return ('<nav class="dough-nav office-nav" %s><ul>%s<li><form method="post" action="/api/backoffice/logout">'
+            '<button type="submit">%s</button></form></li></ul></nav>'
+            % (label('Back office', 'Nội bộ'),
+               ''.join('<li><a href="%s"%s>%s</a></li>' % (href, ' aria-current="page"' if key == cur else '', name)
+                       for key, href, name in links),
+               t('Sign out', 'Đăng xuất')))
+
+
+def office_page(path, data_page, title, desc, main, script=None):
+    """A back-office page: the kitchen's shell with the back office's stylesheet, and its
+    script if it has one."""
+    extra = '<link rel="stylesheet" href="/assets/backoffice.css">'
+    if script:
+        extra += '\n<script src="/assets/%s" defer></script>' % script
+    return kitchen_page(path, data_page, title, desc, main, extra=extra)
+
+
+def office_warn(attr, key, text, cls='dough-warn'):
+    """A line the page's script shows when it applies (attr="key"), one of a group."""
+    return '<p class="%s" %s="%s" hidden>%s</p>' % (cls, attr, key, text)
+
+
+def build_office_home():
+    """/backoffice/: a tile for each tool, and one for the kitchen's, which keeps its own
+    password."""
+    def tile(href, name, text):
+        return ('<li><a class="office-tile" href="%s"><span class="office-tile-name">%s</span>'
+                '<span class="office-tile-text">%s</span></a></li>' % (href, name, text))
+
+    main = '\n'.join([
+        '<main id="main" class="wrap">',
+        page_title(t('Staff only', 'Dành cho nhân viên'), t('Back office', 'Nội bộ'),
+                   t('Sol’s tools for the team.', 'Công cụ của Sol dành cho nhân viên.')),
+        office_nav('home'),
+        '<ul class="office-tiles">%s</ul>' % ''.join([
+            tile('/backoffice/purchase/', t('Purchase request', 'Yêu cầu mua hàng'),
+                 t('Ask for supplies. Management approves it in Slack.',
+                   'Đề nghị mua hàng. Quản lý duyệt trên Slack.')),
+            tile('/backoffice/purchases/', t('Recent requests', 'Yêu cầu gần đây'),
+                 t('The last 30, and whether each one reached Slack.',
+                   '30 yêu cầu gần nhất, và yêu cầu nào đã lên Slack.')),
+            tile('/dough/', t('Dough (kitchen)', 'Bột (bếp)'),
+                 t('The dough calculator and the dough log. They have their own password.',
+                   'Công cụ tính bột và nhật ký bột. Có mật khẩu riêng.')),
+        ]),
+        '<p class="office-foot">%s</p>' % t('You stay signed in on this phone for 30 days.',
+                                           'Bạn sẽ được giữ đăng nhập trên điện thoại này trong 30 ngày.'),
+        '</main>', ''])
+    return office_page('/backoffice/', 'office', ('Back office — Sol', 'Nội bộ — Sol'),
+                       ('Sol’s back office: tools for the team.', 'Trang nội bộ của Sol: công cụ cho nhân viên.'),
+                       main)
+
+
+def build_office_login():
+    """/backoffice/login/: as the kitchen's (build_dough_login()), with the staff password.
+    The Worker shows the line for a wrong password, too many tries or no password set
+    (data-if, unhidden by the Worker), and fills in where to go next."""
+    def warn(key, text):
+        return '<p class="dough-warn" data-if="%s" hidden>%s</p>' % (key, text)
+
+    main = ('<main id="main" class="wrap">\n%s\n'
+            '<form class="dough-login" method="post" action="/api/backoffice/login">'
+            '<input type="hidden" name="next" value="/backoffice/">%s%s%s%s'
+            '<div class="actions"><button class="btn btn-red" type="submit">%s</button></div>'
+            '<p class="dough-hint">%s</p></form>\n</main>\n') % (
+        page_title(OFFICE_EYEBROW, t('Sign in', 'Đăng nhập'),
+                   t('The back office is for Sol’s team. Ask a manager for the staff password.',
+                     'Trang nội bộ dành cho nhân viên Sol. Hãy hỏi quản lý để biết mật khẩu nhân viên.')),
+        dough_box('o-password', '<input id="o-password" name="password" type="password" '
+                                'autocomplete="current-password" required>', t('Staff password', 'Mật khẩu nhân viên')),
+        warn('wrong', t('That isn’t the password. Try again.', 'Mật khẩu chưa đúng. Hãy thử lại.')),
+        warn('wait', t('Too many tries. Wait 15 minutes, then try again.',
+                       'Bạn đã thử quá nhiều lần. Hãy đợi 15 phút rồi thử lại.')),
+        warn('off', t('Signing in isn’t set up on this copy of the site.',
+                      'Chức năng đăng nhập chưa được thiết lập trên bản này của trang.')),
+        t('Sign in', 'Đăng nhập'),
+        t('You stay signed in on this phone for 30 days.', 'Bạn sẽ được giữ đăng nhập trên điện thoại này trong 30 ngày.'))
+    return office_page('/backoffice/login/', 'office-login', ('Sign in — Sol back office', 'Đăng nhập — Nội bộ Sol'),
+                       ('Sign in to Sol’s back office.', 'Đăng nhập vào trang nội bộ của Sol.'), main)
+
+
+def build_purchase():
+    """/backoffice/purchase/: the purchase request. purchase.js loads the Order Guide, fills
+    the lists from it and keeps the summary up to date; every line is here in both
+    languages, and #p-item is the template for an item's row. data-if lines show while
+    they apply; data-guide and data-send-line lines show one of their group at a time."""
+    def field(fid, name, inner, attrs=''):
+        return ('<div class="dough-field"%s><label class="label" for="%s">%s</label><div class="dough-box">%s</div></div>'
+                % (attrs, fid, name, inner))
+
+    def text_box(fid, name, most, attrs=''):
+        return ('<input id="%s" name="%s" type="text" maxlength="%d" autocomplete="off" spellcheck="false"%s>'
+                % (fid, name, most, attrs))
+
+    def station(value, name):
+        return '<label><input type="radio" name="station" value="%s"><span>%s</span></label>' % (value, name)
+
+    def row_field(key, name, inner, cls='dough-field'):
+        return ('<div class="%s"><label class="label" data-for="%s">%s</label><div class="dough-box">%s</div></div>'
+                % (cls, key, name, inner))
+
+    item_row = ('<template id="p-item"><li class="p-item">'
+                '<div class="p-item-head"><p class="label">%s</p><button class="p-remove" type="button" data-remove>'
+                '%s</button></div>%s<ul class="p-options" role="listbox" hidden></ul>'
+                '<div class="dough-fields p-item-fields">%s%s%s</div>'
+                '<p class="p-price" hidden></p></li></template>') % (
+        t('Item <span data-out="n"></span>', 'Hàng <span data-out="n"></span>'),
+        t('Remove', 'Xóa'),
+        row_field('item', t('Item', 'Hàng'),
+                  '<input data-name="item" type="text" maxlength="200" autocomplete="off" spellcheck="false">',
+                  'dough-field p-item-name'),
+        row_field('qty', t('Quantity', 'Số lượng'),
+                  '<input data-name="qty" type="text" inputmode="decimal" maxlength="12" autocomplete="off" '
+                  'spellcheck="false">'),
+        row_field('unit', t('Unit', 'Đơn vị'),
+                  '<input data-name="unit" type="text" maxlength="30" autocomplete="off" spellcheck="false">'),
+        row_field('note', t('Note (optional)', 'Ghi chú (không bắt buộc)'),
+                  '<input data-name="note" type="text" maxlength="200" autocomplete="off">',
+                  'dough-field p-item-note'))
+
+    guide_notes = ''.join([
+        office_warn('data-guide', 'loading', t('Loading the Order Guide…', 'Đang tải danh mục hàng…'), 'dough-status'),
+        office_warn('data-guide', 'stale',
+                    t('Order Guide as of <span data-out="as_of"></span>: the Order Sheet can’t be reached just now, '
+                      'so prices may have changed since.',
+                      'Danh mục hàng cập nhật lúc <span data-out="as_of"></span>: hiện chưa kết nối được Order Sheet, '
+                      'giá có thể đã thay đổi.')),
+        office_warn('data-guide', 'none',
+                    t('The Order Guide isn’t connected, so there are no lists or prices: type the supplier and the '
+                      'items. Arman’s ✅ will be needed.',
+                      'Chưa kết nối danh mục hàng nên chưa có danh sách và giá: hãy tự nhập nhà cung cấp và mặt hàng. '
+                      'Yêu cầu sẽ cần anh Arman duyệt.')),
+        office_warn('data-guide', 'failed',
+                    t('Couldn’t load the Order Guide. Type the supplier and the items, or reload the page.',
+                      'Không tải được danh mục hàng. Hãy tự nhập nhà cung cấp và mặt hàng, hoặc tải lại trang.')),
+        office_warn('data-guide', 'signed-out',
+                    t('You’ve been signed out. <a href="/backoffice/login/?next=/backoffice/purchase/">Sign in again</a>.',
+                      'Bạn đã bị đăng xuất. <a href="/backoffice/login/?next=/backoffice/purchase/">Đăng nhập lại</a>.')),
+        office_warn('data-guide', 'off', t('The back office isn’t set up on this copy of the site.',
+                                           'Trang nội bộ chưa được thiết lập trên bản này của trang.')),
+    ])
+    send_states = ''.join([
+        office_warn('data-send-line', 'invalid', t('Check the marked boxes.', 'Kiểm tra lại các ô được đánh dấu.')),
+        office_warn('data-send-line', 'previewing', t('Writing the message…', 'Đang soạn tin nhắn…'), 'dough-status'),
+        office_warn('data-send-line', 'sending', t('Sending…', 'Đang gửi…'), 'dough-status'),
+        office_warn('data-send-line', 'slack-failed',
+                    t('Slack didn’t take it (<span data-out="slack_error"></span>). Nothing you typed is lost: '
+                      'send it again. It won’t be posted twice.',
+                      'Slack chưa nhận yêu cầu (<span data-out="slack_error"></span>). Những gì bạn nhập vẫn còn: '
+                      'hãy gửi lại. Yêu cầu sẽ không bị đăng hai lần.')),
+        office_warn('data-send-line', 'busy',
+                    t('It’s still being sent. Wait a moment, then send it again: it won’t be posted twice.',
+                      'Yêu cầu vẫn đang được gửi. Hãy đợi một chút rồi gửi lại: yêu cầu sẽ không bị đăng hai lần.')),
+        office_warn('data-send-line', 'failed',
+                    t('Couldn’t send it. Check the connection and try again: it won’t be posted twice.',
+                      'Chưa gửi được. Hãy kiểm tra kết nối và thử lại: yêu cầu sẽ không bị đăng hai lần.')),
+        office_warn('data-send-line', 'signed-out',
+                    t('You’ve been signed out. <a href="/backoffice/login/" target="_blank">Sign in</a> in a new tab, '
+                      'then send it again here.',
+                      'Bạn đã bị đăng xuất. Hãy <a href="/backoffice/login/" target="_blank">đăng nhập</a> ở một thẻ '
+                      'mới, rồi gửi lại ở đây.')),
+        office_warn('data-send-line', 'off', t('The back office isn’t set up on this copy of the site.',
+                                          'Trang nội bộ chưa được thiết lập trên bản này của trang.')),
+    ])
+
+    main = """<main id="main" class="wrap">
+{title}
+{nav}
+<noscript><aside class="note-box"><p>{nojs}</p></aside></noscript>
+<div class="office-notes" role="status">{guide_notes}<p class="dough-status" data-if="dry-run" hidden>{dry_run}</p></div>
+<form class="office-form" id="purchase" autocomplete="off" novalidate hidden>
+<fieldset class="dough-set"><legend>{h_request}</legend>
+  <div class="p-fields">
+    <div class="p-field">
+      {who}
+      <div class="dough-field" data-if="who-typed" hidden><label class="label" for="p-who-other"><span data-if="who-list">{who_name}</span><span data-if="who-nolist" hidden>{l_who}</span></label><div class="dough-box">{who_other}</div></div>
+    </div>
+    <div class="p-field">
+      {supplier}
+      <div class="dough-field" data-if="sup-typed" hidden><label class="label" for="p-supplier-other"><span data-if="sup-list">{sup_name}</span><span data-if="sup-nolist" hidden>{l_supplier}</span></label><div class="dough-box">{sup_other}</div></div>
+      <ul class="p-facts" id="p-facts" hidden></ul>
+    </div>
+    <fieldset class="p-field p-station"><legend class="label">{l_station}</legend><div class="dough-seg">{stations}</div></fieldset>
+    <fieldset class="p-field p-when"><legend class="label">{l_needed}</legend>
+      <div class="dough-fields dough-fields-2">{day}{time}</div>
+    </fieldset>
+  </div>
+</fieldset>
+<fieldset class="dough-set"><legend>{h_items}</legend>
+  <p class="dough-hint">{items_hint}</p>
+  <ol class="p-items" id="p-items"></ol>
+  <div class="dough-actions"><button class="btn btn-outline btn-sm" type="button" data-add>{add}</button></div>
+  <p class="dough-hint" data-if="items-full" hidden>{items_full}</p>
+</fieldset>
+<div class="dough-field dough-notes"><label class="label" for="p-note">{l_note}</label><textarea id="p-note" name="note" rows="3" maxlength="1000"></textarea></div>
+<section class="p-summary" aria-labelledby="p-summary-l">
+  <p class="label" id="p-summary-l">{l_estimate}</p>
+  <p class="p-estimate" data-out="estimate">—</p>
+  <p class="p-sub" data-out="unpriced" data-if="unpriced" hidden></p>
+  <p class="p-approver" data-out="approver"></p>
+  <p class="dough-warn" data-out="owner" data-if="owner" hidden></p>
+</section>
+<div class="p-send">
+  <div class="dough-actions"><button class="btn btn-red" type="button" data-preview>{preview}</button></div>
+  <div class="p-preview-box" id="p-preview-box" data-if="previewed" tabindex="-1" hidden>
+    <p class="label" id="p-preview-l">{l_message}</p>
+    <pre class="p-preview" id="p-preview" aria-labelledby="p-preview-l"></pre>
+    <p class="dough-hint">{message_hint}</p>
+    <div class="dough-actions"><button class="btn btn-red" type="button" data-send>{send}</button></div>
+  </div>
+  <div role="status">{send_states}</div>
+</div>
+</form>
+<section class="p-done" id="p-done" tabindex="-1" aria-labelledby="p-done-h" hidden>
+  <h2 class="p-done-h" id="p-done-h"><span data-if="sent">{sent}</span><span data-if="dry" hidden>{dry}</span></h2>
+  <p class="p-ref">{ref}</p>
+  <p data-if="sent">{approve}</p>
+  <div data-if="dry" hidden><p class="dough-hint">{dry_hint}</p><pre class="p-preview" data-out="sent_message"></pre></div>
+  <div class="dough-actions"><button class="btn btn-red" type="button" data-new>{new}</button></div>
+</section>
+{item_row}
+</main>
+""".format(
+        title=page_title(OFFICE_EYEBROW, t('Purchase request', 'Yêu cầu mua hàng'),
+                         t('Ask for supplies. Management approves it in Slack, in #supply.',
+                           'Đề nghị mua hàng. Quản lý duyệt trên Slack, trong kênh #supply.')),
+        nav=office_nav('purchase'),
+        nojs=t('The form needs JavaScript. Turn it on in the browser’s settings.',
+               'Biểu mẫu này cần JavaScript. Hãy bật JavaScript trong cài đặt trình duyệt.'),
+        guide_notes=guide_notes,
+        dry_run=t('Dry run: requests are kept here but not posted to Slack.',
+                  'Chạy thử: yêu cầu được lưu ở đây nhưng không đăng lên Slack.'),
+        h_request=t('The request', 'Yêu cầu'),
+        l_who=t('Requested by', 'Người yêu cầu'),
+        who=field('p-who', t('Requested by', 'Người yêu cầu'), '<select id="p-who" name="who"></select>',
+                  ' data-if="who-list"'),
+        who_name=t('Name', 'Tên'),
+        who_other=text_box('p-who-other', 'who_other', 60),
+        l_supplier=t('Supplier', 'Nhà cung cấp'),
+        supplier=field('p-supplier', t('Supplier', 'Nhà cung cấp'),
+                       '<select id="p-supplier" name="supplier" aria-describedby="p-facts"></select>',
+                       ' data-if="sup-list"'),
+        sup_name=t('Supplier’s name', 'Tên nhà cung cấp'),
+        sup_other=text_box('p-supplier-other', 'supplier_other', 60),
+        l_station=t('Station', 'Bộ phận'),
+        stations=station('Kitchen', t('Kitchen', 'Bếp')) + station('Bar', 'Bar') + station('FOH', t('FOH', 'Sảnh')),
+        l_needed=t('Needed by', 'Cần lúc'),
+        day=dough_box('p-day', '<input id="p-day" name="day" type="date">', t('Day', 'Ngày')),
+        time=dough_box('p-time', '<input id="p-time" name="time" type="time">',
+                       t('Time (optional)', 'Giờ (không bắt buộc)')),
+        h_items=t('Items', 'Hàng'),
+        items_hint=t('Pick from the supplier’s list, in English or Vietnamese, or type an item that isn’t on it: '
+                     'it goes without a price.',
+                     'Chọn từ danh sách của nhà cung cấp, bằng tiếng Anh hoặc tiếng Việt, hoặc tự nhập mặt hàng chưa '
+                     'có trong danh sách: mặt hàng đó sẽ không có giá.'),
+        add=t('Add an item', 'Thêm hàng'),
+        items_full=t('30 items at most. Send the rest as another request.',
+                     'Tối đa 30 mặt hàng. Hãy gửi phần còn lại trong một yêu cầu khác.'),
+        l_note=t('Note', 'Ghi chú'),
+        l_estimate=t('Estimate before VAT', 'Ước tính chưa VAT'),
+        preview=t('Preview the message', 'Xem trước tin nhắn'),
+        l_message=t('The message for #supply', 'Tin nhắn gửi lên #supply'),
+        message_hint=t('Exactly as Slack will get it. Change anything above and preview it again.',
+                       'Đúng như tin nhắn Slack sẽ nhận. Nếu sửa gì ở trên, hãy xem trước lại.'),
+        send=t('Send to #supply', 'Gửi lên #supply'),
+        send_states=send_states,
+        sent=t('Sent to #supply', 'Đã gửi lên #supply'),
+        dry=t('Dry run: not posted to Slack', 'Chạy thử: chưa đăng lên Slack'),
+        ref=t('Ref <strong data-out="ref"></strong>', 'Mã <strong data-out="ref"></strong>'),
+        approve=t('Management will approve it in Slack.', 'Quản lý sẽ duyệt trên Slack.'),
+        dry_hint=t('This copy of the site only pretends to post. The message it would have posted:',
+                   'Bản này của trang chỉ chạy thử, không đăng thật. Tin nhắn lẽ ra sẽ được đăng:'),
+        new=t('New request', 'Yêu cầu mới'),
+        item_row=item_row,
+    )
+    return office_page('/backoffice/purchase/', 'purchase', ('Purchase request — Sol', 'Yêu cầu mua hàng — Sol'),
+                       ('Ask for supplies: the request goes to Slack, where management approves it.',
+                        'Đề nghị mua hàng: yêu cầu được gửi lên Slack để quản lý duyệt.'),
+                       main, script='purchase.js')
+
+
+def build_purchase_list():
+    """/backoffice/purchases/: purchase-list.js fetches the last 30 requests and fills a
+    copy of #request for each, newest first."""
+    def fact(name, value, cond=None):
+        return '<div%s><dt>%s</dt><dd>%s</dd></div>' % (' data-if="%s"' % cond if cond else '', name, value)
+
+    def slot(key):
+        return '<span data-slot="%s"></span>' % key
+
+    def state(key, text, cls='dough-status'):
+        return '<p class="%s" data-state="%s" hidden>%s</p>' % (cls, key, text)
+
+    entry = ('<template id="request"><article class="log-entry office-entry">'
+             '<header class="log-head"><p class="log-batch">{ref}</p><p class="office-status">{status}</p>'
+             '<p class="log-meta">{by}</p></header><dl class="log-facts">{facts}</dl></article></template>').format(
+        ref=slot('ref'),
+        status=''.join('<span data-if="%s" hidden>%s</span>' % (k, v) for k, v in [
+            ('sent', t('Sent to Slack', 'Đã gửi lên Slack')),
+            ('failed', t('Not sent: Slack failed', 'Chưa gửi: lỗi Slack')),
+            ('dry', t('Dry run', 'Chạy thử')),
+            ('sending', t('Sending', 'Đang gửi'))]),
+        by=t('%s, %s' % (slot('requested_by'), slot('time')), '%s, %s' % (slot('requested_by'), slot('time'))),
+        facts=''.join([
+            fact(t('Supplier', 'Nhà cung cấp'), slot('supplier')),
+            fact(t('Station', 'Bộ phận'), slot('station')),
+            fact(t('Needed by', 'Cần lúc'), slot('needed_by')),
+            fact(t('Items', 'Hàng'), t('%s <span data-if="one">item</span><span data-if="many">items</span>' % slot('items'),
+                                     '%s mặt hàng' % slot('items'))),
+            fact(t('Estimate', 'Ước tính'), t('~%s before VAT' % slot('estimate'), '~%s chưa VAT' % slot('estimate')),
+                 'estimate'),
+            fact(t('Approval', 'Duyệt'), t('Arman’s ✅ needed too', 'Cần cả anh Arman duyệt'), 'owner'),
+        ]))
+    main = '\n'.join([
+        '<main id="main" class="wrap">',
+        page_title(OFFICE_EYEBROW, t('Recent requests', 'Yêu cầu gần đây'),
+                   t('The last 30 purchase requests, newest first. Approving happens in Slack, in #supply.',
+                     '30 yêu cầu mua hàng gần nhất, mới nhất ở trên. Việc duyệt diễn ra trên Slack, trong kênh #supply.')),
+        office_nav('purchases'),
+        '<noscript><aside class="note-box"><p>%s</p></aside></noscript>'
+        % t('The list needs JavaScript. Turn it on in the browser’s settings.',
+            'Danh sách cần JavaScript. Hãy bật JavaScript trong cài đặt trình duyệt.'),
+        '<div class="log-states" role="status">%s</div>' % ''.join([
+            state('loading', t('Loading…', 'Đang tải…')),
+            state('empty', t('No requests yet. Send one from the <a href="/backoffice/purchase/">purchase request</a>.',
+                             'Chưa có yêu cầu nào. Hãy gửi một yêu cầu từ trang '
+                             '<a href="/backoffice/purchase/">yêu cầu mua hàng</a>.')),
+            state('failed', t('Couldn’t load the list. Check the connection and reload the page.',
+                              'Không tải được danh sách. Hãy kiểm tra kết nối và tải lại trang.'), 'dough-warn'),
+            state('signed-out', t('You’ve been signed out. <a href="/backoffice/login/?next=/backoffice/purchases/">'
+                                  'Sign in again</a>.',
+                                  'Bạn đã bị đăng xuất. <a href="/backoffice/login/?next=/backoffice/purchases/">'
+                                  'Đăng nhập lại</a>.'), 'dough-warn'),
+            state('off', t('The back office isn’t set up on this copy of the site.',
+                           'Trang nội bộ chưa được thiết lập trên bản này của trang.'), 'dough-warn'),
+        ]),
+        '<div class="log-list office-list" id="request-list"></div>',
+        entry,
+        '</main>', ''])
+    return office_page('/backoffice/purchases/', 'purchases', ('Recent requests — Sol', 'Yêu cầu gần đây — Sol'),
+                       ('The last 30 purchase requests sent to Slack.', '30 yêu cầu mua hàng gần nhất đã gửi lên Slack.'),
+                       main, script='purchase-list.js')
+
+
+# ==========================================================================
 # 404 and support files
 # ==========================================================================
 def build_404():
@@ -4299,7 +4666,8 @@ def copy_existing():
         shutil.copy2(os.path.join(HERE, 'og', 'png', f), os.path.join(DIST, f))
     assets = os.path.join(DIST, 'assets')
     os.makedirs(assets, exist_ok=True)
-    for f in ('tokens.css', 'printed-menu.css', 'site.css', 'dough.js', 'dough-log.js'):
+    for f in ('tokens.css', 'printed-menu.css', 'site.css', 'dough.js', 'dough-log.js', 'backoffice.css', 'purchase.js',
+              'purchase-list.js'):
         shutil.copy2(os.path.join(DESIGN, f), os.path.join(assets, f))
     # the guest pages' script, with the analytics IDs from the top of this file and the
     # consent version the head script checks too
@@ -4497,7 +4865,7 @@ def _site_path(url, base):
 
 
 # Addresses the Worker's own code answers (worker/index.js), not files in dist/: the
-# kitchen's API (the dough log and its CSV, signing in and out).
+# kitchen's API (the dough log and its CSV, signing in and out) and the back office's.
 WORKER_PATHS = ('/api/',)
 
 
@@ -4567,7 +4935,7 @@ def check_links():
 # Every guest page is in dist/ in both languages, each file one language: its <html
 # lang>, a self-canonical and reciprocal hreflang, nothing of the other language left
 # (data-l, data-aria-*), links that stay in its language (except those that say
-# otherwise with hreflang, like EN · VI), and nothing under /vi/dough. Every section
+# otherwise with hreflang, like EN · VI), and nothing under /vi/dough or /vi/backoffice. Every section
 # gate() keeps back is listed in CONTENT-NEEDED.md.
 # ==========================================================================
 def check_languages():
@@ -4609,6 +4977,8 @@ def check_languages():
                     problems.append('%s: links to %s, a page in the other language' % (where, href.group(1)))
     if os.path.exists(os.path.join(DIST, 'vi', 'dough')):
         problems.append('dist/vi/dough/: the kitchen has no Vietnamese copy (it would skip the password)')
+    if os.path.exists(os.path.join(DIST, 'vi', 'backoffice')):
+        problems.append('dist/vi/backoffice/: the back office has no Vietnamese copy (it would skip the password)')
     listed = read(os.path.join(ROOT, 'CONTENT-NEEDED.md'))
     problems += ['gate %r ("%s") is not in CONTENT-NEEDED.md' % (k, w) for k, w in sorted(GATES.items())
                  if '`%s`' % k not in listed and not (k.startswith('event-') and '`event-<slug>`' in listed)]
@@ -4751,13 +5121,16 @@ if __name__ == '__main__':
     for fn in (build_home, build_about, build_food, build_wine, build_bar, build_events, build_private_dining,
                build_visit, build_booking, build_gift_cards, build_press, build_guest_privacy, build_accessibility,
                build_jobs, build_privacy, build_cookies, build_styleguide, build_dough, build_dough_log,
-               build_dough_login, build_404):
+               build_dough_login, build_office_home, build_office_login, build_purchase, build_purchase_list,
+               build_404):
         fn()
     written = write_pages()
-    print('wrote %d pages: %d in English, %d in Vietnamese, %d for the kitchen' % (
-        len(written), sum(1 for f in written if not os.path.relpath(f, DIST).startswith(('vi' + os.sep, 'dough'))),
+    print('wrote %d pages: %d in English, %d in Vietnamese, %d for the kitchen, %d for the back office' % (
+        len(written),
+        sum(1 for f in written if not os.path.relpath(f, DIST).startswith(('vi' + os.sep, 'dough', 'backoffice'))),
         sum(1 for f in written if os.path.relpath(f, DIST).startswith('vi' + os.sep)),
-        sum(1 for f in written if os.path.relpath(f, DIST).startswith('dough'))))
+        sum(1 for f in written if os.path.relpath(f, DIST).startswith('dough')),
+        sum(1 for f in written if os.path.relpath(f, DIST).startswith('backoffice'))))
     if HIDE:
         print('built but not written, not public yet:', ', '.join(p for p in SITEMAP_PAGES if hidden_section(p)))
     if not FULL and WAITING:

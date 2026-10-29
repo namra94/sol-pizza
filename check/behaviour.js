@@ -1,6 +1,7 @@
 // What the guest pages do, in a real browser: the language addresses and the EN · VI
 // choice, the cookie banner (and that nothing optional loads before a yes), the
-// header, the phone bar, the events, and that the kitchen has none of it.
+// header, the phone bar, the events, and that the kitchen and the back office have
+// none of it.
 //   node behaviour.js                 the local build (../dist), served by serve.js
 //   node behaviour.js <base URL>      a Preview URL or sol.pizza
 const {chromium} = require('playwright');
@@ -161,6 +162,35 @@ async function main() {
        'the kitchen: no banner, phone bar or new header');
     ok(tools.length === 0, 'the kitchen: no analytics');
     await ctx.close();
+  }
+  {
+    // The back office, in the kitchen's shell. Here its pages are files in the public
+    // build; on a Preview or sol.pizza the Worker shows its sign-in page until someone
+    // signs in. Either way: no banner, phone bar, new header or analytics, noindex, and
+    // nothing wider than a small phone, in English or Vietnamese.
+    const pages = ['/backoffice/', '/backoffice/login/', '/backoffice/purchase/', '/backoffice/purchases/'];
+    const found = [], bare = [], indexed = [], wide = [], analytics = [];
+    for (const lang of ['en', 'vi']) {
+      const {ctx, page, tools} = await visitor({width: 360, height: 740});
+      await ctx.addInitScript(l => localStorage.setItem('sol-lang', l), lang);   // as its EN / VI switch does
+      for (const p of pages) {
+        const r = await page.goto(base + p, {waitUntil: 'load'});
+        await page.waitForTimeout(300);
+        const where = p + ' (' + lang + ')';
+        if (r.status() === 200 && new URL(page.url()).pathname.startsWith('/backoffice/') &&
+            await page.evaluate(() => document.documentElement.lang) === lang) found.push(where);
+        if ((await page.$('#consent')) || (await page.$('.actionbar')) || (await page.$('.sitebar'))) bare.push(where);
+        if (!/noindex/.test((await page.getAttribute('meta[name="robots"]', 'content')) || '')) indexed.push(where);
+        if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) wide.push(where);
+      }
+      analytics.push(...tools);
+      if (lang === 'vi') ok((await page.goto(base + '/vi/backoffice/')).status() === 404, 'the back office: no /vi/ copy');
+      await ctx.close();
+    }
+    ok(found.length === pages.length * 2, 'the back office: its four pages are in the build, in both languages (' + found.length + ' of 8)');
+    ok(!bare.length, 'the back office: no banner, phone bar or new header' + (bare.length ? ' (' + bare.join(' ') + ')' : ''));
+    ok(!indexed.length && !analytics.length, 'the back office: noindex, no analytics' + (indexed.length ? ' (' + indexed.join(' ') + ')' : ''));
+    ok(!wide.length, 'the back office: fits a 360px phone in English and Vietnamese' + (wide.length ? ' (' + wide.join(' ') + ')' : ''));
   }
 
   console.log('Header and phone bar');

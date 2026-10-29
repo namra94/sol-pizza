@@ -1,0 +1,165 @@
+/* Sol — the back office's own parts (/backoffice/, build_office_home() and the three
+   after it in gen.py), on top of the kitchen's stylesheet (kitchen/kitchen.css). The
+   pages use the kitchen's shell and its form parts (.dough-box, .dough-field,
+   .dough-seg, .dough-warn, .dough-nav, .log-entry…); this adds what the kitchen
+   doesn't have: the home page's tiles, the purchase request's lists, item rows,
+   summary and message, and the recent requests. The kitchen's rules hold: white
+   boxes with a 1px red rule and hard corners, lining figures, one column on phones.
+   Guest pages and the kitchen's pages never load this file. */
+
+/* the home page: a tile per tool */
+.office-tiles { display: grid; gap: 16px; max-width: 900px; margin: 40px auto 0; }
+@media (min-width: 761px) { .office-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.office-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  padding: 22px 24px 24px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line-brand);
+  transition: background-color .12s linear;
+}
+.office-tile:hover { background: var(--cream); }
+.office-tile-name { font-family: var(--display); font-size: var(--fs-h3); line-height: 1.15; color: var(--sol-red); }
+.office-tile-text { font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+.office-foot { margin-top: 28px; text-align: center; font-size: var(--fs-small); color: var(--ink-muted); }
+
+/* the purchase request: one column, the way a phone shows it */
+.office-notes { max-width: 640px; margin: 24px auto 0; }
+.office-notes > .dough-status:first-child, .office-notes > .dough-warn:first-child { margin-top: 0; }
+.office-form { display: grid; gap: 40px; max-width: 640px; margin: 36px auto 0; }
+.office-form .dough-box input:not([inputmode]), .dough-box select { font-size: var(--fs-body); }
+.p-fields { display: grid; gap: 22px; margin-top: 18px; }
+.p-field { min-width: 0; margin: 0; padding: 0; border: 0; }
+.p-field > legend { padding: 0; margin-bottom: 6px; }
+.p-field > .dough-field + .dough-field { margin-top: 10px; }
+.p-when .dough-fields { margin-top: 0; }
+
+/* a list to pick from, in the kitchen's white box */
+.dough-box select {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 8px 40px 8px 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 6l5 5 5-5' fill='none' stroke='%23a72024' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 12px center / 16px 16px;
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+  line-height: 1.25;
+  color: var(--ink);
+  cursor: pointer;
+}
+.dough-box select:focus { outline: none; }     /* the box draws the ring */
+/* filled in from the Order Guide: no typing */
+.dough-box.is-readonly { background: none; border-color: var(--line); }
+/* the station, when it's missing */
+.dough-seg.is-invalid { box-shadow: inset 0 0 0 1px var(--sol-red); }
+
+/* what the Order Sheet says about the supplier, under its name */
+.p-facts { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; font-size: var(--fs-small); line-height: 1.5; }
+.p-facts .label { margin-right: 6px; font-size: var(--fs-label); }
+
+/* the items: a box for each, numbered */
+.p-items { display: grid; gap: 14px; margin-top: 16px; }
+.p-item { padding: 14px 18px 18px; border: 1px solid var(--line-brand); }
+.p-item-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 30px; }
+.p-item-name { margin-top: 8px; }
+.p-item-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 14px; }
+.p-item-note { grid-column: 1 / -1; }
+.p-remove {             /* type: the labels rule in printed-menu.css */
+  padding: 6px 0;
+  font-size: var(--fs-label);
+  line-height: 18px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  border-bottom: 1px solid currentColor;
+}
+.p-remove:hover { color: var(--sol-red); }
+.p-price { margin-top: 12px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); font-variant-numeric: lining-nums tabular-nums; }
+.p-price.is-unpriced { font-style: italic; }
+
+/* the supplier's items as the box is typed in: a list right under it */
+.p-options {
+  max-height: 264px;
+  overflow-y: auto;
+  margin-top: 4px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line-brand);
+  overscroll-behavior: contain;
+}
+.p-options li { padding: 10px 12px; font-size: var(--fs-small); line-height: 1.35; cursor: pointer; }
+.p-options li + li { border-top: 1px solid var(--line); }
+.p-options li:hover { color: var(--sol-red); }
+.p-options li[aria-selected="true"] { background: var(--cream); color: var(--sol-red); box-shadow: inset 3px 0 0 var(--sol-red); }
+
+/* the summary and the message */
+.p-summary { padding: 22px 24px 24px; background: var(--surface-raised); border: 1px solid var(--line-brand); }
+.p-estimate {
+  margin-top: 4px;
+  font-family: var(--display);
+  font-size: var(--fs-h2);
+  line-height: 1.05;
+  color: var(--sol-red);
+  font-variant-numeric: lining-nums;
+}
+.p-sub { margin-top: 6px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
+.p-approver { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-variant-numeric: lining-nums; }
+.p-send > .dough-actions { margin-top: 0; }
+.p-preview-box { margin-top: 26px; }
+.p-preview-box:focus { outline: none; }
+.p-preview {
+  margin: 8px 0 0;
+  padding: 14px 16px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line-brand);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+}
+
+/* sent */
+.p-done { max-width: 640px; margin: 40px auto 0; padding: 28px 28px 30px; background: var(--surface-raised); border: 1px solid var(--line-brand); text-align: center; }
+.p-done:focus { outline: none; }
+.p-done-h { font-family: var(--display); font-size: var(--fs-h2); line-height: 1.05; color: var(--sol-red); }
+.p-ref { margin: 12px 0 6px; font-size: var(--fs-lead); font-variant-numeric: lining-nums; }
+.p-done .p-preview { text-align: left; }
+.p-done .dough-actions { justify-content: center; }
+
+/* the recent requests: a card each, like the dough log's */
+.office-list { margin-top: 28px; }
+.office-entry .log-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 16px; align-items: baseline; }
+.office-entry .log-meta { grid-column: 1 / -1; }
+.office-status {        /* type: the labels rule in printed-menu.css */
+  font-size: var(--fs-label);
+  line-height: 18px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--basil);
+}
+.office-entry.is-failed { box-shadow: inset 3px 0 0 var(--sol-red); }
+.office-entry.is-failed .office-status { color: var(--sol-red); }
+
+@media (max-width: 760.98px) {
+  /* four links don't fit a phone's line: they wrap, spaced rather than dotted */
+  .office-nav ul { gap: 0 22px; }
+  .office-nav li + li::before { content: none; }
+  .office-tiles { margin-top: 28px; gap: 12px; }
+  .office-tile { padding: 18px 18px 20px; }
+  .office-form { gap: 32px; margin-top: 28px; }
+  .p-item { padding: 12px 14px 16px; }
+  .p-item-fields { gap: 14px 10px; }
+  .p-summary { padding: 18px 16px 20px; }
+  .p-preview { padding: 12px 12px; font-size: 13px; }
+  .p-done { padding: 22px 18px 24px; }
+  .p-send .dough-actions .btn { flex: 1 1 auto; }
+  /* thirty of them: each fact beside its name, not under it as in the dough log */
+  .office-entry .log-facts > div { grid-template-columns: 8.5em minmax(0, 1fr); gap: 10px; padding: 5px 0; }
+}

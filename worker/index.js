@@ -1,22 +1,27 @@
 /* sol.pizza — the Worker in front of the static site.
    Everything else is the files in dist/ (build/gen.py), served by Cloudflare as
-   they are. wrangler.jsonc runs this first only for the kitchen, /dough/* and
-   /api/*, and it
+   they are. wrangler.jsonc runs this first only for the kitchen (/dough/*), the
+   back office (/backoffice/*) and /api/*, and it
      - keeps /dough/ (the dough calculator, the dough log) behind the kitchen
        password, the secret DOUGH_PASSWORD (README-DEPLOY.md, "The kitchen");
      - keeps the dough log in D1 (the DOUGH_DB binding) and serves it as JSON for
-       the pages and as a CSV to download.
-   Signed in = the cookie sol_dough: an expiry and an HMAC of it keyed with the
-   password, so changing the password signs every phone out. With no password set
-   (a Preview, unless it's given one), /dough/ stays locked and says so; with no
-   database the calculator works but the log says it isn't set up.
+       the pages and as a CSV to download;
+     - keeps /backoffice/ behind the staff password, the secret BACKOFFICE_PASSWORD,
+       and sends its purchase requests to Slack (worker/backoffice.js;
+       README-DEPLOY.md, "The back office: purchase requests").
+   The kitchen and the back office are the two sections below (KITCHEN, OFFICE),
+   each with its own password, cookie, pages and API, so one password never opens
+   the other. Signed in = the section's cookie (sol_dough, sol_office): an expiry
+   and an HMAC of it keyed with that password, so changing a password signs every
+   phone out of its section. With no password set (a Preview, unless it's given
+   one), a section stays locked and says so; with no database the calculator works
+   but the log says it isn't set up, and the back office says the same.
    Anything else that reaches the Worker (an address with no file) goes back to
    the static site, which shows the 404 page. */
 
-const COOKIE = 'sol_dough';
+import * as backoffice from './backoffice.js';
+
 const SESSION_DAYS = 30;
-const LOGIN = '/dough/login/';
-const HOME = '/dough/';
 const PAGE = 50;                        // log entries per page
 const MAX_TRIES = 10;                   // wrong passwords per address per 15 minutes
 const TRIES_WINDOW = 15 * 60;
@@ -31,13 +36,29 @@ const SECURITY = {
 };
 const PRIVATE = { 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex, nofollow' };
 
+// The two places behind a password. The HMAC keys start with the section's key, so
+// the kitchen's are what they have always been and every phone stays signed in.
+const KITCHEN = {
+  password: 'DOUGH_PASSWORD', cookie: 'sol_dough', key: 'sol-dough', failures: 'dough_login_failures',
+  home: '/dough/', login: '/dough/login/', api: '/api/dough/',
+  next: /^\/dough\/[\w\-./?=&%]*$/,     // where signing in may lead
+  redirects: {},                         // its redirects' headers, as they have always been
+};
+const OFFICE = {
+  password: 'BACKOFFICE_PASSWORD', cookie: 'sol_office', key: 'sol-office', failures: 'backoffice_login_failures',
+  home: '/backoffice/', login: '/backoffice/login/', api: '/api/backoffice/',
+  next: /^\/backoffice\/[\w\-./?=&%]*$/,
+  redirects: SECURITY,                   // the security headers go on its redirects too
+};
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
     try {
       if (path.startsWith('/api/')) return await api(request, env, url);
-      if (path === '/dough' || path.startsWith('/dough/')) return await kitchen(request, env, url);
+      if (path === '/dough' || path.startsWith('/dough/')) return await pages(KITCHEN, request, env, url);
+      if (path === '/backoffice' || path.startsWith('/backoffice/')) return await pages(OFFICE, request, env, url);
       return withHeaders(await env.ASSETS.fetch(request), SECURITY);
     } catch (err) {
       console.error(err);
@@ -81,45 +102,46 @@ function same(a, b) {
 }
 
 // Both sides hashed first, so the comparison takes the same time whatever was typed
-async function rightPassword(given, env) {
-  return same(await hmac('sol-dough-password', given), await hmac('sol-dough-password', env.DOUGH_PASSWORD));
+async function rightPassword(s, given, env) {
+  const key = s.key + '-password';
+  return same(await hmac(key, given), await hmac(key, env[s.password]));
 }
 
-async function session(env, exp) {
-  return exp + '.' + (await hmac('sol-dough-session\n' + env.DOUGH_PASSWORD, String(exp)));
+async function session(s, env, exp) {
+  return exp + '.' + (await hmac(s.key + '-session\n' + env[s.password], String(exp)));
 }
 
-function cookie(value, maxAge) {
-  return `${COOKIE}=${value}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Lax`;
+function cookie(s, value, maxAge) {
+  return `${s.cookie}=${value}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Lax`;
 }
 
-async function signedIn(request, env) {
-  if (!env.DOUGH_PASSWORD) return false;
-  const m = new RegExp(`(?:^|;\\s*)${COOKIE}=(\\d+)\\.([0-9a-f]{64})(?:;|$)`).exec(request.headers.get('Cookie') || '');
+async function signedIn(s, request, env) {
+  if (!env[s.password]) return false;
+  const m = new RegExp(`(?:^|;\\s*)${s.cookie}=(\\d+)\\.([0-9a-f]{64})(?:;|$)`).exec(request.headers.get('Cookie') || '');
   if (!m || Number(m[1]) < Date.now() / 1000) return false;
-  return same(await session(env, m[1]), `${m[1]}.${m[2]}`);
+  return same(await session(s, env, m[1]), `${m[1]}.${m[2]}`);
 }
 
-// Where to go after signing in: a kitchen page, never somewhere else
-function safeNext(next) {
-  return typeof next === 'string' && /^\/dough\/[\w\-./?=&%]*$/.test(next) && !next.includes('..') &&
-    !next.startsWith(LOGIN) ? next : HOME;
+// Where to go after signing in: a page of the same section, never somewhere else
+function safeNext(s, next) {
+  return typeof next === 'string' && s.next.test(next) && !next.includes('..') &&
+    !next.startsWith(s.login) ? next : s.home;
 }
 
-function loginUrl(next, flag) {
+function loginUrl(s, next, flag) {
   const q = [];
   if (flag) q.push(flag + '=1');
-  if (next !== HOME) q.push('next=' + encodeURIComponent(next));
-  return LOGIN + (q.length ? '?' + q.join('&') : '');
+  if (next !== s.home) q.push('next=' + encodeURIComponent(next));
+  return s.login + (q.length ? '?' + q.join('&') : '');
 }
 
-/* The kitchen's pages -------------------------------------------------------- */
-async function kitchen(request, env, url) {
+/* The sections' pages -------------------------------------------------------- */
+async function pages(s, request, env, url) {
   const path = url.pathname;
-  const next = safeNext(url.searchParams.get('next'));
-  if (/^\/dough\/login(\/(index\.html)?)?$/.test(path)) {
-    if (await signedIn(request, env)) return redirect(next);
-    const flag = !env.DOUGH_PASSWORD ? 'off' : ['wrong', 'wait'].find((f) => url.searchParams.has(f));
+  const next = safeNext(s, url.searchParams.get('next'));
+  if ([s.login.slice(0, -1), s.login, s.login + 'index.html'].includes(path)) {
+    if (await signedIn(s, request, env)) return redirect(next, s.redirects);
+    const flag = !env[s.password] ? 'off' : ['wrong', 'wait'].find((f) => url.searchParams.has(f));
     let rewriter = new HTMLRewriter().on('input[name="next"]', {
       element(el) { el.setAttribute('value', next); },
     });
@@ -128,7 +150,7 @@ async function kitchen(request, env, url) {
     }
     return withHeaders(rewriter.transform(await env.ASSETS.fetch(request)), { ...SECURITY, ...PRIVATE });
   }
-  if (!(await signedIn(request, env))) return redirect(loginUrl(safeNext(path + url.search)));
+  if (!(await signedIn(s, request, env))) return redirect(loginUrl(s, safeNext(s, path + url.search)), s.redirects);
   return withHeaders(await env.ASSETS.fetch(request), { ...SECURITY, ...PRIVATE });
 }
 
@@ -136,15 +158,17 @@ async function kitchen(request, env, url) {
 async function api(request, env, url) {
   const path = url.pathname;
   const method = request.method;
-  if (path === '/api/dough/login') return login(request, env);
-  if (path === '/api/dough/logout') return redirect(LOGIN, { 'Set-Cookie': cookie('', 0) });
-  if (!path.startsWith('/api/dough/')) return json({ error: 'not found' }, 404);
-  if (!(await signedIn(request, env))) return json({ error: 'signed out' }, 401);
-  // Changes come from the kitchen's own pages only
+  const s = [KITCHEN, OFFICE].find((x) => path.startsWith(x.api));
+  if (!s) return json({ error: 'not found' }, 404);
+  if (path === s.api + 'login') return login(s, request, env);
+  if (path === s.api + 'logout') return redirect(s.login, { ...s.redirects, 'Set-Cookie': cookie(s, '', 0) });
+  if (!(await signedIn(s, request, env))) return json({ error: 'signed out' }, 401);
+  // Changes come from the section's own pages only
   const origin = request.headers.get('Origin');
   if (method !== 'GET' && method !== 'HEAD' && origin && origin !== url.origin) return json({ error: 'forbidden' }, 403);
   if (!env.DOUGH_DB) return json({ error: 'no database' }, 503);
-  const db = await database(env);
+  const db = await database(env, tables(s));
+  if (s === OFFICE) return office(request, env, url, db);
 
   if (path === '/api/dough/log' && method === 'GET') return list(db, url);
   if (path === '/api/dough/log' && method === 'POST') return add(db, request);
@@ -157,36 +181,54 @@ async function api(request, env, url) {
   return json({ error: 'not found' }, 404);
 }
 
-async function login(request, env) {
-  if (request.method !== 'POST') return redirect(LOGIN);
+async function login(s, request, env) {
+  if (request.method !== 'POST') return redirect(s.login, s.redirects);
   const form = await request.formData();
-  const next = safeNext(form.get('next'));
-  if (!env.DOUGH_PASSWORD) return redirect(loginUrl(next, 'off'));
-  const db = env.DOUGH_DB ? await database(env) : null;
+  const next = safeNext(s, form.get('next'));
+  if (!env[s.password]) return redirect(loginUrl(s, next, 'off'), s.redirects);
+  const db = env.DOUGH_DB ? await database(env, tables(s)) : null;
   const ip = request.headers.get('CF-Connecting-IP') || 'local';
   const now = Math.floor(Date.now() / 1000);
   if (db) {
-    const row = await db.prepare('SELECT COUNT(*) AS n FROM dough_login_failures WHERE ip = ? AND at > ?')
+    const row = await db.prepare(`SELECT COUNT(*) AS n FROM ${s.failures} WHERE ip = ? AND at > ?`)
       .bind(ip, now - TRIES_WINDOW).first();
-    if (row.n >= MAX_TRIES) return redirect(loginUrl(next, 'wait'));
+    if (row.n >= MAX_TRIES) return redirect(loginUrl(s, next, 'wait'), s.redirects);
   }
-  if (!(await rightPassword(String(form.get('password') || ''), env))) {
+  if (!(await rightPassword(s, String(form.get('password') || ''), env))) {
     if (db) {
       await db.batch([
-        db.prepare('INSERT INTO dough_login_failures (ip, at) VALUES (?, ?)').bind(ip, now),
-        db.prepare('DELETE FROM dough_login_failures WHERE at < ?').bind(now - 86400),
+        db.prepare(`INSERT INTO ${s.failures} (ip, at) VALUES (?, ?)`).bind(ip, now),
+        db.prepare(`DELETE FROM ${s.failures} WHERE at < ?`).bind(now - 86400),
       ]);
     }
-    return redirect(loginUrl(next, 'wrong'));
+    return redirect(loginUrl(s, next, 'wrong'), s.redirects);
   }
-  if (db) await db.prepare('DELETE FROM dough_login_failures WHERE ip = ?').bind(ip).run();
+  if (db) await db.prepare(`DELETE FROM ${s.failures} WHERE ip = ?`).bind(ip).run();
   const maxAge = SESSION_DAYS * 86400;
-  return redirect(next, { 'Set-Cookie': cookie(await session(env, now + maxAge), maxAge) });
+  return redirect(next, { ...s.redirects, 'Set-Cookie': cookie(s, await session(s, env, now + maxAge), maxAge) });
+}
+
+/* The back office's API ------------------------------------------------------ */
+// What the forms ask for; the work is in worker/backoffice.js.
+async function office(request, env, url, db) {
+  const path = url.pathname;
+  const method = request.method;
+  if (path === '/api/backoffice/guide' && method === 'GET') return json(await backoffice.guide(env, db));
+  if (path === '/api/backoffice/purchases' && method === 'GET') return json(await backoffice.purchases(db));
+  if (path === '/api/backoffice/purchase' && method === 'POST') {
+    if (!(request.headers.get('Content-Type') || '').startsWith('application/json')) return json({ error: 'json' }, 415);
+    let body;
+    try { body = await request.json(); } catch { return json({ error: 'json' }, 400); }
+    const [status, out] = await backoffice.purchase(env, db, body);
+    return json(out, status);
+  }
+  return json({ error: 'not found' }, 404);
 }
 
 /* The log in D1 -------------------------------------------------------------- */
 // The tables are made on first use, so a new database (and `wrangler dev`'s local
 // one) needs no setup. To change them later, add a migration (README-DEPLOY.md).
+// The back office keeps its own tables in the same database (backoffice.SCHEMA).
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS dough_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -207,16 +249,18 @@ const SCHEMA = [
   'CREATE TABLE IF NOT EXISTS dough_login_failures (ip TEXT NOT NULL, at INTEGER NOT NULL)',
   'CREATE INDEX IF NOT EXISTS dough_login_failures_ip ON dough_login_failures (ip, at)',
 ];
-let ready = null;
+const ready = new Map();                // each section's tables, once they're made
 
-async function database(env) {
-  if (!ready) {
-    ready = env.DOUGH_DB.batch(SCHEMA.map((sql) => env.DOUGH_DB.prepare(sql))).catch((err) => {
-      ready = null;
+function tables(s) { return s === OFFICE ? backoffice.SCHEMA : SCHEMA; }
+
+async function database(env, schema) {
+  if (!ready.has(schema)) {
+    ready.set(schema, env.DOUGH_DB.batch(schema.map((sql) => env.DOUGH_DB.prepare(sql))).catch((err) => {
+      ready.delete(schema);
       throw err;
-    });
+    }));
   }
-  await ready;
+  await ready.get(schema);
   return env.DOUGH_DB;
 }
 

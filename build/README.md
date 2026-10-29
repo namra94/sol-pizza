@@ -28,7 +28,9 @@ section still waiting for content, with `noindex`; see "Build modes" below. Eith
    written twice: English at `/…`, Vietnamese at `/vi/…` (`write_pages()`,
    `localise()`). The kitchen's pages (`/dough/`, `/dough/log/`, `/dough/login/`:
    behind the kitchen password, which `worker/index.js` checks; `noindex`) are written
-   once each, bilingual, in their own frozen shell (`kitchen_page()`).
+   once each, bilingual, in their own frozen shell (`kitchen_page()`), and so are the
+   back office's (`/backoffice/` and the three under it, behind the staff password;
+   `office_page()`).
    The public build builds any page in `HIDDEN` but doesn't write it, so a
    mistake in one still stops every build, pull request previews included.
 4. **Support files.** `sitemap.xml` (every public page in both languages, each listing
@@ -44,13 +46,13 @@ section still waiting for content, with `noindex`; see "Build modes" below. Eith
    languages, each with the right `<html lang>`, a self-canonical and reciprocal
    `hreflang`, nothing of the other language left in it, and links that stay in its
    language (EN · VI and other links with an `hreflang` go where they say); nothing is
-   written under `/vi/dough`; and every section `gate()` keeps back is listed in
+   written under `/vi/dough` or `/vi/backoffice`; and every section `gate()` keeps back is listed in
    `CONTENT-NEEDED.md`.
 7. **Link check** (public build). Every `href`, `src`, canonical and alternate
    link, `og:url`, `og:image`, JSON-LD address, CSS `url()`, sitemap and
    `robots.txt` address, font preload and redirect destination must be a file in
    `dist/`, a redirect or an address the Worker answers (`WORKER_PATHS`: the
-   kitchen's `/api/`), and none may lead to a page in `HIDDEN` (nor may such a
+   kitchen's and the back office's `/api/`), and none may lead to a page in `HIDDEN` (nor may such a
    page be in `dist/`). If one does, the build stops and lists it.
 
 The checks on the data run in both modes: the wine counts (`PROSE_WINE_COUNTS`),
