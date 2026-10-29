@@ -8,19 +8,30 @@
   // the same login also sees another account with an unused sol-pizza Worker.
   "account_id": "8c4ec4948dc4732b29398c10fcb2020b",
   "compatibility_date": "2026-09-22",
-  // The Worker's own code runs only for the kitchen (run_worker_first below): the
-  // password on /dough/ and the dough log's API. Every other address is a file in
-  // ./dist, served as it is, with _headers and _redirects.
+  // The Worker's own code runs only for the kitchen and the back office
+  // (run_worker_first below): the passwords on /dough/ and /backoffice/, the dough
+  // log's API and the purchase requests'. Every other address is a file in ./dist,
+  // served as it is, with _headers and _redirects.
   "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash",
-    "run_worker_first": ["/dough", "/dough/*", "/api/*"]
+    "run_worker_first": ["/dough", "/dough/*", "/backoffice", "/backoffice/*", "/api/*"]
   },
-  // The dough log. The password is a secret, never in this file:
-  // npx wrangler secret put DOUGH_PASSWORD   (README-DEPLOY.md, "The kitchen")
+  // Who a purchase request mentions in Slack's #supply: the owner (for big orders
+  // and suppliers not Active yet), the Kitchen approver and the Bar & FOH approver.
+  // Slack member ids, not secrets. The secrets are never in this file:
+  // DOUGH_PASSWORD (README-DEPLOY.md, "The kitchen"), BACKOFFICE_PASSWORD,
+  // SLACK_WEBHOOK_URL and ORDER_GUIDE_URL ("The back office: purchase requests").
+  "vars": {
+    "SLACK_OWNER": "U0BU86D7VL2",
+    "SLACK_APPROVER_KITCHEN": "U0BTWU0P2TH",
+    "SLACK_APPROVER_BAR_FOH": "U0C1Q87Q7E0"
+  },
+  // The dough log, and the back office's tables beside it (its purchase requests,
+  // the Order Guide's last good copy), each made by the Worker on first use.
   "d1_databases": [
     {
       "binding": "DOUGH_DB",
@@ -31,8 +42,8 @@
   "observability": { "enabled": true },
   // Worker Previews: Workers Builds runs `npx wrangler preview` for every branch
   // that isn't main, and that command needs this block. Empty on purpose: a
-  // Preview gets no database and no kitchen password, so its /dough/ stays locked
-  // (it says so) and can't reach the real dough log. Production deploys
-  // (`wrangler deploy`, on main) use only the settings above.
+  // Preview gets no database, no passwords and no vars, so its /dough/ and
+  // /backoffice/ stay locked (they say so) and can't reach the real dough log or
+  // Slack. Production deploys (`wrangler deploy`, on main) use only the settings above.
   "previews": {}
 }

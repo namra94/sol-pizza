@@ -84,6 +84,31 @@ move, double-tap to press.
       no bars, banners or buttons; sections not split across pages where it can be
       helped; the prices (once set) line up.
 
+## 7. The back office, on a phone (iPhone and Android)
+
+`sol.pizza/backoffice/`, with the staff password. What goes to Slack is real: make the
+note **TEST — ignore**, and react ❌ to it in #supply afterwards.
+
+- [ ] Signed out, `sol.pizza/backoffice/purchase/` opens the sign-in page. A wrong
+      password: "That isn't the password". The staff password: straight on to the form.
+- [ ] **Requested by** lists the team; pick a name. Reload the page: it's still picked.
+- [ ] **Supplier**: Active ones first, then Quoting, then Not used yet; no Stopped one.
+      Picking one shows who orders it, its order days and cut-off, and picks its station.
+- [ ] **Items**: type part of an item in Vietnamese without the accents ("pho mai"): the
+      list finds it. Pick it: its unit fills in, and its price and the line's estimate
+      show under it. Type something that isn't on the list: "not in the Order Guide — no
+      price". **Thêm hàng** adds a row, **Xóa** takes one away.
+- [ ] The summary: the estimate before VAT and who approves. Over 5,000,000đ, or with
+      **Other supplier…**: the line "Arman's ✅ needed".
+- [ ] **VI** (top left): every label in Vietnamese, prices as 1.250.000đ.
+- [ ] **Preview the message**: the 🛒 block. Change a quantity: the preview goes away.
+      Preview again, then **Send to #supply**: "Sent to #supply" and a ref. In #supply,
+      the message, mentioning the right people. React ❌.
+- [ ] Turn on airplane mode and send another (TEST — ignore): "Couldn't send it", and
+      everything typed is still there. Airplane mode off, send again: it arrives once.
+- [ ] **Recent requests**: both, "Sent to Slack".
+- [ ] **Sign out**: the sign-in page. `sol.pizza/dough/` still asks for the kitchen password.
+
 ## Once ResDiary is live
 
 - [ ] `/booking/` and `/vi/booking/`: the widget loads in both (in Vietnamese on `/vi/` if

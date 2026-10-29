@@ -1,5 +1,12 @@
 # Secrets for `npx wrangler dev` on your own machine. Copy this file to .dev.vars
-# (git-ignored) to sign in to /dough/ locally. A local test value only: the real
-# kitchen password is set with `npx wrangler secret put DOUGH_PASSWORD` and is
-# never written in the repo.
+# (git-ignored) to sign in to /dough/ and /backoffice/ locally. Local test values
+# only: the real passwords are set with `npx wrangler secret put DOUGH_PASSWORD`
+# and `npx wrangler secret put BACKOFFICE_PASSWORD` and are never written in the repo.
 DOUGH_PASSWORD=local-dough-test
+BACKOFFICE_PASSWORD=local-office-test
+# The back office's dry run: purchase requests are kept in the local database but
+# never posted to Slack (the page shows the message instead), and with no
+# ORDER_GUIDE_URL the form uses the fake Order Guide in worker/backoffice-sample.json.
+# Never set it on the real site. SLACK_WEBHOOK_URL and ORDER_GUIDE_URL stay out of
+# this file: README-DEPLOY.md, "The back office: purchase requests".
+BACKOFFICE_DRY_RUN=1

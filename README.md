@@ -35,6 +35,7 @@ come" and `README-DEPLOY.md`).
 | `/accessibility/` | Accessibility statement: the site and the restaurant | Draft, waits for the lawyer (`WAITING`) |
 | `/styleguide/` | The parts pages are built from (after-dark sections, image bands, galleries, cards, quotes) | Full build only, never on sol.pizza |
 | `/dough/`, `/dough/log/` | The kitchen's dough calculator and dough log (below) | Behind the kitchen password (`/dough/login/`): no tab or footer link, `noindex`, not in the sitemap, no analytics, no `/vi/` copy |
+| `/backoffice/`, `/backoffice/purchase/`, `/backoffice/purchases/` | The back office: its tools, the purchase request (to Slack's #supply) and the recent requests (below) | Behind the staff password (`/backoffice/login/`), the same way as the kitchen |
 
 Also public: the 404 pages (English, and Vietnamese for any missing `/vi/…` address),
 `sitemap.xml` (both languages), `robots.txt`, and the assets and share cards those pages
@@ -333,7 +334,7 @@ elsewhere), and "Back to the house spec" clears it.
 The pages are written by `build/gen.py` like the rest; the arithmetic is in
 `build/design/dough.js`, the log page's script in `build/design/dough-log.js`, and
 the password and the log's API in `worker/index.js`, the Worker's own code, which
-runs only for `/dough/*` and `/api/*`.
+runs only for `/dough/*`, `/backoffice/*` and `/api/*`.
 
 The kitchen's pages keep the shell every page had on 12 October 2026: both languages in
 one page with the in-page EN / VI switch, the header with About · Menu · Booking, and the
@@ -342,6 +343,36 @@ old footer, styled by `build/design/kitchen/kitchen.css` and run by
 them, and they have no cookie banner, phone bar, announcement bar or analytics, and no
 `/vi/` copy (a `/vi/dough/` page would sit outside the Worker's password check; the build
 stops if one is ever written). `npm run check` makes sure.
+
+### The back office: purchase requests
+
+`/backoffice/` is for the team: one shared **staff password**, separate from the
+kitchen's (each opens only its own section), the same 30 days signed in on a phone. Only
+management is on Slack; the kitchen and floor are on Zalo and their phones, so the back
+office lets anyone with the staff password ask for supplies, and approval stays in Slack.
+Setting it up (the password, the Slack webhook, the Order Sheet's web app) is in
+`README-DEPLOY.md`, "The back office: purchase requests".
+
+- **Purchase request** (`/backoffice/purchase/`): who's asking, the supplier, the station,
+  when it's needed, the items, a note. The supplier and its items come from the Order
+  Sheet's Order Guide, read live (suppliers by status, Active first; Stopped ones left
+  out); an item is found by typing part of its name in English or Vietnamese, with or
+  without accents, and anything not on the lists can be typed (without a price). The
+  summary keeps up: the estimate before VAT, who approves, and when Arman's ✅ is needed
+  (over the limit, or a supplier that isn't Active). **Preview** shows the exact Slack
+  message; **Send to #supply** posts it and gives a ref, `SOL-YYMMDD-HHMM`.
+- **Recent requests** (`/backoffice/purchases/`): the last 30, and whether each reached
+  Slack.
+- A tile leads to the kitchen's `/dough/`, which keeps its own password.
+
+The Worker never trusts the browser's prices or flags: it works the request out again
+from the Order Guide, keeps it in D1, and posts it once (a second tap or a retry gets the
+first answer). The message's labels are the Order Sheet's "Order helper"'s, exactly: an
+Order desk agent reads #supply by them. The pages are the kitchen's shell, with
+`build/design/backoffice.css`, `purchase.js` and `purchase-list.js`; the Worker's side is
+`worker/backoffice.js`; the Order Sheet's web app is `tools/order-sheet.gs`. Nothing from
+the Order Sheet (suppliers, prices, people) is in this repo, which is public: only the
+fake Order Guide in `worker/backoffice-sample.json`, for `wrangler dev` and the checks.
 
 ---
 
@@ -469,10 +500,14 @@ build/jobs/             the six job descriptions, English and Vietnamese (Markdo
 build/announcements.json  the line across the top of every page, with its dates
 build/design/           tokens.css, printed-menu.css (the design), site.css (repo
                         additions), site.js (header, EN · VI, cookie banner, analytics,
-                        events), dough.js and dough-log.js (the kitchen's calculator and log)
+                        events), dough.js and dough-log.js (the kitchen's calculator and log),
+                        backoffice.css, purchase.js and purchase-list.js (the back office)
 build/design/kitchen/   kitchen.css and kitchen.js: the kitchen pages' frozen shell
-worker/index.js         the Worker's own code, for the kitchen only: the password on
-                        /dough/ and the dough log's API (D1)
+worker/index.js         the Worker's own code, for the kitchen and the back office: their
+                        passwords, the dough log's API (D1)
+worker/backoffice.js    the purchase requests: the Order Guide, the checks, the Slack message
+worker/backoffice-sample.json  a FAKE Order Guide, for wrangler dev and the checks only
+tools/order-sheet.gs    the Order Sheet's web app (Google Apps Script), pasted into the sheet
 build/assets/           logo, illustrations, sun pattern (SVG)
 build/og/               share cards: card.html (the template), cards.json (what each PNG
                         was rendered from); the words are OG_CARDS in gen.py
