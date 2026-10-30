@@ -7,6 +7,14 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Website builder, 30 Oct 2026
+
+From the Website feedback list. The tax code is in, from the company’s business registration certificate (Rec0CDN8LSG68). The Vietnamese is the wording already in `build/gen.py` and logged on 13 Oct (“MST …”), now with the number: not a new translation. The kitchen and back-office pages keep their own footer, unchanged.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| every page | footer, last line: © 2026 Công ty TNHH Aurelian · Tax code 0111443247 · Tây Hồ, Hanoi | © 2026 Công ty TNHH Aurelian · Tây Hồ, Hà Nội | © 2026 Công ty TNHH Aurelian · MST 0111443247 · Tây Hồ, Hà Nội |
+
 ## The back office: purchase requests, 29 Oct 2026
 
 New pages for the team, behind the staff password and out of search: the back office’s home (`/backoffice/`), its sign-in page, the purchase request (`/backoffice/purchase/`) and the recent requests (`/backoffice/purchases/`). Every line is new. Numbers follow the language, as in the kitchen (1,250,000đ in English, 1.250.000đ in Vietnamese). The names of suppliers, items and people come from the Order Sheet as they are written there. The Slack message itself isn’t listed: its labels (“NCC / Supplier”, “Cần lúc / Needed by”…) are the Order Sheet’s Order helper’s, and stay exactly as they are.

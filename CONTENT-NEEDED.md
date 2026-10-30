@@ -13,7 +13,9 @@ When something arrives, send it over (or put it where the table says), and the s
 goes live with the next build. Every key in `backticks` below is a gated section: the
 build stops if `gen.py` gates a section that isn't listed here.
 
-Last updated 13 October 2026.
+Last updated 30 October 2026: the tax code is in (`TAX_CODE`, 0111443247, from the business
+registration certificate; its head office is the restaurant's address, so `REGISTERED_ADDRESS`
+stays empty).
 
 ## Needed soon: before opening
 
@@ -54,7 +56,6 @@ Last updated 13 October 2026.
 | Gift cards | `/gift-cards/`, built and waiting: values, how long a card lasts; how to buy is "at the restaurant, or by email" (online sales would need the Ministry of Industry and Trade notification first) | Values in đồng, how long a card lasts | Arman |
 | Takeaway and delivery | An Order page, only if you want one: which apps carry Sol (the Host job description mentions ordering platforms) | App names and links | Arman |
 | Social links | `SOCIAL` in `build/gen.py`: the footer and the structured data (Instagram is there) | Facebook, TikTok, Zalo OA… addresses | Arman |
-| Tax code | `TAX_CODE` in `build/gen.py`: the footer, beside Công ty TNHH Aurelian; and `REGISTERED_ADDRESS` if the company's registered address isn't the restaurant's | Mã số thuế; the registered address | The accountant |
 | The public name | The structured data and Google: "Sol" with "Sol Hanoi" as its other name, until you decide | Sol or Sol Hanoi | Arman |
 
 ## Photography
@@ -104,7 +105,6 @@ Each key below is a section the public build leaves out until its content arrive
 | `about-closing` | `/about/`, Sol Pizza: a line or two on what closing it meant to you and the team (Sol Pizza to Sol, above) |
 | `about-dough` | `/about/`, "The dough": its flours, how long it ferments, how it's baked, in the kitchen's words |
 | `about-team` | `/about/`, "The team": a portrait and two or three lines on each person (The team, above) |
-| `company-tax-code` | The footer's last line: the tax code (`TAX_CODE` in `build/gen.py`; Tax code, above) |
 | `press-contact` | `/press/`, "Who to ask": a name and an email (`PRESS_CONTACT`; Press contact, above). Until then it says hello@sol.pizza |
 | `photography` | Every photograph: the home page (the first picture, the story, the three cards), About (the room, the oven), the menus, Private dining, Visit, each Eclipse edition, and the ones the press may use on `/press/`. Each placeholder on the full preview gives its slot, what to shoot and its shapes; `python3 build/media_tool.py slots` lists them (Photography, above) |
 | `home-press` | The home page: press or review quotes (Press and review quotes, above) |
