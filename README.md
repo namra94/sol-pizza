@@ -54,7 +54,7 @@ is open (they have the Apply bar then). Menu keeps its Food /
 Wine / Bar tabs. The footer has the newsletter sign-up (on the home page it's in the
 page instead), Instagram and any other address in `SOCIAL`, and lists the pages, Press,
 Work with us, Privacy, Cookies and **Cookie settings**; its last line is the company, with
-its tax code once `TAX_CODE` is set.
+its tax code (`TAX_CODE`).
 
 ### Taking a page down
 

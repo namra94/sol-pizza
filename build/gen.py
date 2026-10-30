@@ -165,8 +165,8 @@ SOCIAL = []
 # The company's details for the footer's last line (CONTENT-NEEDED.md): the tax code
 # (mã số thuế), and the registered address if it isn't the restaurant's, as
 # ('English', 'Tiếng Việt'). Until the tax code is set the line has the company's name.
-TAX_CODE = ''
-REGISTERED_ADDRESS = None
+TAX_CODE = '0111443247'          # the business registration certificate (mã số doanh nghiệp)
+REGISTERED_ADDRESS = None        # the certificate's head office is the restaurant's address
 # Who answers the press, on /press/ (CONTENT-NEEDED.md): ('Name', 'email'). Until then
 # the page gives hello@sol.pizza.
 PRESS_CONTACT = None
