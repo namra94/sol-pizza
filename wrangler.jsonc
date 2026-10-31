@@ -20,18 +20,17 @@
     "html_handling": "auto-trailing-slash",
     "run_worker_first": ["/dough", "/dough/*", "/backoffice", "/backoffice/*", "/api/*"]
   },
-  // Who a purchase request mentions in Slack's #supply: the owner (for big orders
-  // and suppliers not Active yet), the Kitchen approver and the Bar & FOH approver.
-  // Slack member ids, not secrets. The secrets are never in this file:
-  // DOUGH_PASSWORD (README-DEPLOY.md, "The kitchen"), BACKOFFICE_PASSWORD,
-  // SLACK_WEBHOOK_URL and ORDER_GUIDE_URL ("The back office: purchase requests").
+  // Who a purchase request mentions in Slack's #supply: the Kitchen approver for
+  // Kitchen requests, the Bar & FOH approver for Bar and FOH ones. Slack member ids,
+  // not secrets. The secrets are never in this file: the kitchen's DOUGH_PASSWORD
+  // (README-DEPLOY.md, "The kitchen"), and the back office's two, BACKOFFICE_PASSWORD
+  // and SLACK_WEBHOOK_URL ("The back office: purchase requests").
   "vars": {
-    "SLACK_OWNER": "U0BU86D7VL2",
     "SLACK_APPROVER_KITCHEN": "U0BTWU0P2TH",
     "SLACK_APPROVER_BAR_FOH": "U0C1Q87Q7E0"
   },
   // The dough log, and the back office's tables beside it (its purchase requests,
-  // the Order Guide's last good copy), each made by the Worker on first use.
+  // the sign-in throttle), each made by the Worker on first use.
   "d1_databases": [
     {
       "binding": "DOUGH_DB",

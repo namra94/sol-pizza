@@ -213,7 +213,7 @@ async function login(s, request, env) {
 async function office(request, env, url, db) {
   const path = url.pathname;
   const method = request.method;
-  if (path === '/api/backoffice/guide' && method === 'GET') return json(await backoffice.guide(env, db));
+  if (path === '/api/backoffice/form' && method === 'GET') return json(await backoffice.form(env, db));
   if (path === '/api/backoffice/purchases' && method === 'GET') return json(await backoffice.purchases(db));
   if (path === '/api/backoffice/purchase' && method === 'POST') {
     if (!(request.headers.get('Content-Type') || '').startsWith('application/json')) return json({ error: 'json' }, 415);

@@ -4145,16 +4145,24 @@ def build_dough_login():
 # Tools for the team, not pages for guests, behind one shared staff password (the
 # Worker, worker/index.js): its own cookie, so the kitchen's password doesn't open it
 # and its password doesn't open the kitchen. The first tool is the purchase request:
-# the form at /backoffice/purchase/ sends a request to Slack's #supply, where
-# management approves it with reactions (worker/backoffice.js); /backoffice/purchases/
-# lists the last 30. The pages are the kitchen's shell (kitchen_page(): one bilingual
-# page each, noindex, no analytics or consent banner, no /vi/ copy) with the kitchen's
-# form parts (kitchen.css) and build/design/backoffice.css; the scripts are
-# build/design/purchase.js and purchase-list.js. The Order Guide (suppliers, items,
-# prices, the staff's names) comes from the Order Sheet at run time and is never in
-# this repo.
+# staff ask for items only at /backoffice/purchase/, and the request goes to Slack's
+# #supply, where management approves it with reactions and chooses the supplier and
+# the brand when they order (worker/backoffice.js); /backoffice/purchases/ lists the
+# last 30. The pages are the kitchen's shell (kitchen_page(): one bilingual page each,
+# noindex, no analytics or consent banner, no /vi/ copy) with the kitchen's form parts
+# (kitchen.css) and build/design/backoffice.css; the scripts are
+# build/design/purchase.js and purchase-list.js. What the form suggests (names, items)
+# comes from earlier requests at run time: no supplier, brand, price or person is
+# ever in this repo.
 # ==========================================================================
 OFFICE_EYEBROW = t('Back office', 'Nội bộ')
+# The units a purchase request offers, in the form's order: (code, English,
+# Vietnamese). The Worker keeps the same list (UNITS in worker/backoffice.js) to write
+# them in the Slack message.
+OFFICE_UNITS = [('kg', 'kg', 'kg'), ('g', 'g', 'g'), ('L', 'L', 'L'), ('ml', 'ml', 'ml'), ('pc', 'pc', 'cái'),
+                ('pack', 'pack', 'gói'), ('box', 'box', 'hộp'), ('bottle', 'bottle', 'chai'), ('can', 'can', 'lon'),
+                ('jar', 'jar', 'hũ'), ('bag', 'bag', 'túi'), ('sack', 'sack', 'bao'), ('bunch', 'bunch', 'bó'),
+                ('tray', 'tray', 'khay'), ('case', 'case', 'thùng'), ('roll', 'roll', 'cuộn')]
 
 
 def office_nav(cur):
@@ -4198,8 +4206,8 @@ def build_office_home():
         office_nav('home'),
         '<ul class="office-tiles">%s</ul>' % ''.join([
             tile('/backoffice/purchase/', t('Purchase request', 'Yêu cầu mua hàng'),
-                 t('Ask for supplies. Management approves it in Slack.',
-                   'Đề nghị mua hàng. Quản lý duyệt trên Slack.')),
+                 t('Ask for the items you need. Management approves it in Slack and chooses the supplier and brand.',
+                   'Ghi những mặt hàng cần mua. Quản lý duyệt trên Slack rồi chọn nhà cung cấp và thương hiệu.')),
             tile('/backoffice/purchases/', t('Recent requests', 'Yêu cầu gần đây'),
                  t('The last 30, and whether each one reached Slack.',
                    '30 yêu cầu gần nhất, và yêu cầu nào đã lên Slack.')),
@@ -4244,14 +4252,14 @@ def build_office_login():
 
 
 def build_purchase():
-    """/backoffice/purchase/: the purchase request. purchase.js loads the Order Guide, fills
-    the lists from it and keeps the summary up to date; every line is here in both
-    languages, and #p-item is the template for an item's row. data-if lines show while
-    they apply; data-guide and data-send-line lines show one of their group at a time."""
-    def field(fid, name, inner, attrs=''):
-        return ('<div class="dough-field"%s><label class="label" for="%s">%s</label><div class="dough-box">%s</div></div>'
-                % (attrs, fid, name, inner))
-
+    """/backoffice/purchase/: the purchase request, for items only: no supplier, brand or
+    price, which management chooses when they order. purchase.js runs it: the
+    suggestions from earlier requests, the rows, Preview and Send. Every line is here in
+    both languages, and #p-item is the template for an item's row; an <option> and a
+    placeholder can't hold the two languages' spans, so theirs are in data-en and
+    data-vi (data-placeholder-en and -vi) for purchase.js to swap. data-if lines show
+    while they apply; data-state and data-send-line lines show one of their group at a
+    time."""
     def text_box(fid, name, most, attrs=''):
         return ('<input id="%s" name="%s" type="text" maxlength="%d" autocomplete="off" spellcheck="false"%s>'
                 % (fid, name, most, attrs))
@@ -4259,48 +4267,44 @@ def build_purchase():
     def station(value, name):
         return '<label><input type="radio" name="station" value="%s"><span>%s</span></label>' % (value, name)
 
-    def row_field(key, name, inner, cls='dough-field'):
-        return ('<div class="%s"><label class="label" data-for="%s">%s</label><div class="dough-box">%s</div></div>'
-                % (cls, key, name, inner))
+    def row_field(key, name, inner, cls='dough-field', attrs=''):
+        return ('<div class="%s"%s><label class="label" data-for="%s">%s</label><div class="dough-box">%s</div></div>'
+                % (cls, attrs, key, name, inner))
 
+    def option(value, en, vi):
+        return '<option value="%s" data-en="%s" data-vi="%s">%s</option>' % (value, en, vi, en)
+
+    # The unit: Choose… first, so nothing is assumed, then the units, then Other…, which
+    # opens a box to type one in
+    units = (option('', 'Choose…', 'Chọn…') + ''.join(option(*u) for u in OFFICE_UNITS)
+             + option('other', 'Other…', 'Khác…'))
+    note_hint = ('Size, ripeness, what it’s for', 'Kích cỡ, độ chín, dùng cho món gì')
     item_row = ('<template id="p-item"><li class="p-item">'
                 '<div class="p-item-head"><p class="label">%s</p><button class="p-remove" type="button" data-remove>'
                 '%s</button></div>%s<ul class="p-options" role="listbox" hidden></ul>'
-                '<div class="dough-fields p-item-fields">%s%s%s</div>'
-                '<p class="p-price" hidden></p></li></template>') % (
+                '<div class="dough-fields p-item-fields">%s%s%s%s</div></li></template>') % (
         t('Item <span data-out="n"></span>', 'Hàng <span data-out="n"></span>'),
         t('Remove', 'Xóa'),
         row_field('item', t('Item', 'Hàng'),
-                  '<input data-name="item" type="text" maxlength="200" autocomplete="off" spellcheck="false">',
+                  '<input data-name="item" type="text" maxlength="80" autocomplete="off" spellcheck="false">',
                   'dough-field p-item-name'),
         row_field('qty', t('Quantity', 'Số lượng'),
                   '<input data-name="qty" type="text" inputmode="decimal" maxlength="12" autocomplete="off" '
                   'spellcheck="false">'),
-        row_field('unit', t('Unit', 'Đơn vị'),
-                  '<input data-name="unit" type="text" maxlength="30" autocomplete="off" spellcheck="false">'),
+        row_field('unit', t('Unit', 'Đơn vị'), '<select data-name="unit">%s</select>' % units),
+        row_field('unit_other', t('Other unit', 'Đơn vị khác'),
+                  '<input data-name="unit_other" type="text" maxlength="20" autocomplete="off" spellcheck="false">',
+                  'dough-field p-item-wide', ' data-unit-other hidden'),
         row_field('note', t('Note (optional)', 'Ghi chú (không bắt buộc)'),
-                  '<input data-name="note" type="text" maxlength="200" autocomplete="off">',
-                  'dough-field p-item-note'))
+                  '<input data-name="note" type="text" maxlength="200" autocomplete="off" placeholder="%s" '
+                  'data-placeholder-en="%s" data-placeholder-vi="%s">' % (note_hint[0], note_hint[0], note_hint[1]),
+                  'dough-field p-item-wide'))
 
-    guide_notes = ''.join([
-        office_warn('data-guide', 'loading', t('Loading the Order Guide…', 'Đang tải danh mục hàng…'), 'dough-status'),
-        office_warn('data-guide', 'stale',
-                    t('Order Guide as of <span data-out="as_of"></span>: the Order Sheet can’t be reached just now, '
-                      'so prices may have changed since.',
-                      'Danh mục hàng cập nhật lúc <span data-out="as_of"></span>: hiện chưa kết nối được Order Sheet, '
-                      'giá có thể đã thay đổi.')),
-        office_warn('data-guide', 'none',
-                    t('The Order Guide isn’t connected, so there are no lists or prices: type the supplier and the '
-                      'items. Arman’s ✅ will be needed.',
-                      'Chưa kết nối danh mục hàng nên chưa có danh sách và giá: hãy tự nhập nhà cung cấp và mặt hàng. '
-                      'Yêu cầu sẽ cần anh Arman duyệt.')),
-        office_warn('data-guide', 'failed',
-                    t('Couldn’t load the Order Guide. Type the supplier and the items, or reload the page.',
-                      'Không tải được danh mục hàng. Hãy tự nhập nhà cung cấp và mặt hàng, hoặc tải lại trang.')),
-        office_warn('data-guide', 'signed-out',
+    page_notes = ''.join([
+        office_warn('data-state', 'signed-out',
                     t('You’ve been signed out. <a href="/backoffice/login/?next=/backoffice/purchase/">Sign in again</a>.',
                       'Bạn đã bị đăng xuất. <a href="/backoffice/login/?next=/backoffice/purchase/">Đăng nhập lại</a>.')),
-        office_warn('data-guide', 'off', t('The back office isn’t set up on this copy of the site.',
+        office_warn('data-state', 'off', t('The back office isn’t set up on this copy of the site.',
                                            'Trang nội bộ chưa được thiết lập trên bản này của trang.')),
     ])
     send_states = ''.join([
@@ -4331,18 +4335,13 @@ def build_purchase():
 {title}
 {nav}
 <noscript><aside class="note-box"><p>{nojs}</p></aside></noscript>
-<div class="office-notes" role="status">{guide_notes}<p class="dough-status" data-if="dry-run" hidden>{dry_run}</p></div>
+<div class="office-notes" role="status">{page_notes}<p class="dough-status" data-if="dry-run" hidden>{dry_run}</p></div>
 <form class="office-form" id="purchase" autocomplete="off" novalidate hidden>
 <fieldset class="dough-set"><legend>{h_request}</legend>
   <div class="p-fields">
     <div class="p-field">
-      {who}
-      <div class="dough-field" data-if="who-typed" hidden><label class="label" for="p-who-other"><span data-if="who-list">{who_name}</span><span data-if="who-nolist" hidden>{l_who}</span></label><div class="dough-box">{who_other}</div></div>
-    </div>
-    <div class="p-field">
-      {supplier}
-      <div class="dough-field" data-if="sup-typed" hidden><label class="label" for="p-supplier-other"><span data-if="sup-list">{sup_name}</span><span data-if="sup-nolist" hidden>{l_supplier}</span></label><div class="dough-box">{sup_other}</div></div>
-      <ul class="p-facts" id="p-facts" hidden></ul>
+      <div class="dough-field"><label class="label" for="p-who" id="p-who-l">{l_who}</label><div class="dough-box">{who}</div></div>
+      <ul class="p-options" id="p-who-list" role="listbox" aria-labelledby="p-who-l" hidden></ul>
     </div>
     <fieldset class="p-field p-station"><legend class="label">{l_station}</legend><div class="dough-seg">{stations}</div></fieldset>
     <fieldset class="p-field p-when"><legend class="label">{l_needed}</legend>
@@ -4357,16 +4356,10 @@ def build_purchase():
   <p class="dough-hint" data-if="items-full" hidden>{items_full}</p>
 </fieldset>
 <div class="dough-field dough-notes"><label class="label" for="p-note">{l_note}</label><textarea id="p-note" name="note" rows="3" maxlength="1000"></textarea></div>
-<section class="p-summary" aria-labelledby="p-summary-l">
-  <p class="label" id="p-summary-l">{l_estimate}</p>
-  <p class="p-estimate" data-out="estimate">—</p>
-  <p class="p-sub" data-out="unpriced" data-if="unpriced" hidden></p>
-  <p class="p-approver" data-out="approver"></p>
-  <p class="dough-warn" data-out="owner" data-if="owner" hidden></p>
-</section>
 <div class="p-send">
+  <p class="p-next">{next}</p>
   <div class="dough-actions"><button class="btn btn-red" type="button" data-preview>{preview}</button></div>
-  <div class="p-preview-box" id="p-preview-box" data-if="previewed" tabindex="-1" hidden>
+  <div class="p-preview-box" id="p-preview-box" tabindex="-1" hidden>
     <p class="label" id="p-preview-l">{l_message}</p>
     <pre class="p-preview" id="p-preview" aria-labelledby="p-preview-l"></pre>
     <p class="dough-hint">{message_hint}</p>
@@ -4386,26 +4379,19 @@ def build_purchase():
 </main>
 """.format(
         title=page_title(OFFICE_EYEBROW, t('Purchase request', 'Yêu cầu mua hàng'),
-                         t('Ask for supplies. Management approves it in Slack, in #supply.',
-                           'Đề nghị mua hàng. Quản lý duyệt trên Slack, trong kênh #supply.')),
+                         t('Ask for supplies. Management approves it in Slack, in #supply, then chooses the supplier '
+                           'and brand.',
+                           'Đề nghị mua hàng. Quản lý duyệt trên Slack, trong kênh #supply, rồi chọn nhà cung cấp và '
+                           'thương hiệu.')),
         nav=office_nav('purchase'),
         nojs=t('The form needs JavaScript. Turn it on in the browser’s settings.',
                'Biểu mẫu này cần JavaScript. Hãy bật JavaScript trong cài đặt trình duyệt.'),
-        guide_notes=guide_notes,
+        page_notes=page_notes,
         dry_run=t('Dry run: requests are kept here but not posted to Slack.',
                   'Chạy thử: yêu cầu được lưu ở đây nhưng không đăng lên Slack.'),
         h_request=t('The request', 'Yêu cầu'),
         l_who=t('Requested by', 'Người yêu cầu'),
-        who=field('p-who', t('Requested by', 'Người yêu cầu'), '<select id="p-who" name="who"></select>',
-                  ' data-if="who-list"'),
-        who_name=t('Name', 'Tên'),
-        who_other=text_box('p-who-other', 'who_other', 60),
-        l_supplier=t('Supplier', 'Nhà cung cấp'),
-        supplier=field('p-supplier', t('Supplier', 'Nhà cung cấp'),
-                       '<select id="p-supplier" name="supplier" aria-describedby="p-facts"></select>',
-                       ' data-if="sup-list"'),
-        sup_name=t('Supplier’s name', 'Tên nhà cung cấp'),
-        sup_other=text_box('p-supplier-other', 'supplier_other', 60),
+        who=text_box('p-who', 'who', 60),
         l_station=t('Station', 'Bộ phận'),
         stations=station('Kitchen', t('Kitchen', 'Bếp')) + station('Bar', 'Bar') + station('FOH', t('FOH', 'Sảnh')),
         l_needed=t('Needed by', 'Cần lúc'),
@@ -4413,39 +4399,44 @@ def build_purchase():
         time=dough_box('p-time', '<input id="p-time" name="time" type="time">',
                        t('Time (optional)', 'Giờ (không bắt buộc)')),
         h_items=t('Items', 'Hàng'),
-        items_hint=t('Pick from the supplier’s list, in English or Vietnamese, or type an item that isn’t on it: '
-                     'it goes without a price.',
-                     'Chọn từ danh sách của nhà cung cấp, bằng tiếng Anh hoặc tiếng Việt, hoặc tự nhập mặt hàng chưa '
-                     'có trong danh sách: mặt hàng đó sẽ không có giá.'),
+        items_hint=t('Write what you need, not the brand or the supplier: management chooses those when they order. '
+                     'Use the note for size, ripeness or what it’s for.',
+                     'Ghi mặt hàng cần mua, không cần ghi thương hiệu hay nhà cung cấp: quản lý sẽ chọn khi đặt hàng. '
+                     'Dùng ô ghi chú cho kích cỡ, độ chín hoặc món sẽ dùng.'),
         add=t('Add an item', 'Thêm hàng'),
         items_full=t('30 items at most. Send the rest as another request.',
                      'Tối đa 30 mặt hàng. Hãy gửi phần còn lại trong một yêu cầu khác.'),
         l_note=t('Note', 'Ghi chú'),
-        l_estimate=t('Estimate before VAT', 'Ước tính chưa VAT'),
+        next=t('Management approves it in Slack, then orders it from the supplier and brand they choose.',
+               'Quản lý duyệt trên Slack, rồi đặt hàng với nhà cung cấp và thương hiệu do quản lý chọn.'),
         preview=t('Preview the message', 'Xem trước tin nhắn'),
         l_message=t('The message for #supply', 'Tin nhắn gửi lên #supply'),
-        message_hint=t('Exactly as Slack will get it. Change anything above and preview it again.',
-                       'Đúng như tin nhắn Slack sẽ nhận. Nếu sửa gì ở trên, hãy xem trước lại.'),
+        message_hint=t('As Slack will show it. Change anything above and preview it again.',
+                       'Tin nhắn sẽ hiện trên Slack như thế này. Nếu sửa gì ở trên, hãy xem trước lại.'),
         send=t('Send to #supply', 'Gửi lên #supply'),
         send_states=send_states,
         sent=t('Sent to #supply', 'Đã gửi lên #supply'),
         dry=t('Dry run: not posted to Slack', 'Chạy thử: chưa đăng lên Slack'),
         ref=t('Ref <strong data-out="ref"></strong>', 'Mã <strong data-out="ref"></strong>'),
-        approve=t('Management will approve it in Slack.', 'Quản lý sẽ duyệt trên Slack.'),
+        approve=t('Management will approve it in Slack and choose the supplier and brand.',
+                  'Quản lý sẽ duyệt trên Slack rồi chọn nhà cung cấp và thương hiệu.'),
         dry_hint=t('This copy of the site only pretends to post. The message it would have posted:',
                    'Bản này của trang chỉ chạy thử, không đăng thật. Tin nhắn lẽ ra sẽ được đăng:'),
         new=t('New request', 'Yêu cầu mới'),
         item_row=item_row,
     )
     return office_page('/backoffice/purchase/', 'purchase', ('Purchase request — Sol', 'Yêu cầu mua hàng — Sol'),
-                       ('Ask for supplies: the request goes to Slack, where management approves it.',
-                        'Đề nghị mua hàng: yêu cầu được gửi lên Slack để quản lý duyệt.'),
+                       ('Ask for supplies: the request goes to Slack, where management approves it and chooses the '
+                        'supplier and brand.',
+                        'Đề nghị mua hàng: yêu cầu được gửi lên Slack để quản lý duyệt rồi chọn nhà cung cấp và '
+                        'thương hiệu.'),
                        main, script='purchase.js')
 
 
 def build_purchase_list():
     """/backoffice/purchases/: purchase-list.js fetches the last 30 requests and fills a
-    copy of #request for each, newest first."""
+    copy of #request for each, newest first. #units holds the units' names in both
+    languages, for the items' lines."""
     def fact(name, value, cond=None):
         return '<div%s><dt>%s</dt><dd>%s</dd></div>' % (' data-if="%s"' % cond if cond else '', name, value)
 
@@ -4457,29 +4448,30 @@ def build_purchase_list():
 
     entry = ('<template id="request"><article class="log-entry office-entry">'
              '<header class="log-head"><p class="log-batch">{ref}</p><p class="office-status">{status}</p>'
-             '<p class="log-meta">{by}</p></header><dl class="log-facts">{facts}</dl></article></template>').format(
+             '<p class="log-meta">{by}</p></header>{why}<dl class="log-facts">{facts}</dl></article></template>').format(
         ref=slot('ref'),
         status=''.join('<span data-if="%s" hidden>%s</span>' % (k, v) for k, v in [
             ('sent', t('Sent to Slack', 'Đã gửi lên Slack')),
-            ('failed', t('Not sent: Slack failed', 'Chưa gửi: lỗi Slack')),
+            ('failed', t('Not sent', 'Chưa gửi')),
             ('dry', t('Dry run', 'Chạy thử')),
             ('sending', t('Sending', 'Đang gửi'))]),
         by=t('%s, %s' % (slot('requested_by'), slot('time')), '%s, %s' % (slot('requested_by'), slot('time'))),
+        why='<p class="dough-warn" data-if="failed" hidden>%s</p>' % t(
+            'Slack didn’t take it (%s).' % slot('slack_error'), 'Slack chưa nhận yêu cầu (%s).' % slot('slack_error')),
         facts=''.join([
-            fact(t('Supplier', 'Nhà cung cấp'), slot('supplier')),
             fact(t('Station', 'Bộ phận'), slot('station')),
             fact(t('Needed by', 'Cần lúc'), slot('needed_by')),
-            fact(t('Items', 'Hàng'), t('%s <span data-if="one">item</span><span data-if="many">items</span>' % slot('items'),
-                                     '%s mặt hàng' % slot('items'))),
-            fact(t('Estimate', 'Ước tính'), t('~%s before VAT' % slot('estimate'), '~%s chưa VAT' % slot('estimate')),
-                 'estimate'),
-            fact(t('Approval', 'Duyệt'), t('Arman’s ✅ needed too', 'Cần cả anh Arman duyệt'), 'owner'),
+            fact(t('Items', 'Hàng'), '<ul class="office-items" data-items></ul>'),
         ]))
+    units = '<template id="units">%s</template>' % ''.join(
+        '<span data-unit="%s" data-en="%s" data-vi="%s"></span>' % u for u in OFFICE_UNITS)
     main = '\n'.join([
         '<main id="main" class="wrap">',
         page_title(OFFICE_EYEBROW, t('Recent requests', 'Yêu cầu gần đây'),
-                   t('The last 30 purchase requests, newest first. Approving happens in Slack, in #supply.',
-                     '30 yêu cầu mua hàng gần nhất, mới nhất ở trên. Việc duyệt diễn ra trên Slack, trong kênh #supply.')),
+                   t('The last 30 purchase requests, newest first. Approving and ordering happen in Slack, so to know '
+                     'where a request is, ask management.',
+                     '30 yêu cầu mua hàng gần nhất, mới nhất ở trên. Việc duyệt và đặt hàng diễn ra trên Slack, nên muốn '
+                     'biết yêu cầu đã được xử lý đến đâu, hãy hỏi quản lý.')),
         office_nav('purchases'),
         '<noscript><aside class="note-box"><p>%s</p></aside></noscript>'
         % t('The list needs JavaScript. Turn it on in the browser’s settings.',
@@ -4500,6 +4492,7 @@ def build_purchase_list():
         ]),
         '<div class="log-list office-list" id="request-list"></div>',
         entry,
+        units,
         '</main>', ''])
     return office_page('/backoffice/purchases/', 'purchases', ('Recent requests — Sol', 'Yêu cầu gần đây — Sol'),
                        ('The last 30 purchase requests sent to Slack.', '30 yêu cầu mua hàng gần nhất đã gửi lên Slack.'),

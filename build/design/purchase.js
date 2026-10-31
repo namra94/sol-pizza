@@ -1,20 +1,20 @@
 /* Sol — the purchase request (/backoffice/purchase/). No dependencies; load with `defer`.
    build/gen.py (build_purchase) writes the page, every line in both languages, and
-   #p-item, the template for an item's row. This loads the Order Guide (GET
-   /api/backoffice/guide, worker/backoffice.js) and fills the lists from it: the staff
-   for Requested by (the last name picked is remembered on the phone), the suppliers by
-   status (Active, then Quoting, then Not used yet; Stopped ones left out), and each
-   supplier's items, found as you type in English or Vietnamese, with or without the
-   accents. Anything not on a list can be typed: an item that isn't in the Order Guide
-   goes without a price, and a supplier that isn't needs Arman's ✅. Without a guide
-   everything is typed.
-   As it's filled the summary keeps up: the estimate before VAT, who approves, and
-   whether Arman's ✅ is needed, by the Order Sheet's rules. That's a guide for the
-   sender: the Worker works it all out again from the Order Guide when it posts.
+   #p-item, the template for an item's row. Staff ask for items only: who's asking,
+   the station, when it's needed, and each item, how much, in what unit, with a note.
+   Management chooses the supplier and the brand when they order, so nothing here
+   names either, and there are no prices.
+   To help, the boxes suggest what earlier requests said (GET /api/backoffice/form,
+   worker/backoffice.js): the names for Requested by (the last one used is remembered
+   on the phone), and for an item the ones asked for before at the station picked
+   (with none picked yet, at any station), most-asked first, found as you type in
+   English or Vietnamese, with or without the accents. Picking one fills in its usual
+   unit, unless one has been chosen already. If they don't load, the form works the
+   same without them, and says nothing.
    Preview asks the Worker for the exact message (POST /api/backoffice/purchase with
-   preview: true); Send posts it with an id made here, kept until the request has gone
-   through, so a second tap or a retry never posts it twice. Nothing typed is lost on
-   an error. */
+   preview: true) and shows it as Slack will; Send posts it with an id made here, kept
+   until the request has gone through, so a second tap or a retry never posts it
+   twice. Nothing typed is lost on an error. */
 (function () {
   'use strict';
   var form = document.getElementById('purchase');
@@ -22,45 +22,31 @@
   var done = document.getElementById('p-done');
   if (!form || !tpl || !done) return;
   var root = document.documentElement;
-  var OTHER = '\n';                     // the lists' "Other…" (no name has a line break)
-  var MAX_ROWS = 30, MAX_QTY = 100000, MAX_NAME = 60;
-  var LIMIT = 5000000;                  // as the Worker's, if the Order Sheet has none
+  var OTHER = 'other';                  // the unit list's "Other…"
+  var MAX_ROWS = 30, MAX_QTY = 100000, MAX_NAME = 60, MAX_ITEM = 80, MAX_UNIT = 20;
+  var SHOWN = 60;                       // suggestions in a list at most
   var NAME_KEY = 'sol-office-name';     // who asked last on this phone (localStorage)
-  var STATUSES = [['Active', 'Active', 'Đang dùng'], ['Quoting', 'Quoting', 'Đang báo giá'],
-                  ['Not used yet', 'Not used yet', 'Chưa dùng']];
   // the accents, taken off to search: the combining marks U+0300 to U+036F
   var MARKS = new RegExp('[' + String.fromCharCode(0x300) + '-' + String.fromCharCode(0x36f) + ']', 'g');
 
   var els = {
-    who: form.elements.who, whoOther: form.elements.who_other,
-    supplier: form.elements.supplier, supplierOther: form.elements.supplier_other,
-    facts: document.getElementById('p-facts'), seg: form.querySelector('.dough-seg'),
+    who: form.elements.who, whoList: document.getElementById('p-who-list'), seg: form.querySelector('.dough-seg'),
     day: form.elements.day, time: form.elements.time, note: form.elements.note,
     list: document.getElementById('p-items'), add: form.querySelector('[data-add]'),
     previewBox: document.getElementById('p-preview-box'), message: document.getElementById('p-preview'),
+    sentMessage: done.querySelector('[data-out="sent_message"]'),
     preview: form.querySelector('[data-preview]'), send: form.querySelector('[data-send]')
   };
-  var guide = null, bySupplier = {}, itemsOf = {}, asOf = null;
-  var rows = [], counter = 0;
+  var people = [], asked = [];          // from earlier requests: names; items, as {station, item, unit, count}
+  var whoBox = null, rows = [], counter = 0;
   var requestId = null;                 // made at the first Send, kept until it has gone through
   var previewed = null;                 // the request the preview shows (body(), as JSON)
+  var messages = {};                    // the messages showing, as the Worker wrote them: {text, station}
   var busy = false, tried = false, sentRows = [];
 
   /* Words and numbers in the page's language --------------------------------- */
   function vi() { return root.lang === 'vi'; }
   function L(en, viText) { return vi() ? viText : en; }
-  var formats = {};
-  function fmt(x, digits) {                 // 1,250,000 / 1.250.000; 1.5 / 1,5
-    var lang = vi() ? 'vi-VN' : 'en-GB', key = lang + digits;
-    if (!formats[key]) formats[key] = new Intl.NumberFormat(lang, { maximumFractionDigits: digits });
-    return formats[key].format(x + 0);
-  }
-  function vnd(x) { return fmt(Math.round(x), 0) + 'đ'; }
-  function hhmm(iso) {                      // 20:30, Hanoi time
-    return new Intl.DateTimeFormat(vi() ? 'vi-VN' : 'en-GB', {
-      hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Ho_Chi_Minh'
-    }).format(new Date(iso));
-  }
   function hanoiToday() { return new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10); }
 
   // "2,5", "2.5" and " 2.5 " are all 2.5; anything else is NaN
@@ -79,153 +65,187 @@
     if (s.normalize) s = s.normalize('NFD').replace(MARKS, '');
     return s.replace(/đ/g, 'd');
   }
+  // One item however it's spelt, as the Worker counts them: whatever the capitals
+  // and spaces, but not the accents (bơ is butter, bò is beef)
+  function key(s) { return clean(s).toLowerCase(); }
+
+  // The unit list's names, by code (from the template's options): [English, Vietnamese]
+  var unitNames = {};
+  tpl.content.querySelectorAll('option[data-vi]').forEach(function (o) {
+    if (o.value && o.value !== OTHER) unitNames[o.value] = [o.getAttribute('data-en'), o.getAttribute('data-vi')];
+  });
+  function listed(u) { return Object.prototype.hasOwnProperty.call(unitNames, u); }
+  function unitName(u) { return listed(u) ? L(unitNames[u][0], unitNames[u][1]) : u; }
+
+  // An <option> and a placeholder can't hold the page's two languages: theirs are in
+  // data-en and data-vi (data-placeholder-en and -vi), and swapped here
+  function words(scope) {
+    scope.querySelectorAll('option[data-vi]').forEach(function (o) {
+      o.textContent = o.getAttribute(vi() ? 'data-vi' : 'data-en');
+    });
+    scope.querySelectorAll('[data-placeholder-vi]').forEach(function (el) {
+      el.placeholder = el.getAttribute(vi() ? 'data-placeholder-vi' : 'data-placeholder-en');
+    });
+  }
+
+  // A message as Slack shows it: the approver's mention as @ and the role (Slack shows
+  // their name), and &amp;, &lt; and &gt; as the characters they stand for
+  function slackShown(m) {
+    var role = m.station === 'Kitchen' ? L('Kitchen approver', 'người duyệt của Bếp')
+      : L('Bar & FOH approver', 'người duyệt của Bar và Sảnh');
+    return m.text.replace(/<@[UW][A-Z0-9]+>/g, function () { return '@' + role; })
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+  }
+  function showMessages() {
+    if (messages.preview) els.message.textContent = slackShown(messages.preview);
+    if (messages.sent) els.sentMessage.textContent = slackShown(messages.sent);
+  }
 
   /* The page's lines ------------------------------------------------------- */
   function show(cond, on) {
     document.querySelectorAll('[data-if="' + cond + '"]').forEach(function (el) { el.hidden = !on; });
   }
-  function out(key, text) {
-    document.querySelectorAll('[data-out="' + key + '"]').forEach(function (el) { el.textContent = text; });
+  function out(name, text) {
+    document.querySelectorAll('[data-out="' + name + '"]').forEach(function (el) { el.textContent = text; });
   }
-  // One line of a group at a time (data-guide, data-send-line); null hides them all
-  function only(attr, key) {
-    document.querySelectorAll('[' + attr + ']').forEach(function (el) { el.hidden = el.getAttribute(attr) !== key; });
+  // One line of a group at a time (data-state, data-send-line); null hides them all
+  function only(attr, name) {
+    document.querySelectorAll('[' + attr + ']').forEach(function (el) { el.hidden = el.getAttribute(attr) !== name; });
   }
   var line = null;                      // the line under Preview and Send that's showing
-  function sendLine(key) {
-    line = key;
-    only('data-send-line', key);
-  }
-  function option(value, text) {
-    var o = document.createElement('option');
-    o.value = value;
-    o.textContent = text;
-    return o;
+  function sendLine(name) {
+    line = name;
+    only('data-send-line', name);
   }
   function mark(el, on) {
     el.setAttribute('aria-invalid', String(on));
     el.parentNode.classList.toggle('is-invalid', on);
   }
+  function station() { return (form.querySelector('input[name="station"]:checked') || {}).value; }
 
-  /* The Order Guide -------------------------------------------------------- */
-  function hasStaff() { return !!(guide && guide.staff.length); }
-  function hasSuppliers() { return !!(guide && guide.suppliers.some(function (s) { return s.status !== 'Stopped'; })); }
-  function index() {
-    bySupplier = Object.create(null);   // by name, whatever the names are
-    itemsOf = Object.create(null);
-    guide.suppliers.forEach(function (s) { bySupplier[s.name] = s; itemsOf[s.name] = []; });
-    guide.items.forEach(function (it) { if (itemsOf[it.supplier]) itemsOf[it.supplier].push(it); });
-  }
-
-  // The supplier as the Worker will see it: picked, or typed (a typed name that's in
-  // the Order Sheet is that supplier)
-  function supplier() {
-    var v = els.supplier.value;
-    var name = hasSuppliers() && v !== OTHER ? v : clean(els.supplierOther.value);
-    return { name: name, s: guide && name && Object.prototype.hasOwnProperty.call(bySupplier, name) ? bySupplier[name] : null };
-  }
-  function offered() {
-    var s = supplier().s;
-    return s ? itemsOf[s.name] : [];
-  }
-  function who() {
-    return hasStaff() && els.who.value !== OTHER ? els.who.value : clean(els.whoOther.value);
-  }
-
-  /* Requested by and the supplier ------------------------------------------ */
-  function fillWho() {
-    var sel = els.who, keep = sel.value;
-    sel.textContent = '';
-    sel.appendChild(option('', L('Choose your name', 'Chọn tên của bạn')));
-    (guide ? guide.staff : []).forEach(function (n) { sel.appendChild(option(n, n)); });
-    sel.appendChild(option(OTHER, L('Other…', 'Người khác…')));
-    sel.value = keep;
-    if (sel.value !== keep) sel.value = '';
-  }
-
-  function whoShown() {
-    var typed = !hasStaff() || els.who.value === OTHER;
-    show('who-list', hasStaff());
-    show('who-nolist', !hasStaff());
-    show('who-typed', typed);
-  }
-
-  function remember() {
-    try { localStorage.setItem(NAME_KEY, who()); } catch (e) { /* private mode */ }
-  }
-  function recall() {
-    var saved = '';
-    try { saved = localStorage.getItem(NAME_KEY) || ''; } catch (e) { /* private mode */ }
-    if (!saved) return;
-    if (hasStaff() && guide.staff.indexOf(saved) >= 0) {
-      els.who.value = saved;
-    } else {
-      if (hasStaff()) els.who.value = OTHER;
-      els.whoOther.value = saved;
-    }
-  }
-
-  function statusName(status) {
-    for (var i = 0; i < STATUSES.length; i++) if (STATUSES[i][0] === status) return L(STATUSES[i][1], STATUSES[i][2]);
-    return status || L('No status', 'Chưa có trạng thái');
-  }
-
-  function fillSuppliers() {
-    var sel = els.supplier, keep = sel.value;
-    var shown = guide ? guide.suppliers.filter(function (s) { return s.status !== 'Stopped'; }) : [];
-    var order = STATUSES.map(function (s) { return s[0]; });
-    shown.forEach(function (s) { if (order.indexOf(s.status) < 0) order.push(s.status); });   // any other status, after
-    sel.textContent = '';
-    sel.appendChild(option('', L('Choose a supplier', 'Chọn nhà cung cấp')));
-    order.forEach(function (status) {
-      var group = shown.filter(function (s) { return s.status === status; });
-      if (!group.length) return;
-      var g = document.createElement('optgroup');
-      g.label = statusName(status);
-      group.forEach(function (s) { g.appendChild(option(s.name, s.name + (s.supplies ? ' — ' + s.supplies : ''))); });
-      sel.appendChild(g);
+  /* Suggestions ------------------------------------------------------------ */
+  // A box that suggests as it's typed in: its list (ul[role=listbox]) right under it,
+  // what to suggest from choices() ({text}, and the unit for an item), and picked(c)
+  // once one is picked. While there's nothing to suggest it's a plain text box.
+  function suggest(input, list, choices, picked) {
+    var box = { input: input, list: list, choices: choices, picked: picked, shown: [], active: -1 };
+    input.addEventListener('input', function () { open(box, false); });
+    input.addEventListener('focus', function () { open(box, true); });
+    input.addEventListener('blur', function () {
+      setTimeout(function () { if (document.activeElement !== input) close(box); }, 150);
     });
-    sel.appendChild(option(OTHER, L('Other supplier…', 'Nhà cung cấp khác…')));
-    sel.value = keep;
-    if (sel.value !== keep) sel.value = '';
+    input.addEventListener('keydown', function (e) {
+      if (!input.hasAttribute('role')) return;
+      var k = e.key;
+      if (k === 'ArrowDown' || k === 'Down') { e.preventDefault(); move(box, 1); }
+      else if (k === 'ArrowUp' || k === 'Up') { e.preventDefault(); move(box, -1); }
+      else if (k === 'Enter' && !list.hidden && box.active >= 0) { e.preventDefault(); choose(box, box.shown[box.active]); }
+      else if ((k === 'Escape' || k === 'Esc') && !list.hidden) { e.preventDefault(); close(box); }
+    });
+    arm(box);
+    return box;
   }
 
-  function supplierShown() {
-    show('sup-list', hasSuppliers());
-    show('sup-nolist', !hasSuppliers());
-    show('sup-typed', !hasSuppliers() || els.supplier.value === OTHER);
-  }
-
-  // What the Order Sheet says about it: who orders, the days, the cut-off…
-  function fillFacts() {
-    var s = supplier().s, f = els.facts;
-    f.textContent = '';
-    if (s) {
-      [['owner', 'Ordered by', 'Người đặt hàng'], ['order_days', 'Order days', 'Ngày đặt hàng'],
-       ['cutoff', 'Cut-off', 'Hạn chót'], ['delivery', 'Delivery', 'Giao hàng'],
-       ['min_order', 'Minimum order', 'Đơn tối thiểu']].forEach(function (x) {
-        if (!s[x[0]]) return;
-        var li = document.createElement('li'), name = document.createElement('span');
-        name.className = 'label';
-        name.textContent = L(x[1], x[2]);
-        li.appendChild(name);
-        li.appendChild(document.createTextNode(s[x[0]]));
-        f.appendChild(li);
+  // A list to pick from while there's something to suggest, else a plain text box
+  function arm(box) {
+    var input = box.input;
+    if (box.choices().length) {
+      input.setAttribute('role', 'combobox');
+      input.setAttribute('aria-autocomplete', 'list');
+      input.setAttribute('aria-expanded', 'false');
+      input.setAttribute('aria-controls', box.list.id);
+    } else {
+      ['role', 'aria-autocomplete', 'aria-expanded', 'aria-controls', 'aria-activedescendant'].forEach(function (a) {
+        input.removeAttribute(a);
       });
     }
-    f.hidden = !f.firstChild;
+    close(box);
   }
 
-  // A new supplier: its station, its facts, and every row's item looked up again
-  function supplierChanged() {
-    supplierShown();
-    fillFacts();
-    var s = supplier().s;
-    if (s && s.station) {
-      form.querySelectorAll('input[name="station"]').forEach(function (r) { r.checked = r.value === s.station; });
-    }
-    rows.forEach(function (row) { combo(row); resolve(row); });
-    update();
+  // The list under the box: what has every word typed, whatever the accents and
+  // capitals; or everything, when coming back to a box that holds one already (to
+  // pick another)
+  function open(box, again) {
+    var all = box.choices(), typed = norm(box.input.value);
+    if (!all.length) return;
+    var whole = again && typed && all.some(function (c) { return norm(c.text) === typed; });
+    var want = whole ? [] : typed.split(' ').filter(Boolean);
+    box.shown = all.filter(function (c) {
+      var hay = norm(c.text);
+      return want.every(function (w) { return hay.indexOf(w) >= 0; });
+    }).slice(0, SHOWN);
+    var list = box.list;
+    list.textContent = '';
+    box.active = -1;
+    box.shown.forEach(function (c, i) {
+      var li = document.createElement('li');
+      li.id = list.id + '-' + i;
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-selected', 'false');
+      li.textContent = c.text;
+      if (c.unit) {
+        var u = document.createElement('span');
+        u.className = 'p-option-unit';
+        u.textContent = ' · ' + unitName(c.unit);
+        li.appendChild(u);
+      }
+      li.addEventListener('mousedown', function (e) { e.preventDefault(); });   // the box keeps the focus
+      li.addEventListener('click', function () { choose(box, c); });
+      list.appendChild(li);
+    });
+    list.hidden = !box.shown.length;
+    box.input.setAttribute('aria-expanded', String(!list.hidden));
+    box.input.removeAttribute('aria-activedescendant');
+  }
+
+  function close(box) {
+    box.list.hidden = true;
+    box.active = -1;
+    if (box.input.hasAttribute('role')) box.input.setAttribute('aria-expanded', 'false');
+    box.input.removeAttribute('aria-activedescendant');
+  }
+
+  function move(box, by) {
+    if (box.list.hidden) open(box, false);
+    if (!box.shown.length) return;
+    var opts = box.list.children;
+    if (box.active >= 0) opts[box.active].setAttribute('aria-selected', 'false');
+    box.active = box.active < 0 ? (by > 0 ? 0 : box.shown.length - 1)
+      : (box.active + by + box.shown.length) % box.shown.length;
+    var opt = opts[box.active];
+    opt.setAttribute('aria-selected', 'true');
+    box.input.setAttribute('aria-activedescendant', opt.id);
+    if (opt.scrollIntoView) opt.scrollIntoView({ block: 'nearest' });
+  }
+
+  function choose(box, c) {
+    box.input.value = c.text;
+    close(box);
+    box.picked(c);
+  }
+
+  function nameChoices() { return people.map(function (n) { return { text: n }; }); }
+
+  // The items asked for before: at the station picked, most-asked first; with none
+  // picked yet, at every station, each item once
+  function itemChoices() {
+    var st = station(), seen = Object.create(null), all = [];
+    asked.forEach(function (x) {
+      if (st && x.station !== st) return;
+      var k = key(x.item);
+      if (seen[k]) { seen[k].count += x.count; return; }
+      all.push(seen[k] = { text: x.item, unit: x.unit, count: x.count });
+    });
+    if (!st) all.sort(function (a, b) { return b.count - a.count; });
+    return all;
+  }
+
+  /* Requested by ----------------------------------------------------------- */
+  function remember() {
+    try { localStorage.setItem(NAME_KEY, clean(els.who.value)); } catch (e) { /* private mode */ }
+  }
+  function recall() {
+    try { els.who.value = localStorage.getItem(NAME_KEY) || ''; } catch (e) { /* private mode */ }
   }
 
   /* An item's row ---------------------------------------------------------- */
@@ -233,23 +253,31 @@
     if (rows.length >= MAX_ROWS) return;
     var el = tpl.content.firstElementChild.cloneNode(true);
     var n = ++counter;
-    // row.input, .qty, .unit and .note are its boxes; row.item the Order Guide's item it names
-    var row = { el: el, item: null, active: -1, shown: [], list: el.querySelector('[role="listbox"]'),
-                price: el.querySelector('.p-price') };
-    var boxes = { item: 'input', qty: 'qty', unit: 'unit', note: 'note' };
-    Object.keys(boxes).forEach(function (key) {
-      var input = el.querySelector('[data-name="' + key + '"]'), lab = el.querySelector('[data-for="' + key + '"]');
-      input.id = 'p-i' + n + '-' + key;
+    // row.input, .qty, .unit, .unitOther and .note are its boxes; unitChosen: the unit
+    // was picked or typed here, not filled in by a suggestion
+    var row = { el: el, other: el.querySelector('[data-unit-other]'), unitChosen: false };
+    var boxes = { item: 'input', qty: 'qty', unit: 'unit', unit_other: 'unitOther', note: 'note' };
+    Object.keys(boxes).forEach(function (name) {
+      var input = el.querySelector('[data-name="' + name + '"]'), lab = el.querySelector('[data-for="' + name + '"]');
+      input.id = 'p-i' + n + '-' + name;
       lab.htmlFor = input.id;
       lab.id = input.id + '-l';
-      row[boxes[key]] = input;
+      row[boxes[name]] = input;
     });
-    row.list.id = 'p-i' + n + '-list';
-    row.list.setAttribute('aria-labelledby', row.input.id + '-l');
-    wire(row);
+    var list = el.querySelector('[role="listbox"]');
+    list.id = 'p-i' + n + '-list';
+    list.setAttribute('aria-labelledby', row.input.id + '-l');
+    words(el);
+    row.box = suggest(row.input, list, itemChoices, function (c) { picked(row, c); });
+    row.unit.addEventListener('change', function () {
+      row.unitChosen = true;
+      otherShown(row);
+      if (row.unit.value === OTHER) row.unitOther.focus();
+    });
+    row.unitOther.addEventListener('input', function () { row.unitChosen = true; });
+    el.querySelector('[data-remove]').addEventListener('click', function () { removeRow(row); });
     rows.push(row);
     els.list.appendChild(el);
-    combo(row);
     renumber();
     update();
     if (focus) row.input.focus();
@@ -279,189 +307,32 @@
     show('items-full', rows.length >= MAX_ROWS);
   }
 
-  // The item's box is a list to search while the supplier has items, else plain text
-  function combo(row) {
-    var on = offered().length > 0, input = row.input;
-    if (on) {
-      input.setAttribute('role', 'combobox');
-      input.setAttribute('aria-autocomplete', 'list');
-      input.setAttribute('aria-expanded', 'false');
-      input.setAttribute('aria-controls', row.list.id);
-    } else {
-      ['role', 'aria-autocomplete', 'aria-expanded', 'aria-controls', 'aria-activedescendant'].forEach(function (a) {
-        input.removeAttribute(a);
-      });
-    }
-    closeList(row);
-  }
-
-  // The supplier's item the box names, by its name or its Vietnamese name, whatever
-  // the accents and capitals; then its unit, which can't be changed
-  function resolve(row) {
-    var key = norm(row.input.value), found = null;
-    if (key) {
-      offered().some(function (it) {
-        if (norm(it.name) === key || (it.vn && norm(it.vn) === key)) found = it;
-        return !!found;
-      });
-    }
-    setItem(row, found);
-  }
-
-  function setItem(row, it) {
-    row.item = it;
-    var fixed = !!(it && it.unit);
-    if (fixed) row.unit.value = it.unit;
-    row.unit.readOnly = fixed;
-    row.unit.parentNode.classList.toggle('is-readonly', fixed);
-  }
-
-  function optionText(it) {
-    var parts = [it.name];
-    if (it.vn && it.vn !== it.name) parts.push(it.vn);
-    if (it.pack) parts.push(it.pack);
-    return parts.join(' · ');
-  }
-
-  // The list under the box: the supplier's items that have every word typed, or all of
-  // them when coming back to a box that names one already (to pick another)
-  function openList(row, all) {
-    var items = offered();
-    if (!items.length) return;
-    var words = all ? [] : norm(row.input.value).split(' ').filter(Boolean);
-    row.shown = items.filter(function (it) {
-      var hay = norm([it.name, it.vn, it.pack, it.code, it.category].join(' '));
-      return words.every(function (w) { return hay.indexOf(w) >= 0; });
-    }).slice(0, 60);
-    row.list.textContent = '';
-    row.active = -1;
-    row.shown.forEach(function (it, i) {
-      var li = document.createElement('li');
-      li.id = row.list.id + '-' + i;
-      li.setAttribute('role', 'option');
-      li.setAttribute('aria-selected', 'false');
-      li.textContent = optionText(it);
-      li.addEventListener('mousedown', function (e) { e.preventDefault(); });   // the box keeps the focus
-      li.addEventListener('click', function () { pick(row, it); });
-      row.list.appendChild(li);
-    });
-    row.list.hidden = !row.shown.length;
-    row.input.setAttribute('aria-expanded', String(!row.list.hidden));
-    row.input.removeAttribute('aria-activedescendant');
-  }
-
-  function closeList(row) {
-    row.list.hidden = true;
-    row.active = -1;
-    if (row.input.hasAttribute('role')) row.input.setAttribute('aria-expanded', 'false');
-    row.input.removeAttribute('aria-activedescendant');
-    priceLine(row);
-  }
-
-  function move(row, by) {
-    if (row.list.hidden) openList(row, false);
-    if (!row.shown.length) return;
-    var opts = row.list.children;
-    if (row.active >= 0) opts[row.active].setAttribute('aria-selected', 'false');
-    row.active = row.active < 0 ? (by > 0 ? 0 : row.shown.length - 1)
-      : (row.active + by + row.shown.length) % row.shown.length;
-    var opt = opts[row.active];
-    opt.setAttribute('aria-selected', 'true');
-    row.input.setAttribute('aria-activedescendant', opt.id);
-    if (opt.scrollIntoView) opt.scrollIntoView({ block: 'nearest' });
-  }
-
-  // An item picked from the list: its name in the box, its unit, then the quantity
-  function pick(row, it) {
-    row.input.value = it.name;
-    setItem(row, it);
-    closeList(row);
+  // An item picked from the list: its usual unit, unless one was chosen already;
+  // then the quantity
+  function picked(row, c) {
+    if (!row.unitChosen) setUnit(row, c.unit);
     update();
     row.qty.focus();
   }
 
-  function wire(row) {
-    var input = row.input;
-    input.addEventListener('input', function () {
-      resolve(row);
-      openList(row, false);
-    });
-    input.addEventListener('focus', function () { openList(row, !!row.item); });
-    input.addEventListener('blur', function () {
-      if (row.item) input.value = row.item.name;
-      setTimeout(function () { if (document.activeElement !== input) closeList(row); }, 150);
-    });
-    input.addEventListener('keydown', function (e) {
-      if (!input.hasAttribute('role')) return;
-      var key = e.key;
-      if (key === 'ArrowDown' || key === 'Down') { e.preventDefault(); move(row, 1); }
-      else if (key === 'ArrowUp' || key === 'Up') { e.preventDefault(); move(row, -1); }
-      else if (key === 'Enter' && !row.list.hidden && row.active >= 0) { e.preventDefault(); pick(row, row.shown[row.active]); }
-      else if ((key === 'Escape' || key === 'Esc') && !row.list.hidden) { e.preventDefault(); closeList(row); }
-    });
-    row.el.querySelector('[data-remove]').addEventListener('click', function () { removeRow(row); });
+  // A unit from the list, or one typed before, under Other…
+  function setUnit(row, u) {
+    if (!u) return;
+    row.unit.value = listed(u) ? u : OTHER;
+    row.unitOther.value = listed(u) ? '' : u;
+    otherShown(row);
+  }
+  function otherShown(row) { row.other.hidden = row.unit.value !== OTHER; }
+  function unitOf(row) { return row.unit.value === OTHER ? clean(row.unitOther.value) : row.unit.value; }
+
+  // A row left empty is left out
+  function blank(row) {
+    return !clean(row.input.value) && !row.qty.value.trim() && !row.unit.value && !row.note.value.trim();
   }
 
-  // Under each item: its price and the line's estimate, or that it has none
-  function priceLine(row) {
-    var it = row.item, q = parse(row.qty.value), text = '';
-    if (it && it.price !== null) {
-      var unit = vi() && it.unit_vn ? it.unit_vn : it.unit;
-      text = vnd(it.price) + (unit ? ' / ' + unit : '') + (q > 0 ? ' · ~' + vnd(q * it.price) : '') +
-        (it.notes ? ' · ' + it.notes : '');
-    } else if (it) {
-      text = L('No price in the Order Guide', 'Chưa có giá trong danh mục');
-    } else if (guide && clean(row.input.value) && row.list.hidden) {     // not while the list offers some
-      text = L('Not in the Order Guide — no price', 'Chưa có trong danh mục — chưa có giá');
-    }
-    row.price.textContent = text;
-    row.price.hidden = !text;
-    row.price.classList.toggle('is-unpriced', !!text && !(it && it.price !== null));
-  }
-
-  /* The summary ------------------------------------------------------------ */
-  function summary() {
-    var sup = supplier(), set = guide ? guide.settings : {}, total = 0, priced = 0, unpriced = 0;
-    rows.forEach(function (row) {
-      if (!clean(row.input.value)) return;
-      var q = parse(row.qty.value);
-      if (row.item && row.item.price !== null) {
-        priced++;
-        if (q > 0) total += q * row.item.price;
-      } else {
-        unpriced++;
-      }
-    });
-    total = Math.round(total);
-    out('estimate', priced ? '~' + vnd(total) : '—');
-    var sub = !priced && !unpriced ? L('Add the items to see it.', 'Thêm mặt hàng để xem ước tính.')
-      : !priced ? L('No item here has a price in the Order Guide.', 'Chưa mặt hàng nào có giá trong danh mục.')
-      : unpriced ? L(unpriced + (unpriced === 1 ? ' item has no price and isn’t in it.' : ' items have no price and aren’t in it.'),
-                     unpriced + ' mặt hàng chưa có giá, không được tính.') : '';
-    out('unpriced', sub);
-    show('unpriced', !!sub);
-
-    var station = (form.querySelector('input[name="station"]:checked') || {}).value;
-    var approver = station === 'Kitchen' ? set.kitchen_approver || L('the Kitchen approver', 'người duyệt của Bếp')
-      : station ? set.barfoh_approver || L('the Bar & FOH approver', 'người duyệt của Bar và Sảnh') : '';
-    out('approver', approver ? L('Approves in Slack: ', 'Người duyệt trên Slack: ') + approver
-      : L('Choose the station to see who approves.', 'Chọn bộ phận để biết ai duyệt.'));
-
-    // Arman too, above the limit or for a supplier that isn't Active (the Order Sheet's rule)
-    var limit = set.limit === undefined ? LIMIT : set.limit, why = [];
-    if (total > limit) why.push(L('over ' + vnd(limit) + ' before VAT', 'trên ' + vnd(limit) + ' chưa VAT'));
-    if (sup.name && !sup.s) why.push(L('supplier not in the Order Sheet', 'nhà cung cấp chưa có trong Order Sheet'));
-    else if (sup.s && sup.s.status !== 'Active') why.push(L('supplier not Active yet', 'nhà cung cấp chưa Active'));
-    var owner = set.owner || 'Arman';
-    out('owner', why.length ? L(owner + '’s ✅ needed: ', 'Cần anh ' + owner + ' duyệt: ') + why.join(', ') : '');
-    show('owner', why.length > 0);
-  }
-
-  // After any change: the prices and the summary again, the marks once a send has been
-  // tried, and the preview hidden once the request is no longer what it shows
+  // After any change: the marks again once a send has been tried, and the preview
+  // hidden once the request is no longer what it shows
   function update() {
-    rows.forEach(priceLine);
-    summary();
     if (tried && !problem() && line === 'invalid') sendLine(null);
     if (!els.previewBox.hidden && JSON.stringify(body()) !== previewed) {
       els.previewBox.hidden = true;
@@ -470,27 +341,29 @@
   }
 
   /* Checking and sending --------------------------------------------------- */
-  // Marks what isn't right and returns the first box to fix, or null. A row left
-  // empty is left out.
+  // Marks what isn't right and returns the first box to fix, or null
   function problem() {
     var first = null;
     function need(el, ok) { mark(el, !ok); if (!ok && !first) first = el; }
-    var name = who(), sup = supplier();
-    need(hasStaff() && els.who.value !== OTHER ? els.who : els.whoOther, !!name && name.length <= MAX_NAME);
-    need(hasSuppliers() && els.supplier.value !== OTHER ? els.supplier : els.supplierOther,
-         !!sup.name && (!!sup.s || sup.name.length <= MAX_NAME));
-    var station = form.querySelector('input[name="station"]:checked');
-    els.seg.classList.toggle('is-invalid', !station);
-    if (!station && !first) first = form.querySelector('input[name="station"]');
+    var name = clean(els.who.value);
+    need(els.who, !!name && name.length <= MAX_NAME);
+    var st = station();
+    els.seg.classList.toggle('is-invalid', !st);
+    if (!st && !first) first = form.querySelector('input[name="station"]');
     need(els.day, !!els.day.value && els.day.value >= hanoiToday());
     need(els.time, !els.time.value || /^\d\d:\d\d$/.test(els.time.value));
     var any = false;
     rows.forEach(function (row) {
-      var name = clean(row.input.value), q = parse(row.qty.value);
-      if (!name && !row.qty.value.trim() && !row.note.value.trim()) { mark(row.input, false); mark(row.qty, false); return; }
+      if (blank(row)) {
+        [row.input, row.qty, row.unit, row.unitOther].forEach(function (el) { mark(el, false); });
+        return;
+      }
       any = true;
-      need(row.input, !!name && (!!row.item || name.length <= MAX_NAME));
+      var item = clean(row.input.value), q = parse(row.qty.value), u = unitOf(row);
+      need(row.input, !!item && item.length <= MAX_ITEM);
       need(row.qty, q > 0 && q <= MAX_QTY);
+      mark(row.unit.value === OTHER ? row.unit : row.unitOther, false);
+      need(row.unit.value === OTHER ? row.unitOther : row.unit, !!u && u.length <= MAX_UNIT);
     });
     if (!any && rows.length) need(rows[0].input, false);
     return first;
@@ -498,17 +371,15 @@
 
   // The request as the Worker takes it; the rows it sends, in order, for its answer
   function body() {
-    var sup = supplier(), b = {
-      requested_by: who(), supplier: sup.s ? sup.s.name : sup.name,
-      station: (form.querySelector('input[name="station"]:checked') || {}).value,
+    var b = {
+      requested_by: clean(els.who.value), station: station(),
       needed_by: els.day.value, needed_time: els.time.value.slice(0, 5), note: els.note.value.trim(), items: []
     };
     sentRows = [];
     rows.forEach(function (row) {
-      var name = clean(row.input.value);
-      if (!name) return;
+      if (blank(row)) return;
       sentRows.push(row);
-      b.items.push({ item: row.item ? row.item.name : name, qty: parse(row.qty.value), unit: clean(row.unit.value),
+      b.items.push({ item: clean(row.input.value), qty: parse(row.qty.value), unit: unitOf(row),
                      note: clean(row.note.value) });
     });
     return b;
@@ -516,10 +387,12 @@
 
   // The box the Worker says is wrong (field: requested_by, items.2.qty…)
   function markField(field) {
-    var m = /^items\.(\d+)\.(\w+)$/.exec(field), el = null;
-    if (m && sentRows[+m[1]]) el = sentRows[+m[1]][m[2] === 'qty' ? 'qty' : m[2] === 'item' ? 'input' : m[2]];
-    else if (field === 'requested_by') el = hasStaff() && els.who.value !== OTHER ? els.who : els.whoOther;
-    else if (field === 'supplier') el = hasSuppliers() && els.supplier.value !== OTHER ? els.supplier : els.supplierOther;
+    var m = /^items\.(\d+)\.(\w+)$/.exec(field), row = m && sentRows[+m[1]], el = null;
+    if (row) {
+      el = m[2] === 'qty' ? row.qty : m[2] === 'note' ? row.note : m[2] !== 'unit' ? row.input
+        : row.unit.value === OTHER ? row.unitOther : row.unit;
+    }
+    else if (field === 'requested_by') el = els.who;
     else if (field === 'needed_by') el = els.day;
     else if (field === 'needed_time') el = els.time;
     else if (field === 'note') el = els.note;
@@ -580,13 +453,14 @@
     sendLine(preview ? 'previewing' : 'sending');
     request(b).then(function (r) {
       if (preview && r.status === 200 && r.data && r.data.preview) {
-        els.message.textContent = r.data.message;
+        messages.preview = { text: r.data.message, station: b.station };
+        showMessages();
         previewed = shown;
         sendLine(null);
         els.previewBox.hidden = false;
         els.previewBox.focus();
       } else if (!preview && r.status === 200 && r.data && r.data.ok) {
-        sent(r.data);
+        sent(r.data, b.station);
       } else {
         failed(r);
       }
@@ -596,22 +470,23 @@
     });
   }
 
-  function sent(d) {
+  function sent(d, at) {
     out('ref', d.ref);
-    out('sent_message', d.message);
+    messages.sent = { text: d.message, station: at };
+    showMessages();
     show('sent', !d.dry_run);
     show('dry', !!d.dry_run);
     requestId = null;
+    remember();
     sendLine(null);
     form.hidden = true;
     done.hidden = false;
     done.focus();
+    load(false);                        // the next request suggests this one's items too
   }
 
   // New request: an empty form, Requested by kept
   function reset() {
-    els.supplier.value = '';
-    els.supplierOther.value = '';
     form.querySelectorAll('input[name="station"]').forEach(function (r) { r.checked = false; });
     els.day.value = '';
     els.time.value = '';
@@ -622,30 +497,17 @@
     requestId = null;
     form.querySelectorAll('[aria-invalid="true"]').forEach(function (el) { mark(el, false); });
     els.seg.classList.remove('is-invalid');
+    els.previewBox.hidden = true;
     addRow(false);
-    supplierChanged();
   }
 
   /* Changes ---------------------------------------------------------------- */
   form.addEventListener('submit', function (e) { e.preventDefault(); });
-  form.addEventListener('input', function (e) {
-    if (e.target === els.supplierOther) supplierChanged();
-    else update();
-  });
+  form.addEventListener('input', update);
   form.addEventListener('change', function (e) {
-    var el = e.target;
-    if (el === els.who) {
-      whoShown();
-      if (el.value === OTHER) els.whoOther.focus();
-      remember();
-    } else if (el === els.whoOther) {
-      remember();
-    } else if (el === els.supplier) {
-      supplierChanged();
-      if (el.value === OTHER) els.supplierOther.focus();
-    } else {
-      update();
-    }
+    if (e.target === els.who) remember();
+    if (e.target.name === 'station') rows.forEach(function (row) { arm(row.box); });   // that station's items
+    update();
   });
   els.add.addEventListener('click', function () { addRow(true); });
   els.preview.addEventListener('click', function () { go(true); });
@@ -654,58 +516,47 @@
     reset();
     done.hidden = true;
     form.hidden = false;
-    (hasSuppliers() ? els.supplier : els.supplierOther).focus();
+    form.querySelector('input[name="station"]').focus();
   });
 
-  // EN / VI: the lists, the prices and the summary follow the page's language (the
-  // message doesn't: it's the same in both)
-  function relabel() {
-    if (asOf) out('as_of', hhmm(asOf));
-    if (form.hidden && done.hidden) return;
-    fillWho();
-    fillSuppliers();
-    fillFacts();
-    renumber();
-    rows.forEach(priceLine);
-    summary();
-  }
+  // EN / VI: the units, the note's placeholder and the messages' approver follow the
+  // page's language (the message itself doesn't: it's the same in both)
   if (window.MutationObserver) {
-    new MutationObserver(relabel).observe(root, { attributes: true, attributeFilter: ['lang'] });
+    new MutationObserver(function () {
+      words(form);
+      renumber();
+      showMessages();
+    }).observe(root, { attributes: true, attributeFilter: ['lang'] });
   }
 
   /* Loading ---------------------------------------------------------------- */
-  function start() {
-    fillWho();
-    recall();
-    whoShown();
-    fillSuppliers();
-    els.day.min = hanoiToday();
-    form.hidden = false;
-    addRow(false);
-    supplierChanged();
+  // The suggestions. At the start, signed out or no database: just the line that says
+  // so, no form. Not loading: the form as it is, without them.
+  function load(first) {
+    fetch('/api/backoffice/form', { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (res) {
+      if (first && (res.status === 401 || res.status === 503)) {
+        form.hidden = true;
+        only('data-state', res.status === 401 ? 'signed-out' : 'off');
+        return null;
+      }
+      return res.ok ? res.json() : null;
+    }).then(function (d) {
+      if (!d) return;
+      people = Array.isArray(d.people) ? d.people : [];
+      asked = Array.isArray(d.items) ? d.items : [];
+      show('dry-run', !!d.dry_run);
+      [whoBox].concat(rows.map(function (row) { return row.box; })).forEach(function (box) {
+        arm(box);
+        if (document.activeElement === box.input) open(box, true);
+      });
+    }).catch(function () { /* no suggestions this time */ });
   }
 
-  // Signed out or no database: just the line that says so. The guide not loading:
-  // the form, with everything typed by hand.
-  only('data-guide', 'loading');
-  fetch('/api/backoffice/guide', { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (res) {
-    if (res.status === 401 || res.status === 503) return res.status;
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json();
-  }).then(function (d) {
-    if (d === 401 || d === 503) {
-      only('data-guide', d === 401 ? 'signed-out' : 'off');
-      return;
-    }
-    guide = d && d.guide && Array.isArray(d.guide.suppliers) ? d.guide : null;
-    if (guide) index();
-    asOf = guide && d.stale && d.as_of ? d.as_of : null;
-    if (asOf) out('as_of', hhmm(asOf));
-    only('data-guide', !guide ? 'none' : asOf ? 'stale' : null);
-    show('dry-run', !!d.dry_run);
-    start();
-  }, function () {
-    only('data-guide', 'failed');
-    start();
-  });
+  words(form);
+  recall();
+  whoBox = suggest(els.who, els.whoList, nameChoices, function () { remember(); update(); });
+  els.day.min = hanoiToday();
+  form.hidden = false;
+  addRow(false);
+  load(true);
 })();

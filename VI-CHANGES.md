@@ -7,59 +7,75 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## The back office: item requests, 31 Oct 2026
+
+Staff now ask for items only: the purchase request has no supplier, brand, price or estimate any more, as management chooses the supplier and the brand when they order. These are the back office’s new and changed lines. The 29 Oct section below keeps the lines that stay as they were; the ones that went (the supplier, the Order Guide, prices, the estimate, Arman’s ✅) are gone from it. Where a line changed, the old English is in brackets.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /backoffice/ | Purchase request · Ask for the items you need. Management approves it in Slack and chooses the supplier and brand. (was: Ask for supplies. Management approves it in Slack.) | Đề nghị mua hàng. Quản lý duyệt trên Slack. | Ghi những mặt hàng cần mua. Quản lý duyệt trên Slack rồi chọn nhà cung cấp và thương hiệu. |
+| /backoffice/purchase/ | lead: Ask for supplies. Management approves it in Slack, in #supply, then chooses the supplier and brand. (was: … approves it in Slack, in #supply.) | Đề nghị mua hàng. Quản lý duyệt trên Slack, trong kênh #supply. | Đề nghị mua hàng. Quản lý duyệt trên Slack, trong kênh #supply, rồi chọn nhà cung cấp và thương hiệu. |
+| /backoffice/purchase/ | meta description: Ask for supplies: the request goes to Slack, where management approves it and chooses the supplier and brand. (was: … where management approves it.) | Đề nghị mua hàng: yêu cầu được gửi lên Slack để quản lý duyệt. | Đề nghị mua hàng: yêu cầu được gửi lên Slack để quản lý duyệt rồi chọn nhà cung cấp và thương hiệu. |
+| /backoffice/purchase/ | under Items: Write what you need, not the brand or the supplier: management chooses those when they order. Use the note for size, ripeness or what it’s for. (was: Pick from the supplier’s list, in English or Vietnamese, or type an item that isn’t on it: it goes without a price.) | Chọn từ danh sách của nhà cung cấp, bằng tiếng Anh hoặc tiếng Việt, hoặc tự nhập mặt hàng chưa có trong danh sách: mặt hàng đó sẽ không có giá. | Ghi mặt hàng cần mua, không cần ghi thương hiệu hay nhà cung cấp: quản lý sẽ chọn khi đặt hàng. Dùng ô ghi chú cho kích cỡ, độ chín hoặc món sẽ dùng. |
+| /backoffice/purchase/ | each item, the units: Choose… · kg · g · L · ml · pc · pack · box · bottle · can · jar · bag · sack · bunch · tray · case · roll · Other… | — | Chọn… · kg · g · L · ml · cái · gói · hộp · chai · lon · hũ · túi · bao · bó · khay · thùng · cuộn · Khác… |
+| /backoffice/purchase/ | each item: Other unit (the box Other… opens) · in the item’s note until something is typed: Size, ripeness, what it’s for | — | Đơn vị khác · Kích cỡ, độ chín, dùng cho món gì |
+| /backoffice/purchase/ | above Preview: Management approves it in Slack, then orders it from the supplier and brand they choose. | — | Quản lý duyệt trên Slack, rồi đặt hàng với nhà cung cấp và thương hiệu do quản lý chọn. |
+| /backoffice/purchase/ | under the message: As Slack will show it. Change anything above and preview it again. (was: Exactly as Slack will get it. …) | Đúng như tin nhắn Slack sẽ nhận. Nếu sửa gì ở trên, hãy xem trước lại. | Tin nhắn sẽ hiện trên Slack như thế này. Nếu sửa gì ở trên, hãy xem trước lại. |
+| /backoffice/purchase/ | in the message on the page, where Slack will show the approver’s name: @Kitchen approver · @Bar & FOH approver | — | @người duyệt của Bếp · @người duyệt của Bar và Sảnh |
+| /backoffice/purchase/ | sent: Management will approve it in Slack and choose the supplier and brand. (was: Management will approve it in Slack.) | Quản lý sẽ duyệt trên Slack. | Quản lý sẽ duyệt trên Slack rồi chọn nhà cung cấp và thương hiệu. |
+| /backoffice/purchases/ | lead: The last 30 purchase requests, newest first. Approving and ordering happen in Slack, so to know where a request is, ask management. (was: … Approving happens in Slack, in #supply.) | 30 yêu cầu mua hàng gần nhất, mới nhất ở trên. Việc duyệt diễn ra trên Slack, trong kênh #supply. | 30 yêu cầu mua hàng gần nhất, mới nhất ở trên. Việc duyệt và đặt hàng diễn ra trên Slack, nên muốn biết yêu cầu đã được xử lý đến đâu, hãy hỏi quản lý. |
+| /backoffice/purchases/ | each request: Not sent (was: Not sent: Slack failed) · Slack didn’t take it (what Slack said). | Chưa gửi: lỗi Slack | Chưa gửi · Slack chưa nhận yêu cầu (lỗi Slack báo). |
+| /backoffice/purchases/ | each request, its items, with the units as on the form: Basil — 4 bunch (big leaves) | — | Basil — 4 bó (big leaves) |
+| #supply | the Slack message, each line in both languages: 📝 YÊU CẦU MUA HÀNG / PURCHASE REQUEST · Bộ phận / Station · Cần lúc / Needed by · Hàng / Items · Người yêu cầu / Requested by · Ghi chú / Note · Duyệt / Approve · Đặt hàng / Ordering: quản lý chọn NCC và thương hiệu / management picks the supplier and brand · Gửi từ sol.pizza/backoffice · Ref; a unit as 4 bó/bunch | — | YÊU CẦU MUA HÀNG · Bộ phận · Cần lúc · Hàng · Người yêu cầu · Ghi chú · Duyệt · Đặt hàng: quản lý chọn NCC và thương hiệu · Gửi từ sol.pizza/backoffice |
+
+The Slack message’s lines are the brief’s, and never change once it’s live: an agent may read #supply by them. If one reads wrong, say so before it goes live.
+
+Questions for Linh (the three under 29 Oct are still open):
+
+4. **The units**: cái, gói, hộp, chai, lon, hũ, túi, bao, bó, khay, thùng, cuộn, and Khác… for Other. Are they the words the kitchen and the bar use (thùng for a case, khay for a tray, bao for a sack)? They show on the form, on Recent requests and in the Slack message (as thùng/case), so they’re best settled before the team starts.
+
 ## The back office: purchase requests, 29 Oct 2026
 
-New pages for the team, behind the staff password and out of search: the back office’s home (`/backoffice/`), its sign-in page, the purchase request (`/backoffice/purchase/`) and the recent requests (`/backoffice/purchases/`). Every line is new. Numbers follow the language, as in the kitchen (1,250,000đ in English, 1.250.000đ in Vietnamese). The names of suppliers, items and people come from the Order Sheet as they are written there. The Slack message itself isn’t listed: its labels (“NCC / Supplier”, “Cần lúc / Needed by”…) are the Order Sheet’s Order helper’s, and stay exactly as they are.
+New pages for the team, behind the staff password and out of search: the back office’s home (`/backoffice/`), its sign-in page, the purchase request (`/backoffice/purchase/`) and the recent requests (`/backoffice/purchases/`). Every line was new. Since 31 Oct staff ask for items only (the section above): the lines that went with the supplier, the Order Guide, prices and the estimate are gone, from the pages and from this table, and the lines that changed are above, with what they said before. Numbers follow the language, as in the kitchen (2.5 in English, 2,5 in Vietnamese). Items and people’s names show as staff type them.
 
 | Page | English | Old VI | New VI |
 | --- | --- | --- | --- |
 | /backoffice/ | eyebrow: Staff only · heading and page title: Back office; Back office — Sol | — | Dành cho nhân viên · Nội bộ; Nội bộ — Sol |
 | /backoffice/ | lead: Sol’s tools for the team. · meta description: Sol’s back office: tools for the team. | — | Công cụ của Sol dành cho nhân viên. · Trang nội bộ của Sol: công cụ cho nhân viên. |
 | all four | menu: Back office · Purchase request · Recent requests · Sign out | — | Nội bộ · Yêu cầu mua hàng · Yêu cầu gần đây · Đăng xuất |
-| /backoffice/ | Purchase request · Ask for supplies. Management approves it in Slack. | — | Yêu cầu mua hàng · Đề nghị mua hàng. Quản lý duyệt trên Slack. |
 | /backoffice/ | Recent requests · The last 30, and whether each one reached Slack. | — | Yêu cầu gần đây · 30 yêu cầu gần nhất, và yêu cầu nào đã lên Slack. |
 | /backoffice/ | Dough (kitchen) · The dough calculator and the dough log. They have their own password. | — | Bột (bếp) · Công cụ tính bột và nhật ký bột. Có mật khẩu riêng. |
 | /backoffice/login/ | eyebrow on the other back-office pages: Back office · page title: Sign in — Sol back office | — | Nội bộ · Đăng nhập — Nội bộ Sol |
 | /backoffice/login/ | The back office is for Sol’s team. Ask a manager for the staff password. · meta description: Sign in to Sol’s back office. | — | Trang nội bộ dành cho nhân viên Sol. Hãy hỏi quản lý để biết mật khẩu nhân viên. · Đăng nhập vào trang nội bộ của Sol. |
 | /backoffice/login/ | Staff password (the other lines as the kitchen’s sign-in page) | — | Mật khẩu nhân viên |
 | /backoffice/purchase/ | heading and page title: Purchase request; Purchase request — Sol | — | Yêu cầu mua hàng; Yêu cầu mua hàng — Sol |
-| /backoffice/purchase/ | lead: Ask for supplies. Management approves it in Slack, in #supply. · meta description: Ask for supplies: the request goes to Slack, where management approves it. | — | Đề nghị mua hàng. Quản lý duyệt trên Slack, trong kênh #supply. · Đề nghị mua hàng: yêu cầu được gửi lên Slack để quản lý duyệt. |
 | /backoffice/purchase/ | without JavaScript: The form needs JavaScript. Turn it on in the browser’s settings. | — | Biểu mẫu này cần JavaScript. Hãy bật JavaScript trong cài đặt trình duyệt. |
-| /backoffice/purchase/ | Loading the Order Guide… · Order Guide as of 20:30: the Order Sheet can’t be reached just now, so prices may have changed since. | — | Đang tải danh mục hàng… · Danh mục hàng cập nhật lúc 20:30: hiện chưa kết nối được Order Sheet, giá có thể đã thay đổi. |
-| /backoffice/purchase/ | The Order Guide isn’t connected, so there are no lists or prices: type the supplier and the items. Arman’s ✅ will be needed. | — | Chưa kết nối danh mục hàng nên chưa có danh sách và giá: hãy tự nhập nhà cung cấp và mặt hàng. Yêu cầu sẽ cần anh Arman duyệt. |
-| /backoffice/purchase/ | Couldn’t load the Order Guide. Type the supplier and the items, or reload the page. | — | Không tải được danh mục hàng. Hãy tự nhập nhà cung cấp và mặt hàng, hoặc tải lại trang. |
 | /backoffice/purchase/ | The back office isn’t set up on this copy of the site. · Dry run: requests are kept here but not posted to Slack. | — | Trang nội bộ chưa được thiết lập trên bản này của trang. · Chạy thử: yêu cầu được lưu ở đây nhưng không đăng lên Slack. |
-| /backoffice/purchase/ | The request · Requested by · Choose your name · Other… · Name | — | Yêu cầu · Người yêu cầu · Chọn tên của bạn · Người khác… · Tên |
-| /backoffice/purchase/ | Supplier · Choose a supplier · the groups: Active · Quoting · Not used yet · No status · Other supplier… · Supplier’s name | — | Nhà cung cấp · Chọn nhà cung cấp · Đang dùng · Đang báo giá · Chưa dùng · Chưa có trạng thái · Nhà cung cấp khác… · Tên nhà cung cấp |
-| /backoffice/purchase/ | under the supplier: Ordered by · Order days · Cut-off · Delivery · Minimum order | — | Người đặt hàng · Ngày đặt hàng · Hạn chót · Giao hàng · Đơn tối thiểu |
+| /backoffice/purchase/ | The request · Requested by | — | Yêu cầu · Người yêu cầu |
 | /backoffice/purchase/ | Station: Kitchen · Bar · FOH | — | Bộ phận: Bếp · Bar · Sảnh |
 | /backoffice/purchase/ | Needed by · Day · Time (optional) | — | Cần lúc · Ngày · Giờ (không bắt buộc) |
-| /backoffice/purchase/ | Items · Pick from the supplier’s list, in English or Vietnamese, or type an item that isn’t on it: it goes without a price. | — | Hàng · Chọn từ danh sách của nhà cung cấp, bằng tiếng Anh hoặc tiếng Việt, hoặc tự nhập mặt hàng chưa có trong danh sách: mặt hàng đó sẽ không có giá. |
+| /backoffice/purchase/ | Items | — | Hàng |
 | /backoffice/purchase/ | each item: Item 1 · Remove (for screen readers: Remove item 1) · Item · Quantity · Unit · Note (optional) | — | Hàng 1 · Xóa (Xóa hàng 1) · Hàng · Số lượng · Đơn vị · Ghi chú (không bắt buộc) |
-| /backoffice/purchase/ | each item: 40,000đ / pc · ~800,000đ · No price in the Order Guide · Not in the Order Guide — no price | — | 40.000đ / cái · ~800.000đ · Chưa có giá trong danh mục · Chưa có trong danh mục — chưa có giá |
 | /backoffice/purchase/ | Add an item · 30 items at most. Send the rest as another request. · Note | — | Thêm hàng · Tối đa 30 mặt hàng. Hãy gửi phần còn lại trong một yêu cầu khác. · Ghi chú |
-| /backoffice/purchase/ | summary: Estimate before VAT · Add the items to see it. · No item here has a price in the Order Guide. · 2 items have no price and aren’t in it. | — | Ước tính chưa VAT · Thêm mặt hàng để xem ước tính. · Chưa mặt hàng nào có giá trong danh mục. · 2 mặt hàng chưa có giá, không được tính. |
-| /backoffice/purchase/ | summary: Approves in Slack: (name) · the Kitchen approver · the Bar & FOH approver · Choose the station to see who approves. | — | Người duyệt trên Slack: (tên) · người duyệt của Bếp · người duyệt của Bar và Sảnh · Chọn bộ phận để biết ai duyệt. |
-| /backoffice/purchase/ | summary: Arman’s ✅ needed: over 5,000,000đ before VAT, supplier not Active yet (or: supplier not in the Order Sheet) | — | Cần anh Arman duyệt: trên 5.000.000đ chưa VAT, nhà cung cấp chưa Active (hoặc: nhà cung cấp chưa có trong Order Sheet) |
-| /backoffice/purchase/ | Preview the message · The message for #supply · Exactly as Slack will get it. Change anything above and preview it again. · Send to #supply | — | Xem trước tin nhắn · Tin nhắn gửi lên #supply · Đúng như tin nhắn Slack sẽ nhận. Nếu sửa gì ở trên, hãy xem trước lại. · Gửi lên #supply |
+| /backoffice/purchase/ | Preview the message · The message for #supply · Send to #supply | — | Xem trước tin nhắn · Tin nhắn gửi lên #supply · Gửi lên #supply |
 | /backoffice/purchase/ | Check the marked boxes. · Writing the message… · Sending… | — | Kiểm tra lại các ô được đánh dấu. · Đang soạn tin nhắn… · Đang gửi… |
 | /backoffice/purchase/ | Slack didn’t take it (what Slack said). Nothing you typed is lost: send it again. It won’t be posted twice. | — | Slack chưa nhận yêu cầu (lỗi Slack báo). Những gì bạn nhập vẫn còn: hãy gửi lại. Yêu cầu sẽ không bị đăng hai lần. |
 | /backoffice/purchase/ | It’s still being sent. Wait a moment, then send it again: it won’t be posted twice. | — | Yêu cầu vẫn đang được gửi. Hãy đợi một chút rồi gửi lại: yêu cầu sẽ không bị đăng hai lần. |
 | /backoffice/purchase/ | Couldn’t send it. Check the connection and try again: it won’t be posted twice. | — | Chưa gửi được. Hãy kiểm tra kết nối và thử lại: yêu cầu sẽ không bị đăng hai lần. |
 | /backoffice/purchase/ | You’ve been signed out. Sign in in a new tab, then send it again here. | — | Bạn đã bị đăng xuất. Hãy đăng nhập ở một thẻ mới, rồi gửi lại ở đây. |
-| /backoffice/purchase/ | sent: Sent to #supply · Ref SOL-261105-2143 · Management will approve it in Slack. · New request | — | Đã gửi lên #supply · Mã SOL-261105-2143 · Quản lý sẽ duyệt trên Slack. · Yêu cầu mới |
+| /backoffice/purchase/ | sent: Sent to #supply · Ref REQ-261105-2143 · New request | — | Đã gửi lên #supply · Mã REQ-261105-2143 · Yêu cầu mới |
 | /backoffice/purchase/ | a dry run: Dry run: not posted to Slack · This copy of the site only pretends to post. The message it would have posted: | — | Chạy thử: chưa đăng lên Slack · Bản này của trang chỉ chạy thử, không đăng thật. Tin nhắn lẽ ra sẽ được đăng: |
 | /backoffice/purchases/ | heading and page title: Recent requests; Recent requests — Sol | — | Yêu cầu gần đây; Yêu cầu gần đây — Sol |
-| /backoffice/purchases/ | lead: The last 30 purchase requests, newest first. Approving happens in Slack, in #supply. · meta description: The last 30 purchase requests sent to Slack. | — | 30 yêu cầu mua hàng gần nhất, mới nhất ở trên. Việc duyệt diễn ra trên Slack, trong kênh #supply. · 30 yêu cầu mua hàng gần nhất đã gửi lên Slack. |
+| /backoffice/purchases/ | meta description: The last 30 purchase requests sent to Slack. | — | 30 yêu cầu mua hàng gần nhất đã gửi lên Slack. |
 | /backoffice/purchases/ | The list needs JavaScript. … · Loading… · No requests yet. Send one from the purchase request. | — | Danh sách cần JavaScript. … · Đang tải… · Chưa có yêu cầu nào. Hãy gửi một yêu cầu từ trang yêu cầu mua hàng. |
 | /backoffice/purchases/ | Couldn’t load the list. Check the connection and reload the page. · You’ve been signed out. Sign in again. | — | Không tải được danh sách. Hãy kiểm tra kết nối và tải lại trang. · Bạn đã bị đăng xuất. Đăng nhập lại. |
-| /backoffice/purchases/ | each request: Sent to Slack · Not sent: Slack failed · Dry run · Sending | — | Đã gửi lên Slack · Chưa gửi: lỗi Slack · Chạy thử · Đang gửi |
-| /backoffice/purchases/ | each request: Supplier · Station · Needed by · Items · Estimate · Approval · 3 items · ~1,250,000đ before VAT · Arman’s ✅ needed too | — | Nhà cung cấp · Bộ phận · Cần lúc · Hàng · Ước tính · Duyệt · 3 mặt hàng · ~1.250.000đ chưa VAT · Cần cả anh Arman duyệt |
+| /backoffice/purchases/ | each request: Sent to Slack · Dry run · Sending | — | Đã gửi lên Slack · Chạy thử · Đang gửi |
+| /backoffice/purchases/ | each request: Station · Needed by · Items | — | Bộ phận · Cần lúc · Hàng |
 
 Questions for Linh:
 
 1. **“Nội bộ”** for Back office (the eyebrow, the menu and the page titles): clear to the team, or would “Văn phòng” or “Quản lý” read better?
-2. **“Sảnh”** for FOH (front of house), and “Danh mục hàng” for the Order Guide: the words the team uses?
+2. **“Sảnh”** for FOH (front of house): the word the team uses? (“Danh mục hàng”, the Order Guide’s name, went with it on 31 Oct.)
 3. **“Xóa”** on the purchase request (as asked for), while the dough log says “Xoá”: keep both, or make them the same?
 
 ## Search: structured data, 13 Oct 2026
