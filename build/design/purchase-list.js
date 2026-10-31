@@ -1,21 +1,31 @@
 /* Sol — the recent purchase requests (/backoffice/purchases/). No dependencies; load
    with `defer`. Fetches the last 30 (GET /api/backoffice/purchases, worker/backoffice.js)
    and fills a copy of #request for each, newest first: its ref, who sent it and when,
-   the supplier, the station, the items, the estimate, and whether it reached Slack.
-   build/gen.py (build_purchase_list) writes the template, every line in both
-   languages; this fills the dates and numbers in the page's language and redraws them
-   when EN / VI switches it. */
+   the station, when it's needed, every item, and whether it reached Slack. Approving
+   and ordering happen in Slack, so where a request is after that isn't here.
+   build/gen.py (build_purchase_list) writes the template and #units, the units' names,
+   every line in both languages; this fills the dates, quantities and units in the
+   page's language and redraws them when EN / VI switches it. */
 (function () {
   'use strict';
   var list = document.getElementById('request-list');
   var tpl = document.getElementById('request');
-  if (!list || !tpl) return;
+  var unitsTpl = document.getElementById('units');
+  if (!list || !tpl || !unitsTpl) return;
   var root = document.documentElement;
   var requests = [];
+  var units = {};                            // a unit's code: [English, Vietnamese]
+  unitsTpl.content.querySelectorAll('[data-unit]').forEach(function (el) {
+    units[el.getAttribute('data-unit')] = [el.getAttribute('data-en'), el.getAttribute('data-vi')];
+  });
 
   function vi() { return root.lang === 'vi'; }
   function L(en, viText) { return vi() ? viText : en; }
-  function vnd(x) { return new Intl.NumberFormat(vi() ? 'vi-VN' : 'en-GB').format(Math.round(x)) + 'đ'; }
+  function qty(x) {                          // 1.5 / 1,5
+    return new Intl.NumberFormat(vi() ? 'vi-VN' : 'en-GB', { maximumFractionDigits: 3 }).format(x);
+  }
+  // A unit from the form's list in the page's language; one typed under Other… as it is
+  function unit(u) { return Object.prototype.hasOwnProperty.call(units, u) ? L(units[u][0], units[u][1]) : u; }
   function sent(iso) {                       // Thu 5 Nov, 21:43 / Th 5, 5 thg 11, 21:43 (Hanoi time)
     return new Intl.DateTimeFormat(vi() ? 'vi-VN' : 'en-GB', {
       weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
@@ -48,15 +58,15 @@
     slot('ref', r.ref);
     slot('requested_by', r.requested_by);
     slot('time', sent(r.created_at));
-    slot('supplier', r.supplier);
     slot('station', station(r.station));
     slot('needed_by', needed(r.needed_by));
-    slot('items', String(r.items));
-    cond('one', r.items === 1);
-    cond('many', r.items !== 1);
-    slot('estimate', vnd(r.estimate));
-    cond('estimate', r.estimate > 0);
-    cond('owner', r.owner_needed);
+    var items = el.querySelector('[data-items]');
+    r.items.forEach(function (x) {               // Fior di latte — 10 kg (for Saturday)
+      var li = document.createElement('li');
+      li.textContent = x.item + ' — ' + qty(x.qty) + ' ' + unit(x.unit) + (x.note ? ' (' + x.note + ')' : '');
+      items.appendChild(li);
+    });
+    slot('slack_error', r.slack_error || 'Slack');
     ['sent', 'failed', 'sending'].forEach(function (s) { cond(s, r.status === s); });
     cond('dry', r.status === 'dry_run');
     el.classList.toggle('is-failed', r.status === 'failed');
@@ -82,7 +92,7 @@
       });
     }).catch(function () { state('failed'); });
 
-  // EN / VI: the dates and numbers follow the page's language.
+  // EN / VI: the dates, quantities and units follow the page's language.
   if (window.MutationObserver) {
     new MutationObserver(render).observe(root, { attributes: true, attributeFilter: ['lang'] });
   }

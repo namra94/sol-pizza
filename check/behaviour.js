@@ -169,7 +169,7 @@ async function main() {
     // signs in. Either way: no banner, phone bar, new header or analytics, noindex, and
     // nothing wider than a small phone, in English or Vietnamese.
     const pages = ['/backoffice/', '/backoffice/login/', '/backoffice/purchase/', '/backoffice/purchases/'];
-    const found = [], bare = [], indexed = [], wide = [], analytics = [];
+    const found = [], bare = [], indexed = [], wide = [], analytics = [], supplier = [];
     for (const lang of ['en', 'vi']) {
       const {ctx, page, tools} = await visitor({width: 360, height: 740});
       await ctx.addInitScript(l => localStorage.setItem('sol-lang', l), lang);   // as its EN / VI switch does
@@ -182,6 +182,13 @@ async function main() {
         if ((await page.$('#consent')) || (await page.$('.actionbar')) || (await page.$('.sitebar'))) bare.push(where);
         if (!/noindex/.test((await page.getAttribute('meta[name="robots"]', 'content')) || '')) indexed.push(where);
         if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) wide.push(where);
+        // Staff ask for items only: no supplier field, and no line about the guide the form
+        // once read from the Order Sheet, in either language (the whole page: its hidden
+        // lines and the item row's template too)
+        if (p === '/backoffice/purchase/' && await page.evaluate(() => {
+          const all = document.documentElement.outerHTML;
+          return /\b(name|id|data-name|for|data-for)="[^"]*supplier/i.test(all) || /order\s+guide|danh\s+mục\s+hàng/i.test(all);
+        })) supplier.push(where);
       }
       analytics.push(...tools);
       if (lang === 'vi') ok((await page.goto(base + '/vi/backoffice/')).status() === 404, 'the back office: no /vi/ copy');
@@ -191,6 +198,9 @@ async function main() {
     ok(!bare.length, 'the back office: no banner, phone bar or new header' + (bare.length ? ' (' + bare.join(' ') + ')' : ''));
     ok(!indexed.length && !analytics.length, 'the back office: noindex, no analytics' + (indexed.length ? ' (' + indexed.join(' ') + ')' : ''));
     ok(!wide.length, 'the back office: fits a 360px phone in English and Vietnamese' + (wide.length ? ' (' + wide.join(' ') + ')' : ''));
+    ok(!supplier.length, 'the back office: the purchase request asks for items only, with no supplier field or Order Sheet guide, ' +
+       'in English or Vietnamese' +
+       (supplier.length ? ' (' + supplier.join(' ') + ')' : ''));
   }
 
   console.log('Header and phone bar');

@@ -349,30 +349,32 @@ stops if one is ever written). `npm run check` makes sure.
 `/backoffice/` is for the team: one shared **staff password**, separate from the
 kitchen's (each opens only its own section), the same 30 days signed in on a phone. Only
 management is on Slack; the kitchen and floor are on Zalo and their phones, so the back
-office lets anyone with the staff password ask for supplies, and approval stays in Slack.
-Setting it up (the password, the Slack webhook, the Order Sheet's web app) is in
-`README-DEPLOY.md`, "The back office: purchase requests".
+office lets anyone with the staff password ask for supplies, and approving and ordering
+stay in Slack. Setting it up (the password, the Slack webhook) is in `README-DEPLOY.md`,
+"The back office: purchase requests".
 
-- **Purchase request** (`/backoffice/purchase/`): who's asking, the supplier, the station,
-  when it's needed, the items, a note. The supplier and its items come from the Order
-  Sheet's Order Guide, read live (suppliers by status, Active first; Stopped ones left
-  out); an item is found by typing part of its name in English or Vietnamese, with or
-  without accents, and anything not on the lists can be typed (without a price). The
-  summary keeps up: the estimate before VAT, who approves, and when Arman's ✅ is needed
-  (over the limit, or a supplier that isn't Active). **Preview** shows the exact Slack
-  message; **Send to #supply** posts it and gives a ref, `SOL-YYMMDD-HHMM`.
-- **Recent requests** (`/backoffice/purchases/`): the last 30, and whether each reached
-  Slack.
+- **Purchase request** (`/backoffice/purchase/`): staff ask for **items only**: who's
+  asking, the station, when it's needed, each item (what, how much, a unit from the list
+  or typed under Other…, a note for size, ripeness or what it's for) and a note. No
+  supplier, brand or price: management chooses the supplier and the brand when they
+  order. The boxes suggest what earlier requests said: the names, and the items asked
+  for at that station, most-asked first, found by typing part of one in English or
+  Vietnamese, with or without accents; picking one fills in its usual unit. **Preview**
+  shows the message as Slack will; **Send to #supply** posts it, a 📝 PURCHASE REQUEST,
+  and gives a ref, `REQ-YYMMDD-HHMM`. In Slack the station's approver reacts ✅ or ❌,
+  management posts the 🛒 orders with the Order Sheet's Order helper (one per supplier)
+  and reacts 🛒 on the request.
+- **Recent requests** (`/backoffice/purchases/`): the last 30, their items, and whether
+  each reached Slack. Where one is after that is in Slack: ask management.
 - A tile leads to the kitchen's `/dough/`, which keeps its own password.
 
-The Worker never trusts the browser's prices or flags: it works the request out again
-from the Order Guide, keeps it in D1, and posts it once (a second tap or a retry gets the
-first answer). The message's labels are the Order Sheet's "Order helper"'s, exactly: an
-Order desk agent reads #supply by them. The pages are the kitchen's shell, with
+The Worker never trusts the browser: it checks every field again, keeps the request in
+D1, and posts it once (a second tap or a retry gets the first answer). The message's
+labels never change once it's live, as an agent may read #supply by them, and it never
+has a 🛒: there, that's an order to a supplier. The pages are the kitchen's shell, with
 `build/design/backoffice.css`, `purchase.js` and `purchase-list.js`; the Worker's side is
-`worker/backoffice.js`; the Order Sheet's web app is `tools/order-sheet.gs`. Nothing from
-the Order Sheet (suppliers, prices, people) is in this repo, which is public: only the
-fake Order Guide in `worker/backoffice-sample.json`, for `wrangler dev` and the checks.
+`worker/backoffice.js`. Nothing about suppliers, brands, prices or people is in this
+repo, which is public: the suggestions come from the requests in D1.
 
 ---
 
@@ -505,9 +507,8 @@ build/design/           tokens.css, printed-menu.css (the design), site.css (rep
 build/design/kitchen/   kitchen.css and kitchen.js: the kitchen pages' frozen shell
 worker/index.js         the Worker's own code, for the kitchen and the back office: their
                         passwords, the dough log's API (D1)
-worker/backoffice.js    the purchase requests: the Order Guide, the checks, the Slack message
-worker/backoffice-sample.json  a FAKE Order Guide, for wrangler dev and the checks only
-tools/order-sheet.gs    the Order Sheet's web app (Google Apps Script), pasted into the sheet
+worker/backoffice.js    the purchase requests: the checks, the Slack message, what the form
+                        suggests
 build/assets/           logo, illustrations, sun pattern (SVG)
 build/og/               share cards: card.html (the template), cards.json (what each PNG
                         was rendered from); the words are OG_CARDS in gen.py

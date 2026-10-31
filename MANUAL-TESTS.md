@@ -91,22 +91,28 @@ note **TEST — ignore**, and react ❌ to it in #supply afterwards.
 
 - [ ] Signed out, `sol.pizza/backoffice/purchase/` opens the sign-in page. A wrong
       password: "That isn't the password". The staff password: straight on to the form.
-- [ ] **Requested by** lists the team; pick a name. Reload the page: it's still picked.
-- [ ] **Supplier**: Active ones first, then Quoting, then Not used yet; no Stopped one.
-      Picking one shows who orders it, its order days and cut-off, and picks its station.
-- [ ] **Items**: type part of an item in Vietnamese without the accents ("pho mai"): the
-      list finds it. Pick it: its unit fills in, and its price and the line's estimate
-      show under it. Type something that isn't on the list: "not in the Order Guide — no
-      price". **Thêm hàng** adds a row, **Xóa** takes one away.
-- [ ] The summary: the estimate before VAT and who approves. Over 5,000,000đ, or with
-      **Other supplier…**: the line "Arman's ✅ needed".
-- [ ] **VI** (top left): every label in Vietnamese, prices as 1.250.000đ.
-- [ ] **Preview the message**: the 🛒 block. Change a quantity: the preview goes away.
-      Preview again, then **Send to #supply**: "Sent to #supply" and a ref. In #supply,
-      the message, mentioning the right people. React ❌.
+- [ ] The form asks for items only: no supplier, brand, price or estimate anywhere.
+- [ ] **Requested by**: type your name. Reload the page: it's still there. Once some
+      requests have been sent, typing a few letters suggests the names in them.
+- [ ] **Station**: pick one. **Items**: type part of an item asked for before at that
+      station, in Vietnamese without the accents ("bo"): the list finds it, and bơ and
+      bò show as two items. Pick one: its usual unit fills in. Pick another station: the
+      list suggests that station's items.
+- [ ] **Unit** starts on "Choose…": leave it and preview, and the unit is marked.
+      **Other…** opens a box to type the unit in. The item's **Note** says "Size,
+      ripeness, what it's for" until something is typed.
+- [ ] **Add an item** adds a row, **Remove** takes one away.
+- [ ] **VI** (top left): every label in Vietnamese, the units too (cái, gói, thùng…),
+      and "Chọn…" in the unit list.
+- [ ] **Preview the message**: the 📝 block, with "@Kitchen approver" (or "@Bar & FOH
+      approver") where Slack will show the approver's name, and no 🛒. Change a
+      quantity: the preview goes away. Preview again, then **Send to #supply**: "Sent to
+      #supply" and a ref, REQ-…. In #supply: the message, mentioning the station's
+      approver. React ❌.
 - [ ] Turn on airplane mode and send another (TEST — ignore): "Couldn't send it", and
       everything typed is still there. Airplane mode off, send again: it arrives once.
-- [ ] **Recent requests**: both, "Sent to Slack".
+      React ❌ to it too.
+- [ ] **Recent requests**: both, with their items, "Sent to Slack".
 - [ ] **Sign out**: the sign-in page. `sol.pizza/dough/` still asks for the kitchen password.
 
 ## Once ResDiary is live
