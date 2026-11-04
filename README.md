@@ -276,7 +276,8 @@ With the widget, `/booking/` misses its Lighthouse budgets, so `npm run check --
 with that one FAIL. The budgets stay as they are; it's what runs in ResDiary's frame: their
 `widget-jquery.js`, Google's tag and Stripe. On Google's PageSpeed Insights (4 Nov 2026), on a
 phone: Performance 66, Best Practices 96, Total Blocking Time 1,670 ms, against 100, 100 and
-0 ms for the same page without the widget. Anything after that means something else has changed.
+0 ms for the same page without the widget. Any other FAIL in that run means something else has
+changed.
 
 ### Enquiries and the newsletter
 
