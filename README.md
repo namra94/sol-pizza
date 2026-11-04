@@ -272,6 +272,12 @@ table in the diary for five minutes. axe leaves out what's inside the frame, Res
 markup, but still checks the frame's title. What the widget itself loads in its frame, before
 any cookie choice, is in LAUNCH-CHECKLIST.md (section 9).
 
+With the widget, `/booking/` misses its Lighthouse budgets, so `npm run check -- <URL>` ends
+with that one FAIL. The budgets stay as they are; it's what runs in ResDiary's frame: their
+`widget-jquery.js`, Google's tag and Stripe. On Google's PageSpeed Insights (4 Nov 2026), on a
+phone: Performance 66, Best Practices 96, Total Blocking Time 1,670 ms, against 100, 100 and
+0 ms for the same page without the widget. Anything after that means something else has changed.
+
 ### Enquiries and the newsletter
 
 The enquiry forms write an email; nothing is stored on a server. Filling one in and

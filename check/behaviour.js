@@ -322,10 +322,11 @@ async function main() {
   {
     // With an address in RESDIARY_URL (build/gen.py): each language's booking page has one
     // frame, visible, and ResDiary's first step shows in it. The widget's own frames (Stripe's)
-    // sit inside that one, so only the page's direct children count. This loads the first step
-    // and presses nothing: Next would hold a real table. A frame that answers and stays blank
-    // fails (that's what ?includeJquery=false does); a ResDiary this machine can't reach is
-    // only logged.
+    // sit inside that one, so only the page's direct children count, and of those only ones
+    // with an address (on sol.pizza, Cloudflare's bot script adds a hidden blank frame). This
+    // loads the first step and presses nothing: Next would hold a real table. A frame that
+    // answers and stays blank fails (that's what ?includeJquery=false does); a ResDiary this
+    // machine can't reach is only logged.
     const gen = fs.readFileSync(path.resolve(__dirname, '..', 'build', 'gen.py'), 'utf8');
     const address = name => (new RegExp('^' + name + " = '(.*)'", 'm').exec(gen) || [])[1] || '';
     const en = address('RESDIARY_URL'), vi = address('RESDIARY_URL_VI') || en;
@@ -346,7 +347,8 @@ async function main() {
       page.on('pageerror', e => errors.push(e.message));
       await page.goto(base + p, {waitUntil: 'domcontentloaded'});
       const frame = page.locator('.book-widget iframe');
-      const visible = await frame.filter({visible: true}).count(), all = await page.locator('iframe').count();
+      const visible = await frame.filter({visible: true}).count();
+      const all = await page.locator('.book-widget iframe, iframe[src*="resdiary.com"]').count();
       ok(visible === 1 && all === 1, p + ': one visible booking frame (' + visible + ' visible, ' + all + ' on the page)');
       if (visible) {
         await frame.first().scrollIntoViewIfNeeded();      // it loads lazily
@@ -356,8 +358,8 @@ async function main() {
                      (status >= 500 || status === 403 || status === 429 ? 'it answered ' + status : null);
         if (down) console.log('  (' + p + ": ResDiary can't be reached from here, " + down + ': the first step is not checked)');
         else ok(shown, p + ': the frame shows the first step, "Party size"' + (errors.length ? ' (' + errors[0] + ')' : ''));
-        const loaded = page.mainFrame().childFrames().map(f => f.url());
-        ok(loaded.length === 1 && (down || loaded[0].startsWith(url)), p + ': only that frame loads (' + loaded.join(' ') + ')');
+        const loaded = page.mainFrame().childFrames().map(f => f.url()).filter(u => /^https?:/.test(u));
+        ok(down ? loaded.length <= 1 : loaded.length === 1 && loaded[0].startsWith(url), p + ': only that frame loads (' + loaded.join(' ') + ')');
       }
       await ctx.close();
     }

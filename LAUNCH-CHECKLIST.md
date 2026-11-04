@@ -160,18 +160,20 @@ The listing is "Sol Hanoi" and still carries Sol Pizza's reviews.
       choice, the frame asks for:
       - Google's tag, `gtag.js`, with Google Analytics `G-14S4ZH4PS8` (not ours, which is
         `G-SLBWDVH550`), and through it Google's ad servers
-        (`googleads.g.doubleclick.net`, `www.google.com/rmkt/collect` and `/ccm/collect`)
-        for two Google Ads accounts that aren't ours (`AW-11291730780`, `AW-16698495462`),
-        each told the widget was opened, and on which site;
-      - Cloudflare Insights (`static.cloudflareinsights.com`);
+        (`googleads.g.doubleclick.net`, and `www.google.com` for `/rmkt/collect`,
+        `/ccm/collect` and `/pagead/1p-user-list/`) for two Google Ads accounts that aren't
+        ours (`AW-11291730780`, `AW-16698495462`), each told the widget was opened, and on
+        which site;
+      - Cloudflare Insights (`static.cloudflareinsights.com`, `/cdn-cgi/rum`);
       - Stripe (`js.stripe.com`, `m.stripe.network`, `m.stripe.com`), though deposits are
         off, which sets a cookie, `m`, on `m.stripe.com` for 13 months.
 
       Ask ResDiary whether Google's tags can be turned off for Sol's widget. Ask the lawyer
-      whether the cookie notice (`/privacy/cookies/`) needs a line until then. (The PC this
-      was watched from has DNS that filters ad and analytics hosts: the requests to
-      doubleclick and Cloudflare Insights were made but went no further, and no Google
-      Analytics hit, `/g/collect`, showed in 25 seconds. A guest's phone may get further.)
+      whether the cookie notice (`/privacy/cookies/`) needs a line until then. (Watched from
+      a PC with AdGuard, which stops the ad servers and Cloudflare Insights, and in Google's
+      PageSpeed Insights, which has no blocker and where they all went through. No Google
+      Analytics hit, `/g/collect`, showed in either. On a PC with a blocker, this list can't
+      be checked from the browser alone.)
 
 ### 10. Enquiries and the newsletter
 
@@ -293,5 +295,6 @@ age check. The site isn't an e-commerce platform: booking a table needs no notif
 3. [ ] Google Business Profile: open.
 4. [ ] `npm run check -- https://sol.pizza` after the deploy, and Google's own measurement:
        https://pagespeed.web.dev/ on `https://sol.pizza/`, `/menu/` and `/booking/` (Mobile).
+       `/booking/` misses its budgets because of the widget (README.md, "Booking").
 5. [ ] On a phone: the home page says it's open, **Book** reaches the booking form, and a
        test booking goes through (`MANUAL-TESTS.md`, "Once ResDiary is live").
