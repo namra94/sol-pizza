@@ -47,9 +47,9 @@ The header: the logo at the top; under it a bar that stays at the top of the win
 page scrolls, with Menu · About · Events · Private dining · Visit (`NAV_TABS` and `BUILT`
 in `build/gen.py`), EN · VI and the red **Book** button, which goes to the
 booking page in the same language. On phones and tablets (below 1024px wide): a slim bar
-with EN · VI, the logo and the menu button, and at the foot of the window a bar with Book
-and Directions (and, once online booking is live, Call on English pages and Zalo on
-Vietnamese ones), hidden on the booking page, and on the role pages while a hiring round
+with EN · VI, the logo and the menu button, and at the foot of the window a bar with Book,
+Call on English pages and Zalo on Vietnamese ones (Call until there's a Zalo number), and
+Directions, hidden on the booking page, and on the role pages while a hiring round
 is open (they have the Apply bar then). Menu keeps its Food /
 Wine / Bar tabs. The footer has the newsletter sign-up (on the home page it's in the
 page instead), Instagram and any other address in `SOCIAL`, and lists the pages, Press,
@@ -233,31 +233,55 @@ tells you what to update.
 
 ### Booking
 
-Online booking waits for ResDiary. Once the widget is set up (ResDiary →
-Promote → Widget configurator → Embed Code), paste its URL into
-`RESDIARY_URL` near the top of `build/gen.py` and rebuild: the Booking page's
-booking box then shows the widget and says "Book online below, or call or
-email us." Until then the booking box gives the phone number, email and Instagram
-as text to copy (the team's call, 23 Sep), and the phone bar has no Call button;
-with `RESDIARY_URL` set they become a tap away (`CONTACT_LIVE`), with Zalo and WhatsApp
-too once their numbers are in `ZALO` and `WHATSAPP`. If ResDiary gives the widget a
-separate Vietnamese address, put it in `RESDIARY_URL_VI` (the Vietnamese page uses it). If
-guests pay a deposit inside the widget, set `RESDIARY_PAYMENTS = True`: the pages then let
-the widget's frame use the browser's payment feature (if its payment step comes from
-another address, add that origin too: ask ResDiary). Under the widget there's always a way round it (call, Zalo,
-email), and the booking terms ("Before you book") wait for their content
-(CONTENT-NEEDED.md). Before online booking, `/booking/` has a form to ask for a table in
-opening week.
+Online booking is on. `RESDIARY_URL` near the top of `build/gen.py` holds the ResDiary
+widget's address (ResDiary → Promote → Widget configurator → Embed Code), and the Booking
+page's booking box shows the widget in a frame and says "Book online below, or call or
+email us." There's one widget, in English, so `/vi/booking/` shows it too. If ResDiary gives
+a separate Vietnamese address, put it in `RESDIARY_URL_VI` (the Vietnamese page uses it).
+
+Only the address goes in, not the embed code, and without its `?includeJquery=false`:
+
+- The frame is ResDiary's own iframe option. The embed code's loader script would pull
+  ResDiary's page into ours, with jQuery and its Bootstrap styles, run ResDiary's Google tag
+  on sol.pizza before any cookie choice, and run their scripts on our own origin, next to
+  the back office.
+- `?includeJquery=false` tells ResDiary the host page brings jQuery, and a frame has none.
+  With it, ResDiary serves `widget.js`, which stops with "Bootstrap's JavaScript requires
+  jQuery" and leaves the frame blank. Without it, ResDiary serves `widget-jquery.js` and the
+  form works. The build stops if either address contains it.
+
+With `RESDIARY_URL` set, contact is a tap away (`CONTACT_LIVE`): the phone number, email and
+Instagram in the booking box are links and the phone bar has Call, with Zalo and WhatsApp too
+once their numbers are in `ZALO` and `WHATSAPP`. If it's ever emptied, they go back to text
+to copy (the team's call, 23 Sep), the phone bar loses Call, and `/booking/` gets back its
+form to ask for a table in opening week. If guests pay a deposit inside the widget, set
+`RESDIARY_PAYMENTS = True`: the pages then let the widget's frame use the browser's payment
+feature (if its payment step comes from another address, add that origin too: ask ResDiary).
+Under the widget there's always a way round it (call, Zalo, email), and the booking terms
+("Before you book") wait for their content (CONTENT-NEEDED.md).
+
+The frame is 760px tall, 860px on phones (`build/design/site.css`), so the widget's steps fit
+without a scrollbar inside it. Measured on 4 Nov 2026, by the frame's width: step 1 needs
+706px at 304px (the frame on a 360px phone) and 677px from 360px up; step 2 needs 850px at
+304px, 766px at 390px and 649px from 768px up. Step 3 is for the test booking in
+MANUAL-TESTS.md.
+
+`npm run check` loads the live widget's first step on both booking pages, and only logs it
+if ResDiary can't be reached from where it runs. It never presses **Next**, which holds a real
+table in the diary for five minutes. axe leaves out what's inside the frame, ResDiary's
+markup, but still checks the frame's title. What the widget itself loads in its frame, before
+any cookie choice, is in LAUNCH-CHECKLIST.md (section 9).
 
 ### Enquiries and the newsletter
 
 The enquiry forms write an email; nothing is stored on a server. Filling one in and
 pressing **Send by email** opens the guest's email app with the message ready, to
 `ENQUIRIES` (hello@sol.pizza), the subject in English so the inbox sorts them
-(`Private dining — Lan`, `Opening week — Minh`) and the details in the page's language;
-the message also appears on the page, to copy, for a computer with no email app. There
-are two: groups and private dining (`/private-dining/#enquire`, where every "seven or
-more?" line leads) and, before online booking, a table for opening week (`/booking/`).
+(`Private dining — Lan`) and the details in the page's language;
+the message also appears on the page, to copy, for a computer with no email app. There's
+one: groups and private dining (`/private-dining/#enquire`, where every "seven or
+more?" line leads). A second, a table for opening week, is on `/booking/` only while
+`RESDIARY_URL` is empty.
 The **Sign up by email** button in every footer sends "Please add this email address to
 Sol's newsletter": the email from the guest's own address is their consent. Keep the
 list somewhere the team can find it (LAUNCH-CHECKLIST.md, "Enquiries and the
@@ -449,7 +473,7 @@ says yes, on the guest pages only (never the kitchen's), from `build/design/site
   notice, the banner and `CONSENT_VERSION` together.
 - Events, with a yes: `book_click`, `call_click`, `zalo_click`, `whatsapp_click`,
   `email_click`, `directions_click`, `menu_view` (with the section), `enquiry_submit`
-  (once per form per visit, with the form: Private dining or Opening week) and
+  (once per form per visit, with the form's name: Private dining) and
   `newsletter_signup`; with a yes to Advertising, the matching Meta events (`BookClick`,
   `Contact`, `FindLocation`, `ViewContent`, `Lead`). A finished booking
   (`booking_complete`, Meta's `Schedule`) is mapped but not sent: it happens inside

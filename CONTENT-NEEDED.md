@@ -13,7 +13,7 @@ When something arrives, send it over (or put it where the table says), and the s
 goes live with the next build. Every key in `backticks` below is a gated section: the
 build stops if `gen.py` gates a section that isn't listed here.
 
-Last updated 13 October 2026.
+Last updated 4 November 2026.
 
 ## Needed soon: before opening
 
@@ -21,12 +21,12 @@ Last updated 13 October 2026.
 | --- | --- | --- | --- |
 | The opening date | `OPENING_DATE` near the top of `build/gen.py`: the home page, Booking, Visit, the descriptions and the opening hours in the structured data. From the opening time that day, the pages switch to "open" by themselves | `YYYY-MM-DD` | Arman |
 | Last orders | `HOURS['last_orders']` in `build/gen.py`: the footer and Visit | `HH:MM` | The kitchen |
-| The ResDiary widget | `RESDIARY_URL` in `build/gen.py`: the widget on `/booking/`, and contact becomes tappable everywhere (phone bar, booking box); `RESDIARY_URL_VI` if there's a separate Vietnamese widget | The widget's URL (ResDiary → Promote → Widget configurator → Embed Code), and the Vietnamese one if there is one | Host and Supervisor |
+| A Vietnamese ResDiary widget | `RESDIARY_URL_VI` in `build/gen.py`, if ResDiary can give one. The widget itself is in: `RESDIARY_URL` since 4 November 2026, one widget, in English, on `/booking/` and `/vi/booking/` | The Vietnamese widget's address, without `?includeJquery=false` (README.md, "Booking") | Host and Supervisor |
 | Deposits in the widget | Whether `/booking/` must allow payments in the widget's frame (`Permissions-Policy`) | Yes or no, and which payment screen it shows | Supervisor (ResDiary) |
 | Booking terms | The booking policy on `/booking/`: cancellations, deposits, how long a table is held, the largest party that can book online | A few lines, English and Vietnamese | Supervisor |
 | Zalo number | `ZALO` in `build/gen.py`: the phone bar on Vietnamese pages, the booking page (from when online booking is live) | The number as Zalo shows it | Arman |
 | WhatsApp number | `WHATSAPP` in `build/gen.py`: the booking page (from when online booking is live) | International, without the + (84…) | Arman |
-| Inbox for enquiries | Where the private dining form, the opening-week form and the newsletter sign-up send their email (`ENQUIRIES` in `build/gen.py`) | An address (hello@sol.pizza unless you say otherwise) | Arman |
+| Inbox for enquiries | Where the private dining form and the newsletter sign-up send their email (`ENQUIRIES` in `build/gen.py`) | An address (hello@sol.pizza unless you say otherwise) | Arman |
 | The map pin | `GEO` in `build/gen.py`: the structured data (and the Directions button follows the Google listing). The Google listing "Sol Hanoi" carries Sol Pizza's reviews: say whether its pin is on the new building | Latitude and longitude, or the Google Maps link to the right place | Arman |
 | Holiday and Tết hours | `build/announcements.json`: the bar at the top of every page, and Visit | Dates, and a line in English and Vietnamese | Arman, Supervisor |
 
