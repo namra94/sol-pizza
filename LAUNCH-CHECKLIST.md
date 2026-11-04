@@ -146,7 +146,7 @@ The listing is "Sol Hanoi" and still carries Sol Pizza's reviews.
       too, once `ZALO` is set).
 - [ ] The diary against the site. Seen in the widget on 4 Nov 2026: it offers tables on
       Mondays, when the site says closed; from tonight, with no opening date set; up to
-      10:30pm with the table back by midnight, when the site says 11pm; and for up to 15
+      10:30pm with the table back by midnight, when the site says 11pm; and for up to 12
       online, when the site sends seven or more to the group enquiry. Decide each, and
       set it in ResDiary (or change the site).
 - [ ] Deposits: if guests pay a deposit inside the widget, set `RESDIARY_PAYMENTS = True`
