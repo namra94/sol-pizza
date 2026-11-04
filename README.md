@@ -264,7 +264,9 @@ The frame is 760px tall, 860px on phones (`build/design/site.css`), so the widge
 without a scrollbar inside it. Measured on 4 Nov 2026, by the frame's width: step 1 needs
 706px at 304px (the frame on a 360px phone) and 677px from 360px up; step 2 needs 850px at
 304px, 766px at 390px and 649px from 768px up. Step 3 is for the test booking in
-MANUAL-TESTS.md.
+MANUAL-TESTS.md. The frame has no background of its own, so ResDiary's panel, 600px wide at
+most, sits straight on the page. That only blends while the panel's background colour in the
+Widget configurator (`#f9e9d3`) matches `--cream`: change one, change the other.
 
 `npm run check` loads the live widget's first step on both booking pages, and only logs it
 if ResDiary can't be reached from where it runs. It never presses **Next**, which holds a real

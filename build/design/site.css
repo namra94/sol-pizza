@@ -494,8 +494,10 @@ body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-ins
 html:not(.js) .mailform-fields, html:not(.js) .mailform .actions { display: none; }
 .mailform-done p:focus { outline: none; }
 
-/* the booking widget (ResDiary) and the way round it */
-.book-widget iframe { display: block; width: 100%; height: 760px; margin-top: 26px; border: 0; background: var(--surface-raised); }
+/* the booking widget (ResDiary) and the way round it. No background on the frame: its panel is
+   600px wide at most, in our --cream (Sol's theme in ResDiary's Widget configurator), and the page
+   shows around it */
+.book-widget iframe { display: block; width: 100%; height: 760px; margin-top: 26px; border: 0; }
 @media (max-width: 760.98px) { .book-widget iframe { height: 860px; } }
 .book-fallback { margin-top: 14px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); }
 
