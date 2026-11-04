@@ -12,6 +12,12 @@ const consent = require('./consent.js');
 
 const DIST = path.resolve(__dirname, '..', 'dist');
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
+// What's inside the booking frame is ResDiary's markup, not ours: its findings go to ResDiary
+// and don't fail this check. In axe's terms: the head and body inside that frame, so the
+// <iframe> element stays in and its title is still checked (a plain '.book-widget iframe'
+// would leave out the element too, and 'html' on its own excludes nothing: axe's starting
+// point wins over an exclusion of the same element).
+const RESDIARY_FRAME_CONTENT = ['.book-widget iframe', 'html > *'];
 
 function pages() {
   const out = [];
@@ -44,12 +50,16 @@ function pages() {
     if (choice) await ctx.addInitScript(consent.store, consent.choice({}, V));
     const page = await ctx.newPage();
     for (const p of list) {
-      await page.goto(base + p, {waitUntil: 'load'});
+      // A ResDiary that never answers holds up the booking pages' load event, not their content
+      await page.goto(base + p, {waitUntil: 'load'}).catch(async e => {
+        if (!(await page.$('.book-widget iframe'))) throw e;
+        console.log('(%s: the booking frame has not finished loading)', p);
+      });
       const states = [['', null]];
       if (!choice && viewport.width < 1024 && (await page.$('[data-sheet-open]'))) states.push(['nav sheet open', '[data-sheet-open]']);
       for (const [state, click] of states) {
         if (click) { await page.click(click); await page.waitForTimeout(100); }
-        const r = await new AxeBuilder({page}).withTags(WCAG.concat(['best-practice'])).analyze();
+        const r = await new AxeBuilder({page}).withTags(WCAG.concat(['best-practice'])).exclude(RESDIARY_FRAME_CONTENT).analyze();
         runs++;
         for (const v of r.violations) {
           const wcag = v.tags.some(t => WCAG.includes(t));

@@ -1,11 +1,11 @@
 // What the guest pages do, in a real browser: the language addresses and the EN · VI
 // choice, the cookie banner (and that nothing optional loads before a yes), the
-// header, the phone bar, the events, and that the kitchen and the back office have
-// none of it.
+// header, the phone bar, the events, the booking frame, and that the kitchen and the
+// back office have none of it.
 //   node behaviour.js                 the local build (../dist), served by serve.js
 //   node behaviour.js <base URL>      a Preview URL or sol.pizza
 const {chromium} = require('playwright');
-const path = require('path');
+const fs = require('fs'), path = require('path');
 const serve = require('./serve.js');
 const consent = require('./consent.js');
 
@@ -229,7 +229,7 @@ async function main() {
     ok(await page.isVisible('#navsheet'), 'the menu button opens the nav sheet');
     await page.keyboard.press('Escape');
     ok(!(await page.isVisible('#navsheet')), 'Escape closes it');
-    await page.goto(base + '/vi/booking/');
+    await page.goto(base + '/vi/booking/', {waitUntil: 'domcontentloaded'});   // (not 'load': that waits for ResDiary)
     ok((await page.$('.actionbar')) === null, 'no phone bar on the booking page');
     await ctx.close();
   }
@@ -309,13 +309,60 @@ async function main() {
       ok(/^mailto:hello@sol\.pizza\?subject=Newsletter&body=Vui/.test(await page.getAttribute('.footer-news .btn', 'href')),
          'the newsletter email asks, in Vietnamese, to be added');
     }
-    await page.goto(base + '/booking/');
+    await page.goto(base + '/booking/', {waitUntil: 'domcontentloaded'});
     const live = await page.evaluate(() => !!document.querySelector('.book-widget') || document.documentElement.classList.contains('is-open'));
     if (live) console.log('  (online booking or opening day: no opening-week form to check)');
     else ok(await page.isVisible('#f-opening-week-name'), 'before online booking: the opening-week form on /booking/');
     const group = await page.$('.offer-note a');
     ok(!group || (await group.getAttribute('href')) === '/private-dining/#enquire', 'seven or more: the group enquiry');
     await ctx.close();
+  }
+
+  console.log('Online booking');
+  {
+    // With an address in RESDIARY_URL (build/gen.py): each language's booking page has one
+    // frame, visible, and ResDiary's first step shows in it. The widget's own frames (Stripe's)
+    // sit inside that one, so only the page's direct children count, and of those only ones
+    // with an address (on sol.pizza, Cloudflare's bot script adds a hidden blank frame). This
+    // loads the first step and presses nothing: Next would hold a real table. A frame that
+    // answers and stays blank fails (that's what ?includeJquery=false does); a ResDiary this
+    // machine can't reach is only logged.
+    const gen = fs.readFileSync(path.resolve(__dirname, '..', 'build', 'gen.py'), 'utf8');
+    const address = name => (new RegExp('^' + name + " = '(.*)'", 'm').exec(gen) || [])[1] || '';
+    const en = address('RESDIARY_URL'), vi = address('RESDIARY_URL_VI') || en;
+    if (!en) console.log('  (RESDIARY_URL is empty: no booking frame to check)');
+    for (const [p, url] of en ? [['/booking/', en], ['/vi/booking/', vi]] : []) {
+      const {ctx, page} = await visitor({width: 390, height: 844});
+      await ctx.addInitScript(consent.store, consent.choice({}, V));
+      let status = null;
+      const waiting = new Set(), failed = [], errors = [];
+      const resdiary = r => /(^|\.)resdiary\.com$/.test(new URL(r.url()).hostname);
+      page.on('request', r => { if (resdiary(r)) waiting.add(r); });
+      page.on('requestfinished', r => waiting.delete(r));
+      page.on('response', r => { if (r.request().isNavigationRequest() && r.url().startsWith(url)) status = r.status(); });
+      page.on('requestfailed', r => {
+        waiting.delete(r);
+        if (resdiary(r) && r.failure().errorText !== 'net::ERR_ABORTED') failed.push(new URL(r.url()).hostname + ' ' + r.failure().errorText);
+      });
+      page.on('pageerror', e => errors.push(e.message));
+      await page.goto(base + p, {waitUntil: 'domcontentloaded'});
+      const frame = page.locator('.book-widget iframe');
+      const visible = await frame.filter({visible: true}).count();
+      const all = await page.locator('.book-widget iframe, iframe[src*="resdiary.com"]').count();
+      ok(visible === 1 && all === 1, p + ': one visible booking frame (' + visible + ' visible, ' + all + ' on the page)');
+      if (visible) {
+        await frame.first().scrollIntoViewIfNeeded();      // it loads lazily
+        const shown = await frame.first().contentFrame().getByText('Party size').filter({visible: true}).first()
+          .waitFor({timeout: 30000}).then(() => true, () => false);
+        const down = shown ? null : failed[0] || (waiting.size && 'no answer from ' + new URL([...waiting][0].url()).hostname) ||
+                     (status >= 500 || status === 403 || status === 429 ? 'it answered ' + status : null);
+        if (down) console.log('  (' + p + ": ResDiary can't be reached from here, " + down + ': the first step is not checked)');
+        else ok(shown, p + ': the frame shows the first step, "Party size"' + (errors.length ? ' (' + errors[0] + ')' : ''));
+        const loaded = page.mainFrame().childFrames().map(f => f.url()).filter(u => /^https?:/.test(u));
+        ok(down ? loaded.length <= 1 : loaded.length === 1 && loaded[0].startsWith(url), p + ': only that frame loads (' + loaded.join(' ') + ')');
+      }
+      await ctx.close();
+    }
   }
 
   console.log('Keyboard');

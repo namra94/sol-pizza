@@ -2,7 +2,7 @@
 //   1. both builds: the full one (every page, noindex) and the public one, each with
 //      its own checks (wine counts, job data, share cards, languages, gates; the
 //      public one also checks every link)
-//   2. behaviour: languages, cookies, header, phone bar, events (behaviour.js)
+//   2. behaviour: languages, cookies, header, phone bar, events, the booking frame (behaviour.js)
 //   3. accessibility: axe on every page in both languages (axe.js)
 //   with a URL (npm run check -- https://…): behaviour and axe there too,
 //   Lighthouse against the budgets (lighthouse.js), and every photo in

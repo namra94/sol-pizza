@@ -139,29 +139,49 @@ The listing is "Sol Hanoi" and still carries Sol Pizza's reviews.
 
 ### 9. ResDiary
 
-- [ ] Widget: ResDiary → **Promote** → **Widget configurator**: languages English and
-      Vietnamese, then **Embed Code** → copy the widget's URL into `RESDIARY_URL` in
-      `build/gen.py` (CONTENT-NEEDED.md). The widget appears on `/booking/`, and the
-      phone number, Call and Zalo become tappable across the site.
+- [x] Widget: ResDiary → **Promote** → **Widget configurator** → **Embed Code**: the
+      widget's address, without `?includeJquery=false`, is in `RESDIARY_URL` in
+      `build/gen.py` (README.md, "Booking"). The widget is on `/booking/` and
+      `/vi/booking/`, and the phone number and Call are tappable across the site (Zalo
+      too, once `ZALO` is set).
+- [ ] The diary against the site. Seen in the widget on 4 Nov 2026: it offers tables on
+      Mondays, when the site says closed; from tonight, with no opening date set; up to
+      10:30pm with the table back by midnight, when the site says 11pm; and for up to 12
+      online, when the site sends seven or more to the group enquiry. Decide each, and
+      set it in ResDiary (or change the site).
 - [ ] Deposits: if guests pay a deposit inside the widget, set `RESDIARY_PAYMENTS = True`
       in `build/gen.py`: the site then allows payment in the widget's frame. Ask ResDiary
       whether the payment step comes from another address, which needs allowing too.
 - [ ] Languages: ask whether the widget can open in Vietnamese (a separate widget
       address, or a setting). If it's a separate address, it goes in `RESDIARY_URL_VI`.
-- [ ] Analytics: the site already counts clicks on Book (`book_click`), after a yes to
-      Analytics. If you switch on ResDiary's own Google Analytics, it runs inside the
-      widget without the site's cookie banner: ask ResDiary first whether it waits for
-      consent, and leave it off if not.
+- [ ] Analytics: the site counts clicks on Book (`book_click`), after a yes to Analytics.
+      The widget doesn't wait for a yes: the site's cookie banner doesn't reach inside its
+      frame. Watched on 4 Nov 2026, on a first visit to `/booking/` before any cookie
+      choice, the frame asks for:
+      - Google's tag, `gtag.js`, with Google Analytics `G-14S4ZH4PS8` (not ours, which is
+        `G-SLBWDVH550`), and through it Google's ad servers
+        (`googleads.g.doubleclick.net`, and `www.google.com` for `/rmkt/collect`,
+        `/ccm/collect` and `/pagead/1p-user-list/`) for two Google Ads accounts that aren't
+        ours (`AW-11291730780`, `AW-16698495462`), each told the widget was opened, and on
+        which site;
+      - Cloudflare Insights (`static.cloudflareinsights.com`, `/cdn-cgi/rum`);
+      - Stripe (`js.stripe.com`, `m.stripe.network`, `m.stripe.com`), though deposits are
+        off, which sets a cookie, `m`, on `m.stripe.com` for 13 months.
+
+      Ask ResDiary whether Google's tags can be turned off for Sol's widget. Ask the lawyer
+      whether the cookie notice (`/privacy/cookies/`) needs a line until then. (Watched from
+      a PC with AdGuard, which stops the ad servers and Cloudflare Insights, and in Google's
+      PageSpeed Insights, which has no blocker and where they all went through. No Google
+      Analytics hit, `/g/collect`, showed in either. On a PC with a blocker, this list can't
+      be checked from the browser alone.)
 
 ### 10. Enquiries and the newsletter
 
 The site's forms send email to hello@sol.pizza (`ENQUIRIES` in `build/gen.py`), with
-subjects that start the same way every time (`Private dining — Lan`, `Opening week —
-Minh`, `Newsletter`):
+subjects that start the same way every time (`Private dining — Lan`, `Newsletter`):
 
 - [ ] In Gmail, a filter for each, so nothing waits: **Subject** `"Private dining —"`
-      (label "Private dining", and star it), `"Opening week —"` (label "Opening week"),
-      `Newsletter` (label "Newsletter").
+      (label "Private dining", and star it), `Newsletter` (label "Newsletter").
 - [ ] Newsletter: keep the addresses in one place (a Google Contacts label, or a sheet),
       with the date each asked. When you choose a newsletter tool, import them, and
       honour every "please take me off".
@@ -275,5 +295,6 @@ age check. The site isn't an e-commerce platform: booking a table needs no notif
 3. [ ] Google Business Profile: open.
 4. [ ] `npm run check -- https://sol.pizza` after the deploy, and Google's own measurement:
        https://pagespeed.web.dev/ on `https://sol.pizza/`, `/menu/` and `/booking/` (Mobile).
+       `/booking/` misses its budgets because of the widget (README.md, "Booking").
 5. [ ] On a phone: the home page says it's open, **Book** reaches the booking form, and a
        test booking goes through (`MANUAL-TESTS.md`, "Once ResDiary is live").

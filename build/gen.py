@@ -132,9 +132,11 @@ INSTA_HANDLE = '@solhanoi'
 COMPANY_EN = 'Aurelian Company Limited'
 COMPANY_VI = 'Công ty TNHH Aurelian'
 
-# ResDiary: paste the widget URL here (ResDiary > Promote > Widget configurator >
-# Embed Code) and rebuild. The Booking page's booking box then shows the widget.
-RESDIARY_URL = ''
+# ResDiary: the widget's address (ResDiary > Promote > Widget configurator > Embed Code).
+# The Booking page's booking box shows it in a frame. The embed code's address ends in
+# ?includeJquery=false: leave that off, or the frame stays blank (the check below, and
+# README.md, "Booking").
+RESDIARY_URL = 'https://booking.resdiary.com/widget/Standard/SolPizza/12890'
 # The widget in Vietnamese, if ResDiary gives a separate address for it (the Widget
 # configurator, Vietnamese selected); empty: Vietnamese pages use RESDIARY_URL too.
 RESDIARY_URL_VI = ''
@@ -155,6 +157,10 @@ assert re.fullmatch(r'(0\d{9})?', ZALO), "ZALO: the number as Zalo shows it, ten
 assert re.fullmatch(r'(84\d{9})?', WHATSAPP), "WHATSAPP: 84 then nine digits, no + or spaces, or ''"
 assert all(re.fullmatch(r'(https://[^\s"<>]+)?', u) for u in (RESDIARY_URL, RESDIARY_URL_VI)), \
     "RESDIARY_URL: the widget's https:// address, or ''"
+assert not any('includejquery=false' in u.lower() for u in (RESDIARY_URL, RESDIARY_URL_VI)), \
+    "RESDIARY_URL, RESDIARY_URL_VI: take ?includeJquery=false off the address. It tells ResDiary the page around " \
+    "the widget brings jQuery, and our frame has none: ResDiary then serves widget.js, which stops with " \
+    "\"Bootstrap's JavaScript requires jQuery\" and leaves the frame blank (README.md, \"Booking\")."
 
 # Where the enquiry forms (groups and private dining, opening week) and the newsletter
 # sign-up send their email: an inbox the team reads every day.

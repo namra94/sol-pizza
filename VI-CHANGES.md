@@ -7,6 +7,16 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Online booking: the ResDiary widget, 4 Nov 2026
+
+The booking form is on `/booking/` and `/vi/booking/`, in a frame from ResDiary. There’s one widget, in English, so the form itself stays in English on the Vietnamese page for now; its words are ResDiary’s, not in this file. The lines marked “(once online booking is live)” in the 13 Oct sections below are live now too: the phone bar’s Gọi, “Không đặt được qua biểu mẫu?” under the form, and the page’s description. The opening-week form (Giữ bàn cho tôi trong tuần khai trương) comes off `/booking/`. These are the lines that weren’t in this file yet. Where a line changed, the old English is in brackets.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /booking/ | lead: Book online below, or call or email us. (was: Online booking opens closer to the day we open. Until then, call or email us and we’ll hold you a table for opening week.) | Chúng tôi sẽ mở đặt bàn trực tuyến khi gần đến ngày khai trương. Từ nay đến lúc đó, bạn cứ gọi điện hoặc gửi email, chúng tôi sẽ giữ bàn cho bạn trong tuần khai trương. | Đặt bàn trực tuyến ngay bên dưới, hoặc gọi điện hay gửi email cho chúng tôi. |
+| /booking/ | the form’s frame, its title for screen readers: Book a table at Sol | — | Đặt bàn tại Sol |
+| /accessibility/ | full previews only, under Booking: The booking form comes from ResDiary, inside our page. If it gives you any trouble, call us on +84 866 161 600 or write to hello@sol.pizza, and we’ll book for you. (was: To book, call us on +84 866 161 600 or write to hello@sol.pizza, and we’ll look after the rest.) | Để đặt bàn, hãy gọi +84 866 161 600 hoặc viết cho chúng tôi qua hello@sol.pizza, chúng tôi sẽ lo phần còn lại. | Biểu mẫu đặt bàn là của ResDiary, nằm trong trang của chúng tôi. Nếu bạn gặp khó khăn, hãy gọi +84 866 161 600 hoặc viết cho chúng tôi qua hello@sol.pizza, chúng tôi sẽ đặt bàn giúp bạn. |
+
 ## The back office: item requests, 31 Oct 2026
 
 Staff now ask for items only: the purchase request has no supplier, brand, price or estimate any more, as management chooses the supplier and the brand when they order. These are the back office’s new and changed lines. The 29 Oct section below keeps the lines that stay as they were; the ones that went (the supplier, the Order Guide, prices, the estimate, Arman’s ✅) are gone from it. Where a line changed, the old English is in brackets.

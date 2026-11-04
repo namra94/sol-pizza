@@ -12,15 +12,14 @@ sol.pizza → Delete).
 ## 1. iPhone, Safari
 
 - [ ] `sol.pizza`: the cookie banner sits at the foot. **Reject all**: it goes, and the
-      phone bar appears (Book · Directions). Reload: no banner.
+      phone bar appears (Book · Call · Directions). Reload: no banner.
 - [ ] Scroll the home page: nothing jumps as it loads; the bar at the foot stays.
 - [ ] **VI** (top left): the page in Vietnamese at `sol.pizza/vi/`. In the same tab, type
       `sol.pizza` again: it opens in Vietnamese. **EN**: back to English.
 - [ ] The menu button (top right): the menu opens over the page; **Menu**, **Events**,
       **Visit**… each opens its page; the × closes it.
-- [ ] **Book** in the phone bar: the booking page. Before online booking: the phone
-      number and email are text to copy (press and hold). Once ResDiary is live: the
-      booking form loads, and a test booking goes through (cancel it after).
+- [ ] **Book** in the phone bar: the booking page: the booking form loads, and a test
+      booking goes through (cancel it after).
 - [ ] **Directions**: Google Maps (the app, or the website) opens with the way to Sol.
       Check the pin is on the new building.
 - [ ] `/private-dining/`: fill the form, **Send by email**: Mail opens with the message
@@ -119,6 +118,10 @@ note **TEST — ignore**, and react ❌ to it in #supply afterwards.
 
 - [ ] `/booking/` and `/vi/booking/`: the widget loads in both (in Vietnamese on `/vi/` if
       ResDiary has a Vietnamese widget, `RESDIARY_URL_VI`).
+- [ ] A test booking through to its confirmation (cancel it after), on a phone and on a
+      tablet: no scrollbar inside the frame at any step. Step 3 hasn't been measured, nor
+      step 2 on a tablet: if a scrollbar shows, note the step and the width, for the
+      frame's height in `build/design/site.css`.
 - [ ] With deposits: a test booking reaches the payment step, and it works inside the
       page.
 - [ ] Under the widget, "Trouble with the booking form?" with the phone, Zalo and email.
