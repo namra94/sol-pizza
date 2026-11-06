@@ -1,19 +1,35 @@
 {
-  "note": "The opening-team round on /jobs/: the cards, and the six role pages at /jobs/<slug>/. Each role's job description is build/jobs/<slug>.md (English, then Vietnamese). The descriptions repeat these dates and figures: edit them together. The build stops if a description's facts table (base salary, openings, closing and start dates) or any salary band in its text no longer matches the data here, because the ads quote the same numbers.",
+  "note": "The opening-team round on /jobs/: the cards, and the seven role pages at /jobs/<slug>/. Each role's job description is build/jobs/<slug>.md (English, then Vietnamese). The descriptions repeat these dates and figures: edit them together. The build stops if a description's facts table (base salary, openings, closing date and start) or any salary band or email address in its text no longer matches the data here, because the ads quote the same numbers.",
   "note_vi": "Every *_vi field is the Vietnamese twin of the field above it.",
+  "note_starts": "starts: a plain date (2026-10-12), or, while the date isn't fixed, any starts (2026-11) with starts_label and starts_label_vi. The label is then all that shows: on the cards, and at the head of each description's Start row.",
+  "note_email": "email, on a role: where its applications go, when that isn't jobs@sol.pizza.",
   "round": {
-    "posted": "2026-09-29",
-    "closes": "2026-10-04T23:59:00+07:00",
-    "starts": "2026-10-12",
+    "posted": "2026-11-08",
+    "closes": "2026-11-14T23:59:00+07:00",
+    "starts": "2026-11",
+    "starts_label": "Late November 2026",
+    "starts_label_vi": "Cuối tháng 11/2026",
     "service_charge": [2000000, 4000000],
     "cv_line": "(Please attach your CV.)",
     "cv_line_vi": "(Vui lòng đính kèm CV.)"
   },
   "sections": [
+    {"key": "lead", "name": "Leading the floor", "name_vi": "Quản lý khu phục vụ"},
     {"key": "foh", "name": "Front of house", "name_vi": "Bộ phận phục vụ"},
     {"key": "kitchen", "name": "Kitchen", "name_vi": "Bếp"}
   ],
   "roles": [
+    {
+      "slug": "restaurant-supervisor",
+      "section": "lead",
+      "openings": null,
+      "base": [16000000, 20000000],
+      "email": "careers@sol.pizza",
+      "card": "Take full ownership of our dining room and bar: the floor, the team, the budget and the guest experience on every shift.",
+      "card_vi": "Chịu trách nhiệm toàn diện phòng ăn và quầy bar: khu phục vụ, đội ngũ, ngân sách và trải nghiệm của khách trong mọi ca.",
+      "question": "A short note (100 words is plenty) on the best service you have ever led or received, and why.",
+      "question_vi": "Một đoạn ngắn (khoảng 100 từ) về ca phục vụ tốt nhất bạn từng dẫn dắt hoặc từng trải nghiệm, và vì sao."
+    },
     {
       "slug": "host",
       "section": "foh",

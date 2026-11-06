@@ -298,36 +298,49 @@ newsletter"), and take people off it when they ask.
 
 ### Jobs
 
-The opening team is six roles, each with a card on `/jobs/` (grouped Front of
-house / Kitchen) and a page at `/jobs/<slug>/` in both languages:
+The opening team is seven roles, each with a card on `/jobs/` (grouped by the
+data's `sections`: Leading the floor / Front of house / Kitchen) and a page at
+`/jobs/<slug>/` in both languages:
 
-- `build/jobs-data.json`: the round (posted, closing instant, start date,
-  service charge estimate) and each role's slug, section, openings, base salary,
-  card line and apply question, English and Vietnamese. The cards, the closing
-  script, the share cards, the meta descriptions and the `JobPosting` take their
-  dates and figures from here.
+- `build/jobs-data.json`: the round (posted, closing instant, start, service
+  charge estimate) and each role's slug, section, openings, base salary, card line
+  and apply question, English and Vietnamese, plus its `email` if its applications
+  don't go to jobs@sol.pizza. The cards, the closing script, the share cards, the
+  meta descriptions and the `JobPosting` take their dates and figures from here.
 - `build/jobs/<slug>.md`: the job description word for word, the English block
   then the Vietnamese one (`# ` title, the eyebrow line, the facts table, the
   bold standfirst, then `##` / `###` headings, paragraphs and `- ` lists). Its
   text carries the same dates and figures, so edit it alongside the data. The
   build stops if they disagree: the facts table's base salary, openings, closing
-  and start dates, and every salary band in the text (each must be the base, the
-  service charge estimate or the total), because the ads quote the same numbers.
+  date and start, every salary band in the text (each must be the base, the
+  service charge estimate or the total), because the ads quote the same numbers,
+  and every email address in the text (each must be the role's own).
 
-Apply buttons open an email to jobs@sol.pizza with the subject (`Pizzaiolo — `)
-and a body in the page's language. After the closing instant a small script in the
-page head shows "Applications for this round closed…" on the cards and pages, hides
-every Apply button, and takes "We're hiring now" off `/jobs/` and "Build it with us"
-off `/about/`; a build after the closing instant leaves them out altogether. To check
-it, set `closes` to yesterday, build with `JOBS_ALLOW_DATE_DRIFT=1 npm run build` (the
-descriptions still say 4 October), look, and set it back. The Vietnamese role pages
-(`/vi/jobs/<slug>/`) have a Vietnamese share card: link job ads for Vietnamese
-speakers there. Each page carries a `JobPosting` for search.
+The start can be approximate. `starts` is a plain date (`2026-10-12`), or, while the
+date isn't fixed, any `starts` (`2026-11`) with `starts_label` and `starts_label_vi`
+(`Late November 2026`, `Cuối tháng 11/2026`). The label is then all that shows: the
+cards read "Start late November 2026" / "Bắt đầu: cuối tháng 11/2026", and each
+description's Start row must begin with it.
+
+Apply buttons open an email to the role's address, its `email` or else jobs@sol.pizza
+(the Restaurant Supervisor's go to careers@sol.pizza, for the owners only), with the
+subject (`Pizzaiolo — `) and a body in the page's language. A click on either address
+is a Meta `Lead` (`src/pixel.js`, `build/design/site.js`): a new address goes in both.
+Under the Apply buttons at the top and end of a role page, a quiet line gives the
+address and the subject as text, with a Copy button, for a computer with no email app.
+After the closing instant a small script in the page head shows "Applications for this
+round closed…" on the cards and pages, hides every Apply button and that line, and takes
+"We're hiring now" off `/jobs/` and "Build it with us" off `/about/`; a build after the
+closing instant leaves them out altogether. To check it, set `closes` to yesterday,
+build with `JOBS_ALLOW_DATE_DRIFT=1 npm run build` (the descriptions still say 14
+November), look, and set it back. The Vietnamese role pages (`/vi/jobs/<slug>/`) have a
+Vietnamese share card: link job ads for Vietnamese speakers there. Each page carries a
+`JobPosting` for search.
 
 Filled roles are listed under "Recently filled" and link to their pages, which
 are the original pages in `src/jobs/` re-wrapped in the site design with their
 copy untouched: a "This role has been filled" note at the top, no apply button,
-`noindex`. Those three are in English only: their Vietnamese pages
+`noindex`. Those two are in English only: their Vietnamese pages
 (`/vi/jobs/<slug>`) have the Vietnamese header, title and a line saying so, then the
 English description.
 

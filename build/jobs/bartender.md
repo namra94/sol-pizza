@@ -7,8 +7,8 @@ Front of House · Full-time · Tây Hồ, Hanoi
 | **Reports to** | Restaurant Supervisor |
 | **Base salary** | 9,000,000 – 13,000,000 VND gross per month, set on experience |
 | **Hours** | Six shifts a week, 48 hours maximum, one rostered day off |
-| **Applications close** | Sunday 4 October 2026 |
-| **Start** | Monday 12 October 2026, or by Monday 19 October at the latest |
+| **Applications close** | Saturday 14 November 2026 |
+| **Start** | Late November 2026 — the exact date is in your offer letter |
 
 **Own the bar from setup to close: make every drink correctly, keep the bar clean and stocked, know what you are serving, and make every guest at the bar feel looked after.**
 
@@ -143,7 +143,7 @@ You are responsible for the operation of the bar during service: preparing drink
 - Strong attention to detail, particularly with recipes, measurements, presentation, allergens and orders.
 - Comfortable working as part of a team and supporting the wider FOH operation when required.
 - Able to work evenings, weekends and public holidays including Tết trading, six shifts a week.
-- Able to start by Monday 19 October 2026.
+- Able to start in late November 2026.
 
 ## Nice to have
 
@@ -182,7 +182,7 @@ Six shifts a week, 48 hours maximum, one rostered day off. We trade in the eveni
 
 ## How to apply
 
-Applications close Sunday 4 October 2026. Start Monday 12 October 2026, or as soon as your notice allows and by Monday 19 October at the latest.
+Applications close Saturday 14 November 2026. We expect you to start in late November 2026. The restaurant is finishing its fit-out, so the exact date will be in your offer letter. Please don’t hand in your notice at your current job until you have it.
 
 Send to [jobs@sol.pizza](mailto:jobs@sol.pizza) with the subject line “Bartender — [Your name]”:
 
@@ -202,8 +202,8 @@ Bộ phận phục vụ · Toàn thời gian · Tây Hồ, Hà Nội
 | **Báo cáo cho** | Giám sát Nhà hàng |
 | **Lương cơ bản** | 9.000.000 – 13.000.000 VNĐ gross/tháng, tùy kinh nghiệm |
 | **Giờ làm** | Sáu ca mỗi tuần, tối đa 48 giờ, một ngày nghỉ theo lịch |
-| **Hạn nộp hồ sơ** | Chủ nhật 04/10/2026 |
-| **Ngày bắt đầu** | Thứ Hai 12/10/2026, muộn nhất thứ Hai 19/10/2026 |
+| **Hạn nộp hồ sơ** | Thứ Bảy 14/11/2026 |
+| **Ngày bắt đầu** | Cuối tháng 11/2026 — ngày chính xác được ghi trong thư mời nhận việc |
 
 **Chịu trách nhiệm toàn bộ khu vực quầy bar từ khâu chuẩn bị đến khi đóng cửa: pha chế đồ uống chuẩn xác, giữ quầy bar sạch sẽ và đầy đủ nguyên liệu, am hiểu sản phẩm phục vụ, và đảm bảo mọi khách hàng tại quầy bar đều được chăm sóc chu đáo.**
 
@@ -338,7 +338,7 @@ Bạn chịu trách nhiệm vận hành quầy bar trong suốt quá trình ph�
 - Chú trọng sự tỉ mỉ, chi tiết, đặc biệt là đối với công thức, định lượng, cách trình bày, thông tin về các chất gây dị ứng và các đơn hàng.
 - Có tinh thần làm việc nhóm tốt và sẵn sàng hỗ trợ các bộ phận phục vụ khác (FOH) khi cần thiết.
 - Có thể làm việc vào các buổi tối, cuối tuần và ngày lễ (bao gồm cả dịp Tết); làm việc 6 ca/tuần.
-- Có thể bắt đầu muộn nhất từ thứ Hai, ngày 19 tháng 10 năm 2026.
+- Có thể bắt đầu đi làm từ cuối tháng 11/2026.
 
 ## Ưu tiên
 
@@ -377,7 +377,7 @@ Sáu ca mỗi tuần, tối đa 48 giờ, một ngày nghỉ theo lịch phân c
 
 ## Cách thức ứng tuyển
 
-Hạn chót nhận hồ sơ: Chủ nhật, ngày 4 tháng 10 năm 2026. Ngày bắt đầu làm việc: thứ Hai, ngày 12 tháng 10 năm 2026 (hoặc sớm nhất có thể tùy thời hạn báo nghỉ việc tại nơi làm việc hiện tại, nhưng muộn nhất là thứ Hai, ngày 19 tháng 10).
+Hạn chót nhận hồ sơ: thứ Bảy, ngày 14 tháng 11 năm 2026. Dự kiến bạn sẽ bắt đầu đi làm từ cuối tháng 11/2026. Nhà hàng đang hoàn thiện những hạng mục cuối, nên ngày bắt đầu chính xác sẽ được ghi trong thư mời nhận việc. Bạn chưa nên xin nghỉ ở nơi làm việc hiện tại cho đến khi nhận được thư mời.
 
 Vui lòng gửi hồ sơ đến [jobs@sol.pizza](mailto:jobs@sol.pizza) với tiêu đề “Bartender — [Tên của bạn]”, bao gồm:
 

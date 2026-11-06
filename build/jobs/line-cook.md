@@ -8,14 +8,14 @@ Kitchen · Full-time · Tây Hồ, Hanoi
 | **Openings** | 2 |
 | **Base salary** | 8,000,000 – 10,000,000 VND gross per month, set on experience |
 | **Hours** | Six shifts a week, 48 hours maximum, one rostered day off |
-| **Applications close** | Sunday 4 October 2026 |
-| **Start** | Monday 12 October 2026, or by Monday 19 October at the latest |
+| **Applications close** | Saturday 14 November 2026 |
+| **Start** | Late November 2026 — the exact date is in your offer letter |
 
 **Run a station on Sol’s line: the prep, the mise en place and every plate that leaves it, cooked to the recipe card from the first ticket to the last.**
 
 ## The role in short
 
-You cook a station on our line — hot or cold — under the Head Chef and, from 22 October, the Sous Chef. We are hiring two, and both of you will learn more than one station, so the line never depends on one person being in. Joining now means joining before we open: you cook the test services, learn the recipe cards with us, and your station’s prep list and set-up are built with you.
+You cook a station on our line — hot or cold — under the Head Chef and the Sous Chef. We are hiring two, and both of you will learn more than one station, so the line never depends on one person being in. Joining now means joining before we open: you cook the test services, learn the recipe cards with us, and your station’s prep list and set-up are built with you.
 
 - **Set up your station.** Prep to the list, labelled and dated, and ready before the first ticket.
 - **Cook to the card.** Every dish at the portion, seasoning and plating on its recipe card, every time.
@@ -86,7 +86,7 @@ You cook a station on our line — hot or cold — under the Head Chef and, from
 - Stays calm and keeps talking when the tickets stack up.
 - Willing to complete the food-handler health check and food-safety training we arrange before you start on the line.
 - Available for evenings, weekends and public holidays including Tết trading, six shifts a week.
-- Able to start by Monday 19 October 2026.
+- Able to start in late November 2026.
 
 ## Nice to have
 
@@ -121,7 +121,7 @@ Six shifts a week, 48 hours maximum, one rostered day off. We trade in the eveni
 
 ## How to apply
 
-Applications close Sunday 4 October 2026. Start Monday 12 October 2026, or as soon as your notice allows and by Monday 19 October at the latest.
+Applications close Saturday 14 November 2026. We expect you to start in late November 2026. The restaurant is finishing its fit-out, so the exact date will be in your offer letter. Please don’t hand in your notice at your current job until you have it.
 
 Send to [jobs@sol.pizza](mailto:jobs@sol.pizza) with the subject line “Line Cook — [Your name]”:
 
@@ -142,14 +142,14 @@ Bếp · Toàn thời gian · Tây Hồ, Hà Nội
 | **Số lượng tuyển** | 2 |
 | **Lương cơ bản** | 8.000.000 – 10.000.000 VNĐ gross/tháng, tùy kinh nghiệm |
 | **Giờ làm** | Sáu ca mỗi tuần, tối đa 48 giờ, một ngày nghỉ theo lịch |
-| **Hạn nộp hồ sơ** | Chủ nhật 04/10/2026 |
-| **Ngày bắt đầu** | Thứ Hai 12/10/2026, muộn nhất thứ Hai 19/10/2026 |
+| **Hạn nộp hồ sơ** | Thứ Bảy 14/11/2026 |
+| **Ngày bắt đầu** | Cuối tháng 11/2026 — ngày chính xác được ghi trong thư mời nhận việc |
 
 **Phụ trách một trạm trên line của Sol: sơ chế, mise en place và từng đĩa ra khỏi trạm, nấu đúng thẻ công thức từ order đầu tiên đến order cuối cùng.**
 
 ## Tóm tắt vị trí
 
-Bạn đứng một trạm trên line của chúng tôi — bếp nóng hoặc bếp lạnh — dưới sự điều hành của Bếp trưởng và, từ ngày 22/10, Bếp phó. Chúng tôi tuyển hai người, và cả hai sẽ học nhiều hơn một trạm để line không bao giờ phụ thuộc vào một người. Gia nhập lúc này nghĩa là bạn tham gia trước khi nhà hàng khai trương: bạn nấu các ca chạy thử, học thẻ công thức cùng chúng tôi, và danh sách sơ chế cũng như cách set up trạm của bạn sẽ được xây dựng cùng bạn.
+Bạn đứng một trạm trên line của chúng tôi — bếp nóng hoặc bếp lạnh — dưới sự điều hành của Bếp trưởng và Bếp phó. Chúng tôi tuyển hai người, và cả hai sẽ học nhiều hơn một trạm để line không bao giờ phụ thuộc vào một người. Gia nhập lúc này nghĩa là bạn tham gia trước khi nhà hàng khai trương: bạn nấu các ca chạy thử, học thẻ công thức cùng chúng tôi, và danh sách sơ chế cũng như cách set up trạm của bạn sẽ được xây dựng cùng bạn.
 
 - **Set up trạm của bạn.** Sơ chế theo danh sách, dán nhãn và ghi ngày, sẵn sàng trước order đầu tiên.
 - **Nấu đúng thẻ công thức.** Mỗi món đúng định lượng, gia vị và cách trình bày trên thẻ công thức, lần nào cũng vậy.
@@ -220,7 +220,7 @@ Bạn đứng một trạm trên line của chúng tôi — bếp nóng hoặc b
 - Giữ bình tĩnh và vẫn trao đổi rõ ràng khi order dồn.
 - Sẵn sàng khám sức khỏe cho người chế biến thực phẩm và tham gia tập huấn an toàn thực phẩm do chúng tôi sắp xếp trước khi vào làm.
 - Sẵn sàng làm việc buổi tối, cuối tuần và ngày lễ (bao gồm cả dịp Tết), 6 ca mỗi tuần.
-- Có thể bắt đầu muộn nhất từ thứ Hai, ngày 19 tháng 10 năm 2026.
+- Có thể bắt đầu đi làm từ cuối tháng 11/2026.
 
 ## Ưu tiên
 
@@ -255,7 +255,7 @@ Sáu ca mỗi tuần, tối đa 48 giờ, một ngày nghỉ theo lịch phân c
 
 ## Cách thức ứng tuyển
 
-Hạn chót nhận hồ sơ: Chủ nhật, ngày 4 tháng 10 năm 2026. Ngày bắt đầu làm việc: thứ Hai, ngày 12 tháng 10 năm 2026 (hoặc sớm nhất có thể tùy thời hạn báo nghỉ việc tại nơi làm việc hiện tại, nhưng muộn nhất là thứ Hai, ngày 19 tháng 10).
+Hạn chót nhận hồ sơ: thứ Bảy, ngày 14 tháng 11 năm 2026. Dự kiến bạn sẽ bắt đầu đi làm từ cuối tháng 11/2026. Nhà hàng đang hoàn thiện những hạng mục cuối, nên ngày bắt đầu chính xác sẽ được ghi trong thư mời nhận việc. Bạn chưa nên xin nghỉ ở nơi làm việc hiện tại cho đến khi nhận được thư mời.
 
 Vui lòng gửi hồ sơ đến [jobs@sol.pizza](mailto:jobs@sol.pizza) với tiêu đề “Line Cook — [Tên của bạn]”, bao gồm:
 

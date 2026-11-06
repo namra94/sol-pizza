@@ -53,11 +53,12 @@
   }, true);
 
   // --- Lead ---------------------------------------------------------------
-  // A click on any mailto link to the jobs inbox. Deliberately NOT fired on
-  // the "Apply for this role" button, which only scrolls down the page.
+  // A click on any mailto link to an applications inbox: jobs@, or careers@ for
+  // the Restaurant Supervisor. Deliberately NOT fired on the "Apply for this
+  // role" button, which only scrolls down the page.
   document.addEventListener("click", function (e) {
     var a = e.target && e.target.closest
-      ? e.target.closest('a[href^="mailto:jobs@sol.pizza"]')
+      ? e.target.closest('a[href^="mailto:jobs@sol.pizza"], a[href^="mailto:careers@sol.pizza"]')
       : null;
     if (!a) return;
     fbq("track", "Lead", {

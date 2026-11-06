@@ -7,6 +7,151 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Hiring round 2: jobs reopened, 8 Nov 2026
+
+The jobs pages reopen: applications close on Saturday 14 November, and no start date is printed any more, only “Cuối tháng 11/2026”, with the exact date in the offer letter. The Restaurant Supervisor moves from “Vừa tuyển xong” to an open role, in Vietnamese for the first time, with its own address, careers@sol.pizza. Back on the site with their words unchanged, as they are whenever a round is open: “Cùng chúng tôi dựng nên Sol” and its lines on `/about/`, and “Chúng tôi sắp khai trương…” on `/jobs/`. Where a line changed, the old English is in brackets.
+
+### The round
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /jobs/ | each card’s dates: Applications close Sat 14 Nov · Start late November 2026 (was: Applications close Sun 4 Oct · Start Mon 12 Oct) | Hạn nộp: Chủ nhật 04/10 · Bắt đầu: thứ Hai 12/10 | Hạn nộp: thứ Bảy 14/11 · Bắt đầu: cuối tháng 11/2026 |
+| /jobs/ | meta description: We’re hiring a Restaurant Supervisor and our opening team for the floor and the kitchen. Every application gets a reply. (was: We’re hiring a Host and our opening team …) | Chúng tôi đang tuyển Lễ tân (Host) và đội ngũ khai trương cho khu phục vụ và bếp. Mọi hồ sơ đều được phản hồi. | Chúng tôi đang tuyển Giám sát Nhà hàng và đội ngũ khai trương cho khu phục vụ và bếp. Mọi hồ sơ đều được phản hồi. |
+| /jobs/ | meta description, once the round has closed: Work with Sol in Tây Hồ, Hanoi. Applications for our opening team closed on Saturday 14 November 2026. | Làm việc cùng Sol tại Tây Hồ, Hà Nội. Đợt tuyển đội ngũ khai trương đã đóng vào Chủ nhật 04/10/2026. | Làm việc cùng Sol tại Tây Hồ, Hà Nội. Đợt tuyển đội ngũ khai trương đã đóng vào thứ Bảy 14/11/2026. |
+| /jobs/ | How to apply, after the jobs@sol.pizza sentence: For the Restaurant Supervisor, email careers@sol.pizza instead. | — | Riêng vị trí Giám sát Nhà hàng, vui lòng gửi tới careers@sol.pizza. |
+| /jobs/ | a new group of cards, above Front of house: Leading the floor | — | Quản lý khu phục vụ |
+| /jobs/ | the Supervisor’s card: Take full ownership of our dining room and bar: the floor, the team, the budget and the guest experience on every shift. | — | Chịu trách nhiệm toàn diện phòng ăn và quầy bar: khu phục vụ, đội ngũ, ngân sách và trải nghiệm của khách trong mọi ca. |
+| /jobs/ | the Supervisor’s card, the Vietnamese title under the English one (English view only): Restaurant Supervisor | Giám sát nhà hàng (the Recently filled list) | Giám sát Nhà hàng |
+| /jobs/ | the Supervisor’s card: Base salary 16,000,000–20,000,000 VND gross a month | — | Lương cơ bản 16.000.000 – 20.000.000 VNĐ gross/tháng |
+| /jobs/ | the Supervisor’s card links, for screen readers only: Read the role: Restaurant Supervisor · Apply: Restaurant Supervisor | — | Xem mô tả công việc: Giám sát Nhà hàng (Restaurant Supervisor) · Ứng tuyển: Giám sát Nhà hàng (Restaurant Supervisor) |
+| /jobs/, role pages | the closed note: Applications for this round closed on Saturday 14 November. Thank you to everyone who applied. | Đợt tuyển dụng này đã đóng vào Chủ nhật 04/10/2026. Cảm ơn tất cả các bạn đã ứng tuyển. | Đợt tuyển dụng này đã đóng vào thứ Bảy 14/11/2026. Cảm ơn tất cả các bạn đã ứng tuyển. |
+| role pages | under the Apply buttons, at the top and the end: No email app? Send your CV to jobs@sol.pizza with the subject “Pizzaiolo — [Your name]”. (the role’s own address, and its name in English, as in the Apply email’s subject) | — | Không có ứng dụng email? Gửi CV tới jobs@sol.pizza với tiêu đề “Pizzaiolo — [Tên của bạn]”. |
+| role pages | the button on that line, before and after a click: Copy address · Copied | — | Sao chép địa chỉ · Đã sao chép |
+| role pages | meta description, the end: Applications close 14 November 2026. (was: … Sunday 4 October 2026.) | Hạn nộp 04/10/2026. | Hạn nộp 14/11/2026. |
+| role pages | share card, the end (Vietnamese only) | Hạn nộp 04/10/2026. | Hạn nộp 14/11/2026. |
+| the six descriptions | fact: Applications close · Saturday 14 November 2026 (was: Sunday 4 October 2026) | Hạn nộp hồ sơ · Chủ nhật 04/10/2026 | Hạn nộp hồ sơ · Thứ Bảy 14/11/2026 |
+| the six descriptions | fact: Start · Late November 2026 — the exact date is in your offer letter (was: Monday 12 October 2026, or by Monday 19 October at the latest) | Ngày bắt đầu · Thứ Hai 12/10/2026, muộn nhất thứ Hai 19/10/2026 | Ngày bắt đầu · Cuối tháng 11/2026 — ngày chính xác được ghi trong thư mời nhận việc |
+| the six descriptions | Essential: Able to start in late November 2026. (was: Able to start by Monday 19 October 2026.) | Có thể bắt đầu muộn nhất từ thứ Hai, ngày 19 tháng 10 năm 2026. | Có thể bắt đầu đi làm từ cuối tháng 11/2026. |
+| the six descriptions | How to apply, first paragraph: Applications close Saturday 14 November 2026. We expect you to start in late November 2026. The restaurant is finishing its fit-out, so the exact date will be in your offer letter. Please don’t hand in your notice at your current job until you have it. (was: Applications close Sunday 4 October 2026. Start Monday 12 October 2026, or as soon as your notice allows and by Monday 19 October at the latest.) | Hạn chót nhận hồ sơ: Chủ nhật, ngày 4 tháng 10 năm 2026. Ngày bắt đầu làm việc: thứ Hai, ngày 12 tháng 10 năm 2026 (hoặc sớm nhất có thể tùy thời hạn báo nghỉ việc tại nơi làm việc hiện tại, nhưng muộn nhất là thứ Hai, ngày 19 tháng 10). | Hạn chót nhận hồ sơ: thứ Bảy, ngày 14 tháng 11 năm 2026. Dự kiến bạn sẽ bắt đầu đi làm từ cuối tháng 11/2026. Nhà hàng đang hoàn thiện những hạng mục cuối, nên ngày bắt đầu chính xác sẽ được ghi trong thư mời nhận việc. Bạn chưa nên xin nghỉ ở nơi làm việc hiện tại cho đến khi nhận được thư mời. |
+| /jobs/pizzaiolo/ | The role in short: … under the Head Chef and the Sous Chef, who owns the dough programme. (was: … and, from 22 October, the Sous Chef, …) | … dưới sự điều hành của Bếp trưởng và, từ ngày 22/10, Bếp phó — người phụ trách chương trình bột. | … dưới sự điều hành của Bếp trưởng và Bếp phó — người phụ trách chương trình bột. |
+| /jobs/line-cook/ | The role in short: … under the Head Chef and the Sous Chef. (was: … and, from 22 October, the Sous Chef.) | … dưới sự điều hành của Bếp trưởng và, từ ngày 22/10, Bếp phó. | … dưới sự điều hành của Bếp trưởng và Bếp phó. |
+
+### The Restaurant Supervisor’s page
+
+Its page lines, then the description line by line (`build/jobs/restaurant-supervisor.md`). The job description is new in Vietnamese: until now the page was in English, with a line saying so.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /jobs/restaurant-supervisor/ | page title: Restaurant Supervisor — Sol, Tây Hồ | Giám sát nhà hàng — Sol, Tây Hồ | Giám sát Nhà hàng (Restaurant Supervisor) — Sol, Tây Hồ |
+| /jobs/restaurant-supervisor/ | meta description: Restaurant Supervisor at Sol, Tây Hồ, Hanoi. Base salary 16,000,000–20,000,000 VND a month, plus service charge and tips, est. 2,000,000–4,000,000 VND a month. Applications close 14 November 2026. (was: The Restaurant Supervisor role at Sol, Tây Hồ, Hanoi. This role has been filled.) | Mô tả công việc giám sát nhà hàng tại Sol, Tây Hồ, Hà Nội. Vị trí này đã tuyển xong. | Tuyển Giám sát Nhà hàng (Restaurant Supervisor) tại Sol, Tây Hồ, Hà Nội. Lương cơ bản 16–20 triệu + phí phục vụ ước tính 2–4 triệu/tháng. Hạn nộp 14/11/2026. |
+| /jobs/restaurant-supervisor/ | share card (Vietnamese only) | — | Tuyển Restaurant Supervisor — Sol, Tây Hồ · Lương cơ bản 16–20 triệu + phí phục vụ ước tính 2–4 triệu/tháng. Hạn nộp 14/11/2026. |
+| /jobs/restaurant-supervisor/ | the fact the build adds: Typical monthly total · 18,000,000 – 24,000,000 VND | — | Tổng thu nhập hằng tháng (ước tính) · 18.000.000 – 24.000.000 VNĐ |
+| /jobs/restaurant-supervisor/ | the Apply email’s question: A short note (100 words is plenty) on the best service you have ever led or received, and why. | — | Một đoạn ngắn (khoảng 100 từ) về ca phục vụ tốt nhất bạn từng dẫn dắt hoặc từng trải nghiệm, và vì sao. |
+| /jobs/restaurant-supervisor/ | title: Restaurant Supervisor | — | Giám sát Nhà hàng (Restaurant Supervisor) |
+| /jobs/restaurant-supervisor/ | Front of House · Full-time · Tây Hồ, Hanoi | — | Bộ phận phục vụ · Toàn thời gian · Tây Hồ, Hà Nội |
+| /jobs/restaurant-supervisor/ | fact: Reports to · General Director | — | Báo cáo cho · Giám đốc điều hành |
+| /jobs/restaurant-supervisor/ | fact: Base salary · 16,000,000 – 20,000,000 VND gross per month, set on experience | — | Lương cơ bản · 16.000.000 – 20.000.000 VNĐ gross/tháng, tùy kinh nghiệm |
+| /jobs/restaurant-supervisor/ | fact: Hours · Six shifts a week, 48 hours maximum, one rostered day off | — | Giờ làm · Sáu ca mỗi tuần, tối đa 48 giờ, một ngày nghỉ theo lịch |
+| /jobs/restaurant-supervisor/ | fact: Applications close · Saturday 14 November 2026 | — | Hạn nộp hồ sơ · Thứ Bảy 14/11/2026 |
+| /jobs/restaurant-supervisor/ | fact: Start · Late November 2026 — the exact date is in your offer letter | — | Ngày bắt đầu · Cuối tháng 11/2026 — ngày chính xác được ghi trong thư mời nhận việc |
+| /jobs/restaurant-supervisor/ | **Take full ownership of our dining room and bar — the floor, the team, the departmental budget and the guest experience on every shift.** | — | **Chịu trách nhiệm toàn diện phòng ăn và quầy bar — khu phục vụ, đội ngũ, ngân sách của bộ phận và trải nghiệm của khách trong mọi ca.** |
+| /jobs/restaurant-supervisor/ | heading: The role in short | — | Tóm tắt vị trí |
+| /jobs/restaurant-supervisor/ | You report directly to the General Director and work in close partnership with the Head Chef. You lead the floor every service and carry real commercial responsibility for it. Joining now means building the service standard for our new space from the ground up. | — | Bạn báo cáo trực tiếp cho Giám đốc điều hành và phối hợp chặt chẽ với Bếp trưởng. Bạn dẫn dắt khu phục vụ trong mọi ca và thực sự chịu trách nhiệm về kết quả kinh doanh của khu vực này. Gia nhập vào thời điểm này nghĩa là bạn xây dựng tiêu chuẩn phục vụ cho không gian mới của chúng tôi ngay từ đầu. |
+| /jobs/restaurant-supervisor/ | **Lead every service.** Table pacing, reservation flow and guest experience, with a strong floor presence at peak. | — | **Dẫn dắt mọi ca phục vụ.** Nhịp độ phục vụ tại bàn, luồng khách đặt bàn và trải nghiệm của khách, luôn có mặt trên sàn phục vụ vào giờ cao điểm. |
+| /jobs/restaurant-supervisor/ | **Run the room.** Senior manager on duty, open and close, banking, and private events. | — | **Điều hành nhà hàng.** Là quản lý cấp cao nhất trong ca, mở và đóng cửa, nộp tiền ngân hàng và phụ trách các tiệc riêng. |
+| /jobs/restaurant-supervisor/ | **Own the numbers.** Rosters and labour cost against the monthly target, daily POS closeouts, and front-of-house stock. | — | **Chịu trách nhiệm về các con số.** Lịch làm việc và chi phí nhân sự theo mục tiêu hằng tháng, chốt POS hằng ngày và hàng hóa của bộ phận phục vụ. |
+| /jobs/restaurant-supervisor/ | **Build the team.** Hire, onboard, write the SOPs, coach, and run quarterly reviews. | — | **Xây dựng đội ngũ.** Tuyển dụng, hướng dẫn nhân viên mới, viết SOP, kèm cặp và đánh giá định kỳ hằng quý. |
+| /jobs/restaurant-supervisor/ | **After 12 months we sponsor WSET Level 3 or the Certified Sommelier exam**, in exchange for a 2-year commitment. | — | **Sau 12 tháng, chúng tôi tài trợ khóa WSET Level 3 hoặc kỳ thi Certified Sommelier**, kèm cam kết làm việc 2 năm. |
+| /jobs/restaurant-supervisor/ | heading: Responsibilities | — | Trách nhiệm cụ thể |
+| /jobs/restaurant-supervisor/ | heading: Floor operations & shift leadership | — | Vận hành khu phục vụ và dẫn dắt ca |
+| /jobs/restaurant-supervisor/ | Lead daily service, managing table pacing, reservation flow and guest experience end to end. | — | Dẫn dắt ca phục vụ hằng ngày, quản lý nhịp độ phục vụ tại bàn, luồng khách đặt bàn và trải nghiệm của khách từ đầu đến cuối. |
+| /jobs/restaurant-supervisor/ | Run pre-shift briefings covering menu changes, specials, beverage pairings and shift targets. | — | Tổ chức họp đầu ca về các thay đổi trong thực đơn, món đặc biệt, gợi ý kết hợp đồ uống và mục tiêu của ca. |
+| /jobs/restaurant-supervisor/ | Manage seating, section assignments and guest flow using our POS and ResDiary. | — | Quản lý việc sắp xếp chỗ ngồi, phân công khu vực và luồng khách bằng hệ thống POS và ResDiary của nhà hàng. |
+| /jobs/restaurant-supervisor/ | Maintain a strong floor presence at peak, hosting, touching tables and supporting the bar. | — | Luôn có mặt trên sàn phục vụ vào giờ cao điểm: đón tiếp khách, ghé thăm các bàn và hỗ trợ quầy bar. |
+| /jobs/restaurant-supervisor/ | heading: Venue & duty management | — | Quản lý nhà hàng và trực ca |
+| /jobs/restaurant-supervisor/ | Act as the senior manager on duty in the General Director’s absence. | — | Là quản lý cấp cao nhất trong ca khi Giám đốc điều hành vắng mặt. |
+| /jobs/restaurant-supervisor/ | Open and close the venue: keys, alarms, cash office, float preparation and end-of-night banking. | — | Mở và đóng cửa nhà hàng: chìa khóa, báo động, phòng giữ tiền, chuẩn bị tiền lẻ đầu ca và nộp tiền cuối ngày. |
+| /jobs/restaurant-supervisor/ | Handle incidents and emergencies — guest injury, staff conflict, security, fire and first aid — and report every one. | — | Xử lý sự cố và tình huống khẩn cấp — khách bị thương, mâu thuẫn giữa nhân viên, an ninh, hỏa hoạn và sơ cứu — và báo cáo mọi trường hợp. |
+| /jobs/restaurant-supervisor/ | Coordinate reservations, private events and large bookings end to end. | — | Điều phối đặt bàn, tiệc riêng và các đặt bàn nhóm đông từ đầu đến cuối. |
+| /jobs/restaurant-supervisor/ | heading: Rostering, cost control & reporting | — | Xếp lịch, kiểm soát chi phí và báo cáo |
+| /jobs/restaurant-supervisor/ | Build and manage weekly rosters against sales forecasts, holding FOH labour cost against the monthly target. | — | Lập và quản lý lịch làm việc hằng tuần theo dự báo doanh thu, giữ chi phí nhân sự của bộ phận phục vụ theo mục tiêu hằng tháng. |
+| /jobs/restaurant-supervisor/ | Perform POS closeouts, till reconciliation, and discount, void and comp audits; submit end-of-day revenue reports. | — | Thực hiện chốt POS, đối soát két tiền, kiểm tra các khoản giảm giá, hủy món và miễn phí; nộp báo cáo doanh thu cuối ngày. |
+| /jobs/restaurant-supervisor/ | Manage front-of-house stock only — beverages, glassware, smallwares and operating supplies — and track breakage and waste. Kitchen ingredients are ordered by the kitchen. | — | Chỉ quản lý hàng hóa của bộ phận phục vụ — đồ uống, ly tách, dụng cụ nhỏ và vật tư vận hành — và theo dõi đổ vỡ, hao hụt. Nguyên liệu bếp do bộ phận bếp đặt. |
+| /jobs/restaurant-supervisor/ | Contribute to the monthly FOH budget and report departmental performance against it. | — | Tham gia xây dựng ngân sách hằng tháng của bộ phận phục vụ và báo cáo kết quả so với ngân sách đó. |
+| /jobs/restaurant-supervisor/ | heading: Kitchen partnership | — | Phối hợp với bếp |
+| /jobs/restaurant-supervisor/ | Coordinate with the Head Chef on ticket times, pass management and dining room pacing. | — | Phối hợp với Bếp trưởng về thời gian ra món, điều phối khu pass và nhịp độ phục vụ trong phòng ăn. |
+| /jobs/restaurant-supervisor/ | Train the FOH team on dishes, sourcing, dietary restrictions and allergen handling. | — | Đào tạo đội ngũ phục vụ về món ăn, nguồn nguyên liệu, các chế độ ăn kiêng và cách xử lý thông tin dị ứng. |
+| /jobs/restaurant-supervisor/ | Feed real-time guest feedback back to the kitchen. | — | Chuyển ngay phản hồi của khách cho bếp. |
+| /jobs/restaurant-supervisor/ | heading: Hiring, training & standards | — | Tuyển dụng, đào tạo và tiêu chuẩn |
+| /jobs/restaurant-supervisor/ | Interview, hire and onboard FOH team members with the General Director. | — | Cùng Giám đốc điều hành phỏng vấn, tuyển dụng và hướng dẫn nhân viên phục vụ mới. |
+| /jobs/restaurant-supervisor/ | Write, document and enforce SOPs for greeting, sequence of service, beverage presentation and upselling. | — | Viết, lưu trữ và đảm bảo thực hiện các SOP về chào đón khách, trình tự phục vụ, cách phục vụ đồ uống và gợi ý bán thêm. |
+| /jobs/restaurant-supervisor/ | Coach continuously, run quarterly performance reviews, and manage underperformance fairly and on the record. | — | Kèm cặp thường xuyên, đánh giá hiệu suất hằng quý, và xử lý các trường hợp chưa đạt yêu cầu một cách công bằng, có ghi nhận bằng văn bản. |
+| /jobs/restaurant-supervisor/ | heading: Guest relations & reputation | — | Quan hệ với khách và uy tín của nhà hàng |
+| /jobs/restaurant-supervisor/ | Act as the escalation point for guest complaints and service recovery. | — | Là đầu mối tiếp nhận khiếu nại của khách và khắc phục sự cố dịch vụ. |
+| /jobs/restaurant-supervisor/ | Monitor and respond to Google, TripAdvisor and social reviews. | — | Theo dõi và phản hồi các đánh giá trên Google, TripAdvisor và mạng xã hội. |
+| /jobs/restaurant-supervisor/ | Support marketing on the floor — promotions, content capture and guest follow-up. | — | Hỗ trợ marketing ngay tại nhà hàng — chương trình khuyến mãi, ghi hình nội dung và chăm sóc khách sau bữa ăn. |
+| /jobs/restaurant-supervisor/ | Ensure compliance with food safety standards and responsible alcohol service. | — | Đảm bảo tuân thủ tiêu chuẩn an toàn thực phẩm và phục vụ rượu bia có trách nhiệm. |
+| /jobs/restaurant-supervisor/ | heading: First 90 days | — | 90 ngày đầu tiên |
+| /jobs/restaurant-supervisor/ | **Days 1–30.** Learn the menu, wine and cocktail list to service standard. Work every FOH position. | — | **Ngày 1–30.** Nắm vững thực đơn, danh sách vang và cocktail theo tiêu chuẩn phục vụ. Làm qua mọi vị trí của bộ phận phục vụ. |
+| /jobs/restaurant-supervisor/ | **Days 31–60.** Own the roster, the daily closeout and the open/close routine. Document the sequence of service. | — | **Ngày 31–60.** Phụ trách lịch làm việc, việc chốt sổ hằng ngày và quy trình mở, đóng cửa. Viết thành văn bản trình tự phục vụ. |
+| /jobs/restaurant-supervisor/ | **Days 61–90.** Hold labour cost against the monthly target for a full month and have a written FOH SOP pack in use. | — | **Ngày 61–90.** Giữ chi phí nhân sự theo mục tiêu hằng tháng trong trọn một tháng và đưa bộ SOP bằng văn bản của bộ phận phục vụ vào sử dụng. |
+| /jobs/restaurant-supervisor/ | heading: How we measure | — | Tiêu chí đánh giá |
+| /jobs/restaurant-supervisor/ | FOH labour cost against the monthly target | — | Chi phí nhân sự của bộ phận phục vụ so với mục tiêu hằng tháng |
+| /jobs/restaurant-supervisor/ | Average spend per guest and beverage attachment rate | — | Mức chi tiêu trung bình mỗi khách và tỷ lệ khách gọi kèm đồ uống |
+| /jobs/restaurant-supervisor/ | Google and TripAdvisor rating and review volume | — | Điểm đánh giá và số lượng đánh giá trên Google và TripAdvisor |
+| /jobs/restaurant-supervisor/ | Covers per service and table turn time | — | Số khách mỗi ca và thời gian xoay vòng bàn |
+| /jobs/restaurant-supervisor/ | FOH team retention and training completion | — | Tỷ lệ giữ chân nhân viên bộ phận phục vụ và mức độ hoàn thành đào tạo |
+| /jobs/restaurant-supervisor/ | Stock variance on beverage and breakage | — | Chênh lệch tồn kho đồ uống và tỷ lệ đổ vỡ |
+| /jobs/restaurant-supervisor/ | heading: Essential | — | Yêu cầu bắt buộc |
+| /jobs/restaurant-supervisor/ | 3+ years of progressive front-of-house leadership (Supervisor, Floor Captain, Assistant Manager or Shift Lead) in a high-volume restaurant, wine bar or casual fine-dining venue. | — | Có từ 3 năm kinh nghiệm trở lên ở các vị trí quản lý tiền sảnh với trách nhiệm tăng dần (Giám sát, Floor Captain, Trợ lý Quản lý hoặc Trưởng ca) tại nhà hàng đông khách, wine bar hoặc nhà hàng casual fine-dining. |
+| /jobs/restaurant-supervisor/ | Proven commercial experience: rostering, labour cost control, inventory and shift reconciliation. | — | Có kinh nghiệm thực tế về mặt kinh doanh: xếp lịch làm việc, kiểm soát chi phí nhân sự, quản lý hàng tồn kho và đối soát ca. |
+| /jobs/restaurant-supervisor/ | Comfortable being the most senior person in the building — able to make decisions, handle incidents and close the venue. | — | Tự tin khi là người phụ trách cao nhất tại nhà hàng — có thể tự ra quyết định, xử lý sự cố và đóng cửa nhà hàng. |
+| /jobs/restaurant-supervisor/ | Fluent Vietnamese and professional working English — comfortable hosting international guests. | — | Thành thạo tiếng Việt và sử dụng tốt tiếng Anh trong công việc — tự tin tiếp đón khách quốc tế. |
+| /jobs/restaurant-supervisor/ | Confident with POS and reservation systems, and with Excel or Google Sheets. | — | Sử dụng thành thạo hệ thống POS và hệ thống đặt bàn, cùng Excel hoặc Google Sheets. |
+| /jobs/restaurant-supervisor/ | Available for split shifts, evenings, weekends and public holidays, including Tết trading. | — | Sẵn sàng làm ca gãy, buổi tối, cuối tuần và ngày lễ, bao gồm cả dịp Tết. |
+| /jobs/restaurant-supervisor/ | heading: Nice to have | — | Ưu tiên |
+| /jobs/restaurant-supervisor/ | Wine, cocktail or barista knowledge — WSET Level 2 or equivalent. | — | Có kiến thức về vang, cocktail hoặc pha chế cà phê — WSET Level 2 hoặc tương đương. |
+| /jobs/restaurant-supervisor/ | Experience opening or relaunching a venue. | — | Có kinh nghiệm khai trương hoặc tái khởi động một nhà hàng. |
+| /jobs/restaurant-supervisor/ | Experience managing a venue’s social media or review channels. | — | Có kinh nghiệm quản lý mạng xã hội hoặc các kênh đánh giá của nhà hàng. |
+| /jobs/restaurant-supervisor/ | heading: Pay and benefits | — | Lương và phúc lợi |
+| /jobs/restaurant-supervisor/ | heading: Pay | — | Mức lương |
+| /jobs/restaurant-supervisor/ | **Base salary:** 16,000,000 – 20,000,000 VND gross per month, set on experience. | — | **Lương cơ bản:** 16.000.000 – 20.000.000 VNĐ gross/tháng, tùy kinh nghiệm. |
+| /jobs/restaurant-supervisor/ | **Service charge & tips:** 2,000,000 – 4,000,000 VND per month from the venue’s 5% service charge and FOH tip pool, paid quarterly, starting once we open. | — | **Phí phục vụ & tip:** 2.000.000 – 4.000.000 VNĐ/tháng (từ 5% phí phục vụ của nhà hàng và quỹ tip của bộ phận phục vụ), chi trả theo quý, bắt đầu khi nhà hàng mở cửa. |
+| /jobs/restaurant-supervisor/ | **Typical monthly total:** 18,000,000 – 24,000,000 VND once the estimated service charge share is included, before the quarterly bonus. | — | **Tổng thu nhập hằng tháng (ước tính):** 18.000.000 – 24.000.000 VNĐ (đã bao gồm phần phí phục vụ dự kiến, chưa gồm thưởng quý). |
+| /jobs/restaurant-supervisor/ | **Performance bonus:** quarterly KPI bonus of up to 10% of quarterly base salary. | — | **Thưởng hiệu suất:** thưởng KPI theo quý, tối đa 10% lương quý. |
+| /jobs/restaurant-supervisor/ | 13-month bonus according to company KPIs. | — | Thưởng tháng 13 dựa theo chỉ số KPI của công ty. |
+| /jobs/restaurant-supervisor/ | Annual salary review based on performance. | — | Xét tăng lương hằng năm dựa trên hiệu suất làm việc. |
+| /jobs/restaurant-supervisor/ | **Probation:** 30 days at 85% of base salary. | — | **Thử việc:** 30 ngày, hưởng 85% lương cơ bản. |
+| /jobs/restaurant-supervisor/ | heading: Benefits | — | Phúc lợi |
+| /jobs/restaurant-supervisor/ | Full employer contribution to compulsory Social, Health and Unemployment Insurance (BHXH, BHYT, BHTN) from the start of your labour contract. | — | Công ty đóng đầy đủ phần của người sử dụng lao động cho BHXH, BHYT, BHTN bắt buộc kể từ khi hợp đồng lao động bắt đầu. |
+| /jobs/restaurant-supervisor/ | 12 days paid annual leave a year, plus 1 additional day per 3 years of service, subject to company policy. | — | 12 ngày phép năm có lương, cộng 1 ngày cho mỗi 3 năm làm việc (theo chính sách công ty). |
+| /jobs/restaurant-supervisor/ | 11 paid public holidays a year including Tết. Holiday work is paid at statutory premium rates. | — | 11 ngày nghỉ lễ, Tết có hưởng lương trong năm. Làm việc vào ngày lễ được trả lương theo mức quy định của pháp luật. |
+| /jobs/restaurant-supervisor/ | Overtime paid in accordance with Vietnamese labour law and company policy. | — | Lương làm thêm giờ được chi trả theo quy định của Bộ luật Lao động và chính sách công ty. |
+| /jobs/restaurant-supervisor/ | A staff meal cooked by our kitchen before dinner service. | — | Bữa ăn nhân viên do bếp chuẩn bị trước giờ phục vụ bữa tối. |
+| /jobs/restaurant-supervisor/ | Sol T-shirts and a branded half apron provided. Our dress code is black; the T-shirt is not required to start. | — | Được cấp áo phông Sol và tạp dề ngang (half-apron) có logo thương hiệu. Quy định trang phục là màu đen; không bắt buộc mặc áo phông Sol ngay khi mới bắt đầu. |
+| /jobs/restaurant-supervisor/ | Staff dining discount across Sol and ASU House Bakery. | — | Giảm giá nhân viên khi dùng bữa tại Sol và ASU House Bakery. |
+| /jobs/restaurant-supervisor/ | **Funded qualification:** after 12 months of service, Sol will sponsor WSET Level 3 or the Certified Sommelier examination, in exchange for a 2-year service commitment from the date of sponsorship. | — | **Tài trợ chứng chỉ:** sau 12 tháng làm việc, Sol tài trợ khóa WSET Level 3 hoặc kỳ thi Certified Sommelier, kèm cam kết làm việc 2 năm kể từ thời điểm được tài trợ. |
+| /jobs/restaurant-supervisor/ | heading: Schedule | — | Lịch làm việc |
+| /jobs/restaurant-supervisor/ | Six shifts a week, 48 hours maximum, one rostered day off. Split shifts, evenings, weekends and public holidays including Tết trading. | — | Sáu ca mỗi tuần, tối đa 48 giờ, một ngày nghỉ theo lịch phân công. Làm ca gãy (chia ca), buổi tối, cuối tuần và ngày lễ, bao gồm cả dịp Tết. |
+| /jobs/restaurant-supervisor/ | heading: How to apply | — | Cách thức ứng tuyển |
+| /jobs/restaurant-supervisor/ | Applications close Saturday 14 November 2026. We expect you to start in late November 2026. The restaurant is finishing its fit-out, so the exact date will be in your offer letter. Please don’t hand in your notice at your current job until you have it. | — | Hạn chót nhận hồ sơ: thứ Bảy, ngày 14 tháng 11 năm 2026. Dự kiến bạn sẽ bắt đầu đi làm từ cuối tháng 11/2026. Nhà hàng đang hoàn thiện những hạng mục cuối, nên ngày bắt đầu chính xác sẽ được ghi trong thư mời nhận việc. Bạn chưa nên xin nghỉ ở nơi làm việc hiện tại cho đến khi nhận được thư mời. |
+| /jobs/restaurant-supervisor/ | Send to careers@sol.pizza with the subject line “Restaurant Supervisor — [Your name]”: | — | Vui lòng gửi hồ sơ đến careers@sol.pizza với tiêu đề “Restaurant Supervisor — [Tên của bạn]”, bao gồm: |
+| /jobs/restaurant-supervisor/ | Your CV. | — | Sơ yếu lý lịch (CV) của bạn. |
+| /jobs/restaurant-supervisor/ | A short note (100 words is plenty) on the best service you have ever led or received, and why. | — | Một đoạn ngắn (khoảng 100 từ) về ca phục vụ tốt nhất bạn từng dẫn dắt hoặc từng trải nghiệm, và vì sao. |
+| /jobs/restaurant-supervisor/ | heading: Our process | — | Quy trình tuyển dụng |
+| /jobs/restaurant-supervisor/ | Application review within 5 working days → 30-minute conversation → paid trial shift → offer. We reply to every applicant. | — | Xét duyệt hồ sơ trong vòng 5 ngày làm việc → Trao đổi 30 phút → Buổi làm thử (trial shift) có trả lương → Đưa ra đề nghị tuyển dụng. Chúng tôi phản hồi tất cả các ứng viên. |
+
+No longer on the site:
+
+- `/jobs/`: “Giám sát nhà hàng · Tháng 9 năm 2026” under “Vừa tuyển xong”.
+- `/vi/jobs/restaurant-supervisor`: the old page, with “Vị trí này đã tuyển xong. Cảm ơn tất cả các bạn đã ứng tuyển.” and “Bản mô tả công việc này chỉ có bằng tiếng Anh.” Both lines stay on the two other filled roles. The address without the slash now leads to the new page.
+
+Questions for Linh:
+
+1. **“Giám đốc điều hành”** for General Director: the applicant privacy notice already calls that person this. Is it the title you want on the job description?
+2. **“Quản lý khu phục vụ”**, the new group on `/jobs/`, sits right above “Bộ phận phục vụ”. Do the two read clearly next to each other?
+3. **The words left in English** in the Supervisor’s description: POS, SOP, KPI, wine bar, casual fine-dining, Floor Captain, trial shift. Are they how the trade says it here?
+
 ## Online booking: the ResDiary widget, 4 Nov 2026
 
 The booking form is on `/booking/` and `/vi/booking/`, in a frame from ResDiary. There’s one widget, in English, so the form itself stays in English on the Vietnamese page for now; its words are ResDiary’s, not in this file. The lines marked “(once online booking is live)” in the 13 Oct sections below are live now too: the phone bar’s Gọi, “Không đặt được qua biểu mẫu?” under the form, and the page’s description. The opening-week form (Giữ bàn cho tôi trong tuần khai trương) comes off `/booking/`. These are the lines that weren’t in this file yet. Where a line changed, the old English is in brackets.
