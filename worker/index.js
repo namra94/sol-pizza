@@ -1,23 +1,26 @@
 /* sol.pizza — the Worker in front of the static site.
-   Everything else is the files in dist/ (build/gen.py), served by Cloudflare as
-   they are. wrangler.jsonc runs this first only for the kitchen (/dough/*), the
-   back office (/backoffice/*) and /api/*, and it
+   The site is the files in dist/ (build/gen.py). wrangler.jsonc runs this first for
+   every address but the careers pages and what they need, which Cloudflare serves
+   as they are, so nothing here can get in their way. It
      - keeps /dough/ (the dough calculator, the dough log) behind the kitchen
        password, the secret DOUGH_PASSWORD (README-DEPLOY.md, "The kitchen");
      - keeps the dough log in D1 (the DOUGH_DB binding) and serves it as JSON for
        the pages and as a CSV to download;
      - keeps /backoffice/ behind the staff password, the secret BACKOFFICE_PASSWORD,
        and sends its purchase requests to Slack (worker/backoffice.js;
-       README-DEPLOY.md, "The back office: purchase requests").
-   The kitchen and the back office are the two sections below (KITCHEN, OFFICE),
-   each with its own password, cookie, pages and API, so one password never opens
-   the other. Signed in = the section's cookie (sol_dough, sol_office): an expiry
-   and an HMAC of it keyed with that password, so changing a password signs every
-   phone out of its section. With no password set (a Preview, unless it's given
-   one), a section stays locked and says so; with no database the calculator works
-   but the log says it isn't set up, and the back office says the same.
-   Anything else that reaches the Worker (an address with no file) goes back to
-   the static site, which shows the 404 page. */
+       README-DEPLOY.md, "The back office: purchase requests");
+     - keeps the main site behind the site password while the secret SITE_PASSWORD
+       is set (README-DEPLOY.md, "The site password").
+   These are the sections below (KITCHEN, OFFICE, SITE), each with its own password,
+   cookie, pages and API, so one password never opens another. Signed in = the
+   section's cookie (sol_dough, sol_office, sol_site): an expiry and an HMAC of it
+   keyed with that password, so changing a password signs every phone out of its
+   section. With no password set (a Preview, unless it's given one), the kitchen and
+   the back office stay locked and say so, and the main site is simply open: that
+   password is its switch. With no database the calculator works but the log says it
+   isn't set up, and the back office says the same.
+   Anything else that reaches the Worker goes to the static site, which shows the
+   page or the 404 page. */
 
 import * as backoffice from './backoffice.js';
 
@@ -50,6 +53,14 @@ const OFFICE = {
   next: /^\/backoffice\/[\w\-./?=&%]*$/,
   redirects: SECURITY,                   // the security headers go on its redirects too
 };
+// The main site, in each language: one password and one cookie, a sign-in page each
+const SITE = {
+  password: 'SITE_PASSWORD', cookie: 'sol_site', key: 'sol-site', failures: 'site_login_failures',
+  home: '/', login: '/login/', api: '/api/site/',
+  next: /^\/(?!\/|api\/)[\w\-./?=&%]*$/,  // any page of this site, never //another.site or the API
+  redirects: SECURITY,
+};
+const SITE_VI = { ...SITE, home: '/vi/', login: '/vi/login/', api: '/api/site-vi/' };
 
 export default {
   async fetch(request, env) {
@@ -59,7 +70,7 @@ export default {
       if (path.startsWith('/api/')) return await api(request, env, url);
       if (path === '/dough' || path.startsWith('/dough/')) return await pages(KITCHEN, request, env, url);
       if (path === '/backoffice' || path.startsWith('/backoffice/')) return await pages(OFFICE, request, env, url);
-      return withHeaders(await env.ASSETS.fetch(request), SECURITY);
+      return await mainSite(request, env, url);
     } catch (err) {
       console.error(err);
       return json({ error: 'server' }, 500);
@@ -136,10 +147,23 @@ function loginUrl(s, next, flag) {
 }
 
 /* The sections' pages -------------------------------------------------------- */
+function isLogin(s, path) {
+  return [s.login.slice(0, -1), s.login, s.login + 'index.html'].includes(path);
+}
+
+// Behind the password while SITE_PASSWORD is set. Without it the site is open, as it
+// was before there was a password, and its sign-in page has nothing to do.
+async function mainSite(request, env, url) {
+  const s = /^\/vi(\/|$)/.test(url.pathname) ? SITE_VI : SITE;
+  if (env[s.password]) return pages(s, request, env, url);
+  if (isLogin(s, url.pathname)) return redirect(s.home, s.redirects);
+  return withHeaders(await env.ASSETS.fetch(request), SECURITY);
+}
+
 async function pages(s, request, env, url) {
   const path = url.pathname;
   const next = safeNext(s, url.searchParams.get('next'));
-  if ([s.login.slice(0, -1), s.login, s.login + 'index.html'].includes(path)) {
+  if (isLogin(s, path)) {
     if (await signedIn(s, request, env)) return redirect(next, s.redirects);
     const flag = !env[s.password] ? 'off' : ['wrong', 'wait'].find((f) => url.searchParams.has(f));
     let rewriter = new HTMLRewriter().on('input[name="next"]', {
@@ -158,10 +182,11 @@ async function pages(s, request, env, url) {
 async function api(request, env, url) {
   const path = url.pathname;
   const method = request.method;
-  const s = [KITCHEN, OFFICE].find((x) => path.startsWith(x.api));
+  const s = [KITCHEN, OFFICE, SITE, SITE_VI].find((x) => path.startsWith(x.api));
   if (!s) return json({ error: 'not found' }, 404);
   if (path === s.api + 'login') return login(s, request, env);
   if (path === s.api + 'logout') return redirect(s.login, { ...s.redirects, 'Set-Cookie': cookie(s, '', 0) });
+  if (s.cookie === SITE.cookie) return json({ error: 'not found' }, 404);    // the main site has no API of its own
   if (!(await signedIn(s, request, env))) return json({ error: 'signed out' }, 401);
   // Changes come from the section's own pages only
   const origin = request.headers.get('Origin');
@@ -249,9 +274,16 @@ const SCHEMA = [
   'CREATE TABLE IF NOT EXISTS dough_login_failures (ip TEXT NOT NULL, at INTEGER NOT NULL)',
   'CREATE INDEX IF NOT EXISTS dough_login_failures_ip ON dough_login_failures (ip, at)',
 ];
+const SITE_SCHEMA = [
+  'CREATE TABLE IF NOT EXISTS site_login_failures (ip TEXT NOT NULL, at INTEGER NOT NULL)',
+  'CREATE INDEX IF NOT EXISTS site_login_failures_ip ON site_login_failures (ip, at)',
+];
 const ready = new Map();                // each section's tables, once they're made
 
-function tables(s) { return s === OFFICE ? backoffice.SCHEMA : SCHEMA; }
+function tables(s) {
+  if (s === OFFICE) return backoffice.SCHEMA;
+  return s.cookie === SITE.cookie ? SITE_SCHEMA : SCHEMA;
+}
 
 async function database(env, schema) {
   if (!ready.has(schema)) {

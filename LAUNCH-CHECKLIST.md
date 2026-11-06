@@ -284,6 +284,12 @@ age check. The site isn't an e-commerce platform: booking a table needs no notif
 
 ---
 
+## When the site is ready
+
+If the site password is on, turn it off (`README-DEPLOY.md`, "The site password"):
+`npx wrangler secret delete SITE_PASSWORD`. Until then guests can't see the menu, the
+hours or the booking page, and search engines are told to leave those pages out.
+
 ## Opening day
 
 1. [ ] In `build/gen.py`, set `SITE_STATE = 'open'` (and `OPENING_DATE`, if it isn't set

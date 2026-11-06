@@ -7,6 +7,23 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## The site password: the sign-in page, 6 Nov 2026
+
+A new page at `/login/` and `/vi/login/`, seen only while the site password is on: everyone without the password lands there, from every page but careers. Every line is new, though the two warnings are the back office’s and the button is the footer’s.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /login/ | page title: Sign in — Sol | — | Đăng nhập — Sol |
+| /login/ | meta description: Our new site is still being finished. Our careers pages are open to everyone. | — | Trang web mới của chúng tôi vẫn đang được hoàn thiện. Các trang tuyển dụng mở cho tất cả mọi người. |
+| /login/ | heading: We’re still working on this site. | — | Chúng tôi vẫn đang hoàn thiện trang web này. |
+| /login/ | Until it’s ready, it’s open only to people with the password. | — | Trong thời gian này, trang chỉ mở cho những người có mật khẩu. |
+| /login/ | the form: Password · Enter | — | Mật khẩu · Vào trang |
+| /login/ | a wrong password: That isn’t the password. Try again. | — | Mật khẩu chưa đúng. Hãy thử lại. |
+| /login/ | too many tries: Too many tries. Wait 15 minutes, then try again. | — | Bạn đã thử quá nhiều lần. Hãy đợi 15 phút rồi thử lại. |
+| /login/ | You stay signed in on this device for 30 days. | — | Bạn sẽ được giữ đăng nhập trên thiết bị này trong 30 ngày. |
+| /login/ | Looking for a job at Sol? Our careers pages are open to everyone. | — | Bạn đang tìm việc tại Sol? Các trang tuyển dụng của chúng tôi mở cho tất cả mọi người. |
+| /login/ | the button: Work with us | — | Tuyển dụng |
+
 ## Online booking: the ResDiary widget, 4 Nov 2026
 
 The booking form is on `/booking/` and `/vi/booking/`, in a frame from ResDiary. There’s one widget, in English, so the form itself stays in English on the Vietnamese page for now; its words are ResDiary’s, not in this file. The lines marked “(once online booking is live)” in the 13 Oct sections below are live now too: the phone bar’s Gọi, “Không đặt được qua biểu mẫu?” under the form, and the page’s description. The opening-week form (Giữ bàn cho tôi trong tuần khai trương) comes off `/booking/`. These are the lines that weren’t in this file yet. Where a line changed, the old English is in brackets.

@@ -114,12 +114,46 @@ temporary site, home and jobs only, with About, Menu and Booking sent to `/`
 with a 302. Versions from before the split serve the whole site as it was then,
 without the new home tagline.
 
+## The site password
+
+While the secret `SITE_PASSWORD` is set on the `sol-pizza` Worker, every page but the
+careers pages asks for it (`README.md`, "The site password"). The secret is the switch.
+
+To turn it on, or to change the password, from this folder:
+
+```
+npx wrangler secret put SITE_PASSWORD     # type the password when asked
+```
+
+It takes effect at once, with no build. Changing it signs everyone out. After 10 wrong
+tries from one address, signing in from it waits 15 minutes.
+
+To turn it off and open the whole site again:
+
+```
+npx wrangler secret delete SITE_PASSWORD
+```
+
+That also takes effect at once. The sign-in page then goes to the home page. Every page
+but careers keeps running the Worker until `run_worker_first` in `wrangler.jsonc` is put
+back to `["/dough", "/dough/*", "/backoffice", "/backoffice/*", "/api/*"]`, which is
+harmless but worth doing once we're done.
+
+Previews have no such secret, so they stay open. To try it on one, give that Preview its
+own password: `npx wrangler preview secret put SITE_PASSWORD --name <branch>`. On your own
+machine, set it in `.dev.vars` and run `npx wrangler dev`; to clear a local lockout:
+`npx wrangler d1 execute sol-dough --local --command "DELETE FROM site_login_failures"`.
+
+While it's on, search engines get a redirect to a `noindex` page for everything behind
+it, so those pages start to drop out of Google, and they come back some time after it's
+off. The careers pages stay in search as they were.
+
 ## The kitchen: password and dough log
 
 `/dough/` (the dough calculator and the dough log) is behind the kitchen
 password, and the log is kept in a D1 database. Both live in the Cloudflare
-account, not the repo: the Worker's own code (`worker/index.js`, which runs only
-for `/dough/*`, `/backoffice/*` and `/api/*`) reads the password from the secret `DOUGH_PASSWORD`
+account, not the repo: the Worker's own code (`worker/index.js`, which runs first
+for every address but the careers pages) reads the password from the secret `DOUGH_PASSWORD`
 and the log from the binding `DOUGH_DB` (`wrangler.jsonc`). Without the
 password, `/dough/` says signing in isn't set up and lets no one in.
 
