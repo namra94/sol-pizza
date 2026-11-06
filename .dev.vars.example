@@ -9,3 +9,6 @@ BACKOFFICE_PASSWORD=local-office-test
 # real site. SLACK_WEBHOOK_URL stays out of this file: README-DEPLOY.md, "The back
 # office: purchase requests".
 BACKOFFICE_DRY_RUN=1
+# The site password: while it's set, everything but the careers pages asks for it
+# (README-DEPLOY.md, "The site password"). Off here, so the site opens as it is.
+# SITE_PASSWORD=local-site-test

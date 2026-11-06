@@ -907,9 +907,9 @@ def head(rec, lang):
         '<link rel="stylesheet" href="/assets/tokens.css">',
         '<link rel="stylesheet" href="/assets/printed-menu.css">',
         '<link rel="stylesheet" href="/assets/site.css">',
-    ] + (['<style>%s</style>' % ANN_STYLE] if ANN_STYLE else []) + [
-        '<script src="/assets/site.js" defer></script>',
-    ] + ['<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' % f for f in FONT_PRELOADS[lang]]
+    ] + (['<style>%s</style>' % ANN_STYLE] if ANN_STYLE else []) + (
+        [] if rec['bare'] else ['<script src="/assets/site.js" defer></script>']
+    ) + ['<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' % f for f in FONT_PRELOADS[lang]]
     if rec['index']:
         lines += ['<link rel="canonical" href="%s">' % url]
         lines += ['<link rel="alternate" hreflang="%s" href="%s%s">' % (code, SITE, lang_path(path, code))
@@ -1249,16 +1249,17 @@ PAGES = []      # every page this build makes, in order: what page() and kitchen
 
 
 def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website', extra='', body_attrs='',
-         index=True, verbatim=False, og_text=None, bar=True, switch=None, news=True):
+         index=True, verbatim=False, og_text=None, bar=True, switch=None, news=True, bare=False):
     """A guest page, written in English at path and in Vietnamese at /vi/path. title and
     desc are (English, Vietnamese) pairs; og_text, when the share card's words differ from
     them: ((English title, description), (Vietnamese title, description)).
     og: the share card's name in build/og/ ('home', …) or a full URL. bar: the phone bar.
     news: the newsletter sign-up in the footer (the home page has it in the page).
     switch: where EN · VI lead, if not to this page in each language (the 404 page).
-    verbatim: leave main's text exactly as it is (the privacy notice). A page that isn't
-    public yet (HIDDEN) is built but not written, so a mistake in it still stops the
-    public build."""
+    verbatim: leave main's text exactly as it is (the privacy notice).
+    bare: main alone, with no header, footer, cookie banner or site.js, so no analytics
+    (the site password's sign-in page). A page that isn't public yet (HIDDEN) is built
+    but not written, so a mistake in it still stops the public build."""
     en_href, vi_href = switch or (lang_path(path, 'en'), lang_path(path, 'vi'))
     if path in WAITING:         # a whole page waiting for its content: labelled in the full build
         key, what = WAITING[path]
@@ -1267,11 +1268,13 @@ def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website
             main = re.sub(r'(<main\b[^>]*>)', lambda m: m.group(1) + (
                 '<div class="wrap"><p class="gated-label gated-page">%s <code>%s</code>: %s</p></div>'
                 % (t('Content needed', 'Cần nội dung'), key, esc(what))), main, count=1)
-    body = '<body class="%s%s"%s>\n%s\n' % (body_class, ' has-actionbar' if bar else '', body_attrs, SUN_SPRITE)
-    body += nbsp('<a class="skip" href="#main">%s</a>\n' % t('Skip to content', 'Chuyển đến nội dung chính')
-                 + consent_banner() + announcement_bars() + header(cur, en_href, vi_href))
+    body = '<body class="%s%s"%s>\n%s\n' % (body_class, ' has-actionbar' if bar and not bare else '', body_attrs, SUN_SPRITE)
+    if not bare:
+        body += nbsp('<a class="skip" href="#main">%s</a>\n' % t('Skip to content', 'Chuyển đến nội dung chính')
+                     + consent_banner() + announcement_bars() + header(cur, en_href, vi_href))
     body += main if verbatim else nbsp(main)
-    body += nbsp(footer(news) + (actionbar() if bar else ''))
+    if not bare:
+        body += nbsp(footer(news) + (actionbar() if bar else ''))
     bad = re.search(r'="[^"<>]*<span data-l=', body)
     if bad:
         raise SystemExit('%s: t() inside an attribute (use label(), or one element per language): …%s…'
@@ -1282,7 +1285,7 @@ def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website
     # extra: <head> lines, as a string, a function of the language, or a list of either
     extra = extra if isinstance(extra, list) else [extra]
     rec = dict(path=path, kitchen=False, title=title, desc=desc, og=og, ogtype=ogtype, extra=extra,
-               index=index, og_text=og_text, body=body, hidden=hidden(path))
+               index=index, og_text=og_text, body=body, hidden=hidden(path), bare=bare)
     PAGES.append(rec)
     return rec
 
@@ -3203,6 +3206,53 @@ def build_role(r):
 
 
 # ==========================================================================
+# THE SITE PASSWORD  /login/   /vi/login/
+# While the secret SITE_PASSWORD is set, the Worker sends everyone who hasn't signed in
+# here, from every page but careers (wrangler.jsonc; README-DEPLOY.md, "The site
+# password"). Without it this page is never seen: the Worker sends it to the home page.
+# ==========================================================================
+def build_site_login():
+    """The password, and the way to the careers pages. The Worker shows the line for a
+    wrong password or too many tries (data-if, unhidden by the Worker) and fills in where
+    to go next. One form per language: each signs in through its own address, so a wrong
+    password comes back to the page in the same language."""
+    def warn(key, text):
+        return '<p class="gate-warn" data-if="%s" role="alert" hidden>%s</p>' % (key, text)
+
+    def form(lang, api, home, password, enter):
+        return ('<form class="gate-form" data-l="%s" lang="%s" method="post" action="%slogin">'
+                '<input type="hidden" name="next" value="%s">'
+                '<div class="field"><label for="site-password">%s</label>'
+                '<input id="site-password" name="password" type="password" autocomplete="current-password" required></div>'
+                '%s%s<div class="actions"><button class="btn btn-red" type="submit">%s</button></div></form>'
+                % (lang, lang, api, home, password,
+                   warn('wrong', t('That isn’t the password. Try again.', 'Mật khẩu chưa đúng. Hãy thử lại.')),
+                   warn('wait', t('Too many tries. Wait 15 minutes, then try again.',
+                                  'Bạn đã thử quá nhiều lần. Hãy đợi 15 phút rồi thử lại.')),
+                   enter))
+
+    main = ('<main id="main" class="wrap gate">\n%s\n<div class="gate-logo">%s</div>\n'
+            '<header class="page-title"><h1>%s</h1><p class="page-lead">%s</p></header>\n%s\n%s\n'
+            '<p class="gate-note">%s</p>\n'
+            '<div class="gate-careers"><p>%s</p><a class="btn btn-outline" href="/jobs/">%s</a></div>\n</main>\n') % (
+        lang_switch('/login/', '/vi/login/'), logo(170, 60),
+        t('We’re still working on this site.', 'Chúng tôi vẫn đang hoàn thiện trang web này.'),
+        t('Until it’s ready, it’s open only to people with the password.',
+          'Trong thời gian này, trang chỉ mở cho những người có mật khẩu.'),
+        form('en', '/api/site/', '/', 'Password', 'Enter'),
+        form('vi', '/api/site-vi/', '/vi/', 'Mật khẩu', 'Vào trang'),
+        t('You stay signed in on this device for 30 days.', 'Bạn sẽ được giữ đăng nhập trên thiết bị này trong 30 ngày.'),
+        t('Looking for a job at Sol? Our careers pages are open to everyone.',
+          'Bạn đang tìm việc tại Sol? Các trang tuyển dụng của chúng tôi mở cho tất cả mọi người.'),
+        JOBS_TAB)
+    return page('/login/', 'page-gate', ('Sign in — Sol', 'Đăng nhập — Sol'),
+                ('Our new site is still being finished. Our careers pages are open to everyone.',
+                 'Trang web mới của chúng tôi vẫn đang được hoàn thiện. Các trang tuyển dụng mở cho tất cả mọi người.'),
+                main, index=False, extra='<meta name="robots" content="noindex, nofollow">',
+                body_attrs=' data-page="gate"', bar=False, bare=True)
+
+
+# ==========================================================================
 # PRIVACY  /privacy/   (src/privacy/index.html, text untouched)
 # ==========================================================================
 def build_privacy():
@@ -5119,7 +5169,7 @@ if __name__ == '__main__':
         build_event(e)
     for fn in (build_home, build_about, build_food, build_wine, build_bar, build_events, build_private_dining,
                build_visit, build_booking, build_gift_cards, build_press, build_guest_privacy, build_accessibility,
-               build_jobs, build_privacy, build_cookies, build_styleguide, build_dough, build_dough_log,
+               build_jobs, build_site_login, build_privacy, build_cookies, build_styleguide, build_dough, build_dough_log,
                build_dough_login, build_office_home, build_office_login, build_purchase, build_purchase_list,
                build_404):
         fn()

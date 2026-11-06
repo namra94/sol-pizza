@@ -17,6 +17,23 @@ The booking form is on `/booking/` and `/vi/booking/`, in a frame from ResDiary.
 | /booking/ | the form’s frame, its title for screen readers: Book a table at Sol | — | Đặt bàn tại Sol |
 | /accessibility/ | full previews only, under Booking: The booking form comes from ResDiary, inside our page. If it gives you any trouble, call us on +84 866 161 600 or write to hello@sol.pizza, and we’ll book for you. (was: To book, call us on +84 866 161 600 or write to hello@sol.pizza, and we’ll look after the rest.) | Để đặt bàn, hãy gọi +84 866 161 600 hoặc viết cho chúng tôi qua hello@sol.pizza, chúng tôi sẽ lo phần còn lại. | Biểu mẫu đặt bàn là của ResDiary, nằm trong trang của chúng tôi. Nếu bạn gặp khó khăn, hãy gọi +84 866 161 600 hoặc viết cho chúng tôi qua hello@sol.pizza, chúng tôi sẽ đặt bàn giúp bạn. |
 
+## The site password: the sign-in page, 6 Nov 2026
+
+A new page at `/login/` and `/vi/login/`, seen only while the site password is on: everyone without the password lands there, from every page but careers. Every line is new, though the two warnings are the back office’s and the button is the footer’s.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /login/ | page title: Sign in — Sol | — | Đăng nhập — Sol |
+| /login/ | meta description: Our new site is still being finished. Our careers pages are open to everyone. | — | Trang web mới của chúng tôi vẫn đang được hoàn thiện. Các trang tuyển dụng mở cho tất cả mọi người. |
+| /login/ | heading: We’re still working on this site. | — | Chúng tôi vẫn đang hoàn thiện trang web này. |
+| /login/ | Until it’s ready, it’s open only to people with the password. | — | Trong thời gian này, trang chỉ mở cho những người có mật khẩu. |
+| /login/ | the form: Password · Enter | — | Mật khẩu · Vào trang |
+| /login/ | a wrong password: That isn’t the password. Try again. | — | Mật khẩu chưa đúng. Hãy thử lại. |
+| /login/ | too many tries: Too many tries. Wait 15 minutes, then try again. | — | Bạn đã thử quá nhiều lần. Hãy đợi 15 phút rồi thử lại. |
+| /login/ | You stay signed in on this device for 30 days. | — | Bạn sẽ được giữ đăng nhập trên thiết bị này trong 30 ngày. |
+| /login/ | Looking for a job at Sol? Our careers pages are open to everyone. | — | Bạn đang tìm việc tại Sol? Các trang tuyển dụng của chúng tôi mở cho tất cả mọi người. |
+| /login/ | the button: Work with us | — | Tuyển dụng |
+
 ## The back office: item requests, 31 Oct 2026
 
 Staff now ask for items only: the purchase request has no supplier, brand, price or estimate any more, as management chooses the supplier and the brand when they order. These are the back office’s new and changed lines. The 29 Oct section below keeps the lines that stay as they were; the ones that went (the supplier, the Order Guide, prices, the estimate, Arman’s ✅) are gone from it. Where a line changed, the old English is in brackets.
