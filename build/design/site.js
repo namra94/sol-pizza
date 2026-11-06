@@ -298,8 +298,8 @@
   function send(name, params) {
     if (consent.analytics && window.gtag) window.gtag('event', name, params);
     var m = META[name];
-    // A click on the jobs inbox is pixel.js's Lead already
-    if (consent.ads && window.fbq && m && params.address !== 'jobs@sol.pizza') {
+    // A click on an applications inbox is pixel.js's Lead already
+    if (consent.ads && window.fbq && m && !/^(jobs|careers)@sol\.pizza$/.test(params.address)) {
       var data = {};
       [m[2] || {}, params].forEach(function (o) { for (var k in o) data[k] = o[k]; });
       window.fbq(m[0], m[1], data);

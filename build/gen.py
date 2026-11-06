@@ -2666,8 +2666,8 @@ def build_visit():
 
 # ==========================================================================
 # WORK WITH US  /jobs/
-# The opening team (build/jobs-data.json): a card each on /jobs/, grouped Front
-# of house / Kitchen, and a page each at /jobs/<slug>/ in both languages, its
+# The opening team (build/jobs-data.json): a card each on /jobs/, grouped by its
+# sections, and a page each at /jobs/<slug>/ in both languages, its
 # job description word for word from build/jobs/<slug>.md. The round's closing
 # instant is in the data once; after it, the cards and pages say the round has
 # closed and hide their Apply buttons (ROUND_SCRIPT).
@@ -2681,13 +2681,11 @@ ROLES = [
     dict(slug='sous-chef', src='sous-chef.html',
          name_en='Sous Chef', name_vi='Bếp phó',
          status='filled', filled_en='September 2026', filled_vi='Tháng 9 năm 2026'),
-    dict(slug='restaurant-supervisor', src='restaurant-supervisor.html',
-         name_en='Restaurant Supervisor', name_vi='Giám sát nhà hàng',
-         status='filled', filled_en='September 2026', filled_vi='Tháng 9 năm 2026'),
 ]
 
 # Promises nothing the opening-team job descriptions don't (checked 24 Sep 2026):
-# the service charge starts once we open, and WSET funding is in none of them.
+# the service charge starts once we open. WSET funding is the Restaurant Supervisor's
+# alone (8 Nov 2026), so it isn't here: this list is "in any role".
 BENEFITS = [
     ('A share of the 5% service charge and the tip pool for floor and kitchen roles, paid quarterly, '
      'starting once we open.',
@@ -2720,9 +2718,39 @@ CLOSES = datetime.fromisoformat(ROUND['closes'])       # Hanoi time, with its of
 # Built after the closing instant: the pages are closed as built (<html class="round-closed">,
 # no Apply buttons), not only once ROUND_SCRIPT runs
 ROUND_OVER = datetime.now().astimezone() >= CLOSES
-STARTS = date.fromisoformat(ROUND['starts'])
 SERVICE = ROUND['service_charge']
 
+
+def round_start(rnd):
+    """When the round's hires start, as ((English, Vietnamese) at the head of a description's
+    Start row, (English, Vietnamese) on the cards). "starts" is a plain date; or, while the
+    date isn't fixed, any "starts" ("2026-11") with "starts_label" and "starts_label_vi",
+    and then only the label ever shows: no exact date is printed anywhere."""
+    en, vi = rnd.get('starts_label'), rnd.get('starts_label_vi')
+    if en and vi:
+        return (en, vi), (en[0].lower() + en[1:], vi[0].lower() + vi[1:])
+    if en or vi:
+        raise SystemExit('build/jobs-data.json: starts_label and starts_label_vi go together')
+    try:
+        d = date.fromisoformat(rnd['starts'])
+    except ValueError:
+        raise SystemExit('build/jobs-data.json: starts "%s" is not a plain date (2026-10-12), and there '
+                         'is no starts_label' % rnd['starts'])
+    return ('%s %d' % (en_date(d), d.year), vi_date(d, True)), (en_date(d, True), vi_date(d))
+
+
+START_ROW, START_CARD = round_start(ROUND)
+
+
+def role_email(r):
+    """Where a role's applications go: its own address if it has one, else the jobs inbox."""
+    return r.get('email') or JOBS_EMAIL
+
+
+def apply_subject(r):
+    """The start of an application's subject line: English in both languages, as the inbox
+    is sorted by it."""
+    return '%s — ' % r['name_en']
 
 
 def vnd(n, sep):
@@ -2826,19 +2854,22 @@ def read_jd(slug):
 def check_jd(r):
     """The ads quote these numbers and dates: stop if a job description has drifted from
     build/jobs-data.json. Checked where they show: the facts table's base salary,
-    openings, closing and start dates, and every salary band anywhere in the text
-    (each must be the base, the service charge estimate or the total).
+    openings, closing date and start (its row begins with the round's start, the label if
+    there is one), every salary band anywhere in the text (each must be the base, the
+    service charge estimate or the total), and every email address (the role's own).
     JOBS_ALLOW_DATE_DRIFT=1 lets the dates differ, to try the closed state."""
     total = [b + s for b, s in zip(r['base'], SERVICE)]
     texts = read(os.path.join(HERE, 'jobs', r['slug'] + '.md')).split('\n# ', 1)
     openings = str(r['openings']) if r['openings'] else None
     problems, dates = [], []
-    for lang, jd, text, band, cur, keys in (
+    for lang, jd, text, band, cur, keys, start in (
             ('English', r['jd'][0], texts[0], band_en, 'VND',
-             ('Base salary', 'Openings', 'Applications close', 'Start')),
+             ('Base salary', 'Openings', 'Applications close', 'Start'), START_ROW[0]),
             ('Vietnamese', r['jd'][1], texts[1], band_vi, 'VNĐ',
-             ('Lương cơ bản', 'Số lượng tuyển', 'Hạn nộp hồ sơ', 'Ngày bắt đầu'))):
+             ('Lương cơ bản', 'Số lượng tuyển', 'Hạn nộp hồ sơ', 'Ngày bắt đầu'), START_ROW[1])):
         facts = dict(jd['facts'])
+        problems += ['%s: "%s", but this role\'s applications go to %s' % (lang, m, role_email(r))
+                     for m in re.findall(r'[\w.+-]+@\w[\w-]*(?:\.\w[\w-]*)+', text) if m != role_email(r)]
         bands = ['%s %s' % (band(x), cur) for x in (r['base'], SERVICE, total)]
         if not facts.get(keys[0], '').startswith(bands[0]):
             problems.append('%s facts: base salary "%s", data says %s' % (lang, facts.get(keys[0]), bands[0]))
@@ -2847,10 +2878,7 @@ def check_jd(r):
         problems += ['%s: no "%s"' % (lang, b) for b in bands if b not in text]
         if facts.get(keys[1]) != openings:
             problems.append('%s facts: openings %s, data says %s' % (lang, facts.get(keys[1]), openings))
-        if lang == 'English':
-            close, start = '%s %d' % (en_date(CLOSES), CLOSES.year), '%s %d' % (en_date(STARTS), STARTS.year)
-        else:
-            close, start = vi_date(CLOSES, True), vi_date(STARTS, True)
+        close = '%s %d' % (en_date(CLOSES), CLOSES.year) if lang == 'English' else vi_date(CLOSES, True)
         if facts.get(keys[2], '').lower() != close.lower():
             dates.append('%s facts: closes "%s", data says %s' % (lang, facts.get(keys[2]), close))
         if not facts.get(keys[3], '').lower().startswith(start.lower()):
@@ -2880,9 +2908,9 @@ ROUND_SCRIPT = ("<script>try{if(Date.now()>Date.parse('%s'))"
                 "document.documentElement.classList.add('round-closed')}catch(e){}</script>" % ROUND['closes'])
 
 # After the page: the Apply links' subject and body, built with encodeURIComponent
-# in the page's language and rebuilt when EN / VI switches it (once the round has
-# closed, the job description's own jobs@sol.pizza link is a plain address); and on
-# phones, the Apply bar while the Apply button at the top is scrolled past and the
+# in the page's language and rebuilt when EN / VI switches it, each to its role's address
+# (once the round has closed, the job description's own address link is a plain address);
+# and on phones, the Apply bar while the Apply button at the top is scrolled past and the
 # one at the end not yet reached. The observers' margins stretch the viewport far
 # down (top) and far up (end), so a jump to a #link or the footer can't skip a change.
 APPLY_SCRIPT = """<script>
@@ -2891,9 +2919,10 @@ APPLY_SCRIPT = """<script>
   function build() {
     var lang = root.lang === 'vi' ? 'vi' : 'en', closed = root.classList.contains('round-closed');
     for (var i = 0; i < links.length; i++) {
-      var a = links[i], body = a.getAttribute('data-body-' + lang).replace(/\\r?\\n/g, '\\r\\n');
-      a.href = closed && !a.classList.contains('apply-btn') ? 'mailto:%(email)s' :
-               'mailto:%(email)s?subject=' + encodeURIComponent(a.getAttribute('data-subject')) +
+      var a = links[i], to = 'mailto:' + a.getAttribute('data-email'),
+          body = a.getAttribute('data-body-' + lang).replace(/\\r?\\n/g, '\\r\\n');
+      a.href = closed && !a.classList.contains('apply-btn') ? to :
+               to + '?subject=' + encodeURIComponent(a.getAttribute('data-subject')) +
                '&body=' + encodeURIComponent(body);
     }
   }
@@ -2909,12 +2938,53 @@ APPLY_SCRIPT = """<script>
   new IntersectionObserver(function (e) { reached = e[e.length - 1].isIntersecting; show(); },
                            {rootMargin: '100000px 0px 0px 0px'}).observe(end);
 })();
-</script>""" % dict(email=JOBS_EMAIL)
+</script>"""
+
+# The Copy button of the "No email app?" line (no_email_line()): the address goes on the
+# clipboard. If the browser refuses, the address is selected instead, to copy by hand.
+COPY_SCRIPT = """<script>
+(function () {
+  function copyOld(text) {
+    var ta = document.createElement('textarea'), ok = false;
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { ok = document.execCommand('copy'); } catch (e) { /* not allowed */ }
+    document.body.removeChild(ta);
+    return ok;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-copy]'), function (b) {
+    var text = b.getAttribute('data-copy'), idle = b.querySelector('[data-copy-idle]'),
+        done = b.querySelector('[data-copy-done]'), timer;
+    function copied() {
+      idle.hidden = true;
+      done.hidden = false;
+      clearTimeout(timer);
+      timer = setTimeout(function () { idle.hidden = false; done.hidden = true; }, 2500);
+    }
+    function instead() {
+      var ok = copyOld(text);
+      b.focus();
+      if (ok) { copied(); return; }
+      var range = document.createRange(), sel = window.getSelection();
+      range.selectNodeContents(b.parentNode.querySelector('.no-email-address'));
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    b.addEventListener('click', function () {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(copied, instead);
+      else instead();
+    });
+  });
+})();
+</script>"""
 
 
 def apply_attrs(r):
     """href (English, for no JS) plus what APPLY_SCRIPT needs to build it in either language."""
-    subject = '%s — ' % r['name_en']              # English in both languages: the inbox is sorted by it
+    email, subject = role_email(r), apply_subject(r)
 
     def body(q, labels, cv):
         name, phone, answer = labels
@@ -2923,18 +2993,18 @@ def apply_attrs(r):
     en = body(r['question'], ('Name:', 'Phone / Zalo:', 'My answer:'), r.get('cv_line') or ROUND['cv_line'])
     vi = body(r['question_vi'], ('Họ tên:', 'Số điện thoại / Zalo:', 'Câu trả lời của bạn:'),
               r.get('cv_line_vi') or ROUND['cv_line_vi'])
-    href = 'mailto:%s?subject=%s&amp;body=%s' % (JOBS_EMAIL, encode_uri_component(subject),
+    href = 'mailto:%s?subject=%s&amp;body=%s' % (email, encode_uri_component(subject),
                                                  encode_uri_component(en.replace('\n', '\r\n')))
 
     def attr(s):
         return _html.escape(s, quote=True).replace('\n', '&#10;')
 
-    return 'href="%s" data-apply data-subject="%s" data-body-en="%s" data-body-vi="%s"' % (
-        href, attr(subject), attr(en), attr(vi))
+    return 'href="%s" data-apply data-email="%s" data-subject="%s" data-body-en="%s" data-body-vi="%s"' % (
+        href, attr(email), attr(subject), attr(en), attr(vi))
 
 
 def named(en, vi, r):
-    """A link label with the role's name for screen readers: six cards share the same labels."""
+    """A link label with the role's name for screen readers: the cards share the same labels."""
     hidden = '<span class="visually-hidden">: %s</span>'
     return t(en + hidden % esc(r['name_en']), vi + hidden % esc(r['name_vi']))
 
@@ -2945,6 +3015,22 @@ def apply_button(r, cls='btn btn-red', label=None):
     if ROUND_OVER:
         return ''
     return '<a class="%s apply-btn" %s>%s</a>' % (cls, apply_attrs(r), label or t('Apply', 'Ứng tuyển'))
+
+
+def no_email_line(r):
+    """Under a role page's Apply buttons, for a computer with no email app, where mailto: links
+    do nothing: the role's address as text, the subject its Apply button uses, and a button
+    to copy the address (it needs JS: site.css, COPY_SCRIPT). It goes with the Apply buttons
+    when the round closes (site.css; a build after that leaves it out)."""
+    if ROUND_OVER:
+        return ''
+    address, subject = '<span class="no-email-address">%s</span>' % esc(role_email(r)), esc(apply_subject(r))
+    return ('<p class="no-email">%s <button type="button" class="no-email-copy" data-copy="%s">'
+            '<span aria-live="polite"><span data-copy-idle>%s</span><span data-copy-done hidden>%s</span></span>'
+            '</button></p>'
+            % (t('No email app? Send your CV to %s with the subject “%s[Your name]”.' % (address, subject),
+                 'Không có ứng dụng email? Gửi CV tới %s với tiêu đề “%s[Tên của bạn]”.' % (address, subject)),
+               esc_attr(role_email(r)), t('Copy address', 'Sao chép địa chỉ'), t('Copied', 'Đã sao chép')))
 
 
 def closed_text():
@@ -2964,8 +3050,8 @@ def role_card(r):
             % (band_vi_cut(r['base'], 'VNĐ'), band_vi_cut(SERVICE, 'VNĐ/tháng')))
     nowrap = '<span class="nowrap">%s</span>'
     dates = t('%s · %s' % (nowrap % ('Applications close ' + en_date(CLOSES, True)),
-                           nowrap % ('Start ' + en_date(STARTS, True))),
-              '%s · %s' % (nowrap % ('Hạn nộp: ' + vi_date(CLOSES)), nowrap % ('Bắt đầu: ' + vi_date(STARTS))))
+                           nowrap % ('Start ' + START_CARD[0])),
+              '%s · %s' % (nowrap % ('Hạn nộp: ' + vi_date(CLOSES)), nowrap % ('Bắt đầu: ' + START_CARD[1])))
     return ('<article class="role" id="role-%s">%s<h4>%s</h4><p class="role-vi" data-l="en" lang="vi">%s</p>'
             '<p>%s</p><p class="role-pay">%s</p><p class="role-dates">%s</p><p class="round-note">%s</p>'
             '<div class="role-links"><a class="link-sc" href="%s">%s</a>%s</div></article>'
@@ -3028,12 +3114,12 @@ def build_jobs():
         sun5=sun(5), h_ben=t('What you get, in any role', 'Quyền lợi, dù bạn ở vị trí nào'),
         benefits=''.join('<li>%s%s</li>' % (sun(i + 1), t(en, vi)) for i, (en, vi) in enumerate(BENEFITS)),
         h_apply=t('How to apply', 'Cách ứng tuyển'),
-        apply=t('Email your CV to jobs@sol.pizza with the role in the subject line. We read every '
-                'application within 5 working days and reply to everyone, including the people we '
-                'can’t take forward.',
-                'Gửi CV tới jobs@sol.pizza với tên vị trí ở dòng tiêu đề. Chúng tôi đọc mọi hồ sơ trong '
-                'vòng 5 ngày làm việc và trả lời tất cả ứng viên, kể cả những bạn chúng tôi chưa thể '
-                'mời vào vòng tiếp theo.'),
+        apply=t('Email your CV to jobs@sol.pizza with the role in the subject line. For the Restaurant '
+                'Supervisor, email careers@sol.pizza instead. We read every application within 5 working '
+                'days and reply to everyone, including the people we can’t take forward.',
+                'Gửi CV tới jobs@sol.pizza với tên vị trí ở dòng tiêu đề. Riêng vị trí Giám sát Nhà hàng, '
+                'vui lòng gửi tới careers@sol.pizza. Chúng tôi đọc mọi hồ sơ trong vòng 5 ngày làm việc và '
+                'trả lời tất cả ứng viên, kể cả những bạn chúng tôi chưa thể mời vào vòng tiếp theo.'),
         email_jobs=t('Email jobs@sol.pizza', 'Gửi email tới jobs@sol.pizza'),
         script=APPLY_SCRIPT,
     )
@@ -3043,10 +3129,10 @@ def build_jobs():
           % (en_date(CLOSES), CLOSES.year),
           'Làm việc cùng Sol tại Tây Hồ, Hà Nội. Đợt tuyển đội ngũ khai trương đã đóng vào %s.'
           % vi_date(CLOSES, True)) if closed else
-         ('We’re hiring a Host and our opening team for the floor and the kitchen. Every application '
-          'gets a reply.',
-          'Chúng tôi đang tuyển Lễ tân (Host) và đội ngũ khai trương cho khu phục vụ và bếp. Mọi hồ '
-          'sơ đều được phản hồi.'),
+         ('We’re hiring a Restaurant Supervisor and our opening team for the floor and the kitchen. '
+          'Every application gets a reply.',
+          'Chúng tôi đang tuyển Giám sát Nhà hàng và đội ngũ khai trương cho khu phục vụ và bếp. Mọi '
+          'hồ sơ đều được phản hồi.'),
          main, cur='jobs', og='jobs', extra=ROUND_SCRIPT, body_attrs=' data-page="index"')
     for r in OPEN_ROLES:
         build_open_role(r)
@@ -3066,8 +3152,8 @@ def build_open_role(r):
     }
 
     def mail_link(text, href):
-        # The job description's jobs@sol.pizza: the same prefilled email as the Apply buttons
-        if href == 'mailto:' + JOBS_EMAIL:
+        # The job description's own address: the same prefilled email as the Apply buttons
+        if href == 'mailto:' + role_email(r):
             return '<a %s>%s</a>' % (apply_attrs(r), text)
         return '<a href="%s">%s</a>' % (esc(href), text)
 
@@ -3095,13 +3181,13 @@ def build_open_role(r):
     main = ('<main id="main" class="wrap">\n'
             '<aside class="note-box round-note"><p>%s</p></aside>\n'
             '<header class="page-title"><p class="eyebrow">%s</p><h1>%s</h1>'
-            '<div class="actions" data-apply-top>%s</div></header>\n'
+            '<div class="actions" data-apply-top>%s</div>%s</header>\n'
             '%s\n%s\n'
-            '<div class="actions role-end" data-apply-end>%s<a class="btn btn-outline" href="/jobs/">%s</a></div>\n'
+            '<div class="actions role-end" data-apply-end>%s<a class="btn btn-outline" href="/jobs/">%s</a></div>%s\n'
             '<div class="apply-bar">%s</div>\n%s\n</main>\n'
             % (closed_text(), t(esc(en['eyebrow']), esc(vi['eyebrow'])), t(esc(r['name_en']), esc(r['name_vi'])),
-               apply_button(r), '\n'.join(facts), '\n'.join(prose), apply_button(r),
-               SEE_ROLES, apply_button(r), APPLY_SCRIPT))
+               apply_button(r), no_email_line(r), '\n'.join(facts), '\n'.join(prose), apply_button(r),
+               SEE_ROLES, no_email_line(r), apply_button(r), APPLY_SCRIPT + '\n' + COPY_SCRIPT))
 
     # Search and sharing. The share card is in Vietnamese: the ads bring Vietnamese speakers.
     posting = {
@@ -3134,8 +3220,9 @@ def build_open_role(r):
     og_desc = 'Lương cơ bản %s + phí phục vụ ước tính %s/tháng. Hạn nộp %s.' % (
         trieu(r['base']), trieu(SERVICE), vi_date(CLOSES, True).split(' ')[-1])
     desc_en = ('%s at Sol, Tây Hồ, Hanoi. Base salary %s VND a month, plus service charge and tips, est. '
-               '%s VND a month. Applications close %s %d.'
-               % (r['name_en'], band_en(r['base'], '–'), band_en(SERVICE, '–'), en_date(CLOSES), CLOSES.year))
+               '%s VND a month. Applications close %d %s %d.'     # no weekday: it would cut the longest (fit)
+               % (r['name_en'], band_en(r['base'], '–'), band_en(SERVICE, '–'),
+                  CLOSES.day, EN_MONTHS[CLOSES.month - 1], CLOSES.year))
     desc_vi = 'Tuyển %s tại Sol, Tây Hồ, Hà Nội. %s' % (r['name_vi'], og_desc)
     page(open_role_path(r), 'page-role',
          (esc_attr('%s — Sol, Tây Hồ' % r['name_en']), esc_attr('%s — Sol, Tây Hồ' % r['name_vi'])),

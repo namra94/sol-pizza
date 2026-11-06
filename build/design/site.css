@@ -155,7 +155,8 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
 .filled a:hover { color: var(--sol-red); }
 
 /* ------------------------------------------------------------------ opening team
-   /jobs/: a card per role, grouped Front of house / Kitchen, three to a row.
+   /jobs/: a card per role, grouped Leading the floor / Front of house / Kitchen, three
+   to a row (a group of one sits in the middle, under its label).
    /jobs/<slug>/: the role pages, with an Apply button under the title, another
    at the end, and on phones a slim Apply bar while neither is on screen.
    After the round closes, <html class="round-closed"> (a head script, or the build
@@ -173,6 +174,7 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
 @media (min-width: 901px) {
   /* minmax(0, …): the cards share the width evenly, whatever the longest line in them */
   .role-list-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .role-list-3 .role:only-child { grid-column: 2; }
   .role-list-3 .role { display: flex; flex-direction: column; }
   .role-list-3 .role-links { margin-top: auto; padding-top: 22px; }
 }
@@ -183,7 +185,7 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
 .round-note { display: none; }
 .round-closed .round-note { display: block; }
 .role p.round-note { color: var(--sol-red); }
-.round-closed .apply-btn, .round-closed .apply-bar { display: none !important; }
+.round-closed .apply-btn, .round-closed .apply-bar, .round-closed .no-email { display: none !important; }
 /* A role page: the Apply bar while the round is open, the phone bar (Book) after it closes
    (and without JS, which the Apply bar needs) */
 html.js:not(.round-closed) body[data-page="role"] .actionbar { display: none; }
@@ -192,6 +194,19 @@ html.js:not(.round-closed) body[data-page="role"] .actionbar { display: none; }
 .page-role .role-facts dd { text-wrap: balance; }
 .page-role .role-end { margin-top: 48px; }
 .apply-bar { display: none; }
+/* "No email app?" under a role page's Apply buttons: the address to send to, and a button
+   to copy it, which needs JS */
+.no-email { max-width: 560px; margin: 14px auto 0; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-muted); text-align: center; }
+.no-email-copy {
+  display: none;
+  min-height: 24px;
+  color: var(--sol-red);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.no-email-copy:hover { color: var(--wood); }
+html.js .no-email-copy { display: inline-block; }
 
 @media (max-width: 760.98px) {
   .prose h2 { margin-top: 40px; }

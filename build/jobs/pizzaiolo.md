@@ -8,14 +8,14 @@ Kitchen · Full-time · Tây Hồ, Hanoi
 | **Openings** | 2 |
 | **Base salary** | 11,000,000 – 14,000,000 VND gross per month, set on experience |
 | **Hours** | Six shifts a week, 48 hours maximum, one rostered day off |
-| **Applications close** | Sunday 4 October 2026 |
-| **Start** | Monday 12 October 2026, or by Monday 19 October at the latest |
+| **Applications close** | Saturday 14 November 2026 |
+| **Start** | Late November 2026 — the exact date is in your offer letter |
 
 **Run the oven and the pizza station at Sol: every dough ball stretched by hand, every pizza baked to spec, from heating the oven in the afternoon to the last pizza of the night.**
 
 ## The role in short
 
-Pizza is the heart of Sol, and you are the person who puts it on the plate. You work the pizza station and our Pavesi oven under the Head Chef and, from 22 October, the Sous Chef, who owns the dough programme. We are hiring two of you, so the oven is covered every night we trade. Joining now means joining before we open: you are on the line for the first test bakes, the pre-opening nights and training week, and the way we stretch, top and bake is set with you rather than handed to you.
+Pizza is the heart of Sol, and you are the person who puts it on the plate. You work the pizza station and our Pavesi oven under the Head Chef and the Sous Chef, who owns the dough programme. We are hiring two of you, so the oven is covered every night we trade. Joining now means joining before we open: you are on the line for the first test bakes, the pre-opening nights and training week, and the way we stretch, top and bake is set with you rather than handed to you.
 
 - **Run the oven.** Bring it up to heat every afternoon, hold it through service, shut it down and clean it at night, with the temperature log filled in every shift.
 - **Stretch and bake to spec.** Every pizza the same size, weight and colour as the spec sheet, from the first ticket to the last.
@@ -86,7 +86,7 @@ Pizza is the heart of Sol, and you are the person who puts it on the plate. You 
 - Food-safety habits without being told: temperatures, labels and dates, clean as you go, allergens.
 - Willing to complete the food-handler health check and food-safety training we arrange before you start on the line.
 - Available for evenings, weekends and public holidays including Tết trading, six shifts a week.
-- Able to start by Monday 19 October 2026.
+- Able to start in late November 2026.
 
 ## Nice to have
 
@@ -121,7 +121,7 @@ Six shifts a week, 48 hours maximum, one rostered day off. We trade in the eveni
 
 ## How to apply
 
-Applications close Sunday 4 October 2026. Start Monday 12 October 2026, or as soon as your notice allows and by Monday 19 October at the latest.
+Applications close Saturday 14 November 2026. We expect you to start in late November 2026. The restaurant is finishing its fit-out, so the exact date will be in your offer letter. Please don’t hand in your notice at your current job until you have it.
 
 Send to [jobs@sol.pizza](mailto:jobs@sol.pizza) with the subject line “Pizzaiolo — [Your name]”:
 
@@ -142,14 +142,14 @@ Bếp · Toàn thời gian · Tây Hồ, Hà Nội
 | **Số lượng tuyển** | 2 |
 | **Lương cơ bản** | 11.000.000 – 14.000.000 VNĐ gross/tháng, tùy kinh nghiệm |
 | **Giờ làm** | Sáu ca mỗi tuần, tối đa 48 giờ, một ngày nghỉ theo lịch |
-| **Hạn nộp hồ sơ** | Chủ nhật 04/10/2026 |
-| **Ngày bắt đầu** | Thứ Hai 12/10/2026, muộn nhất thứ Hai 19/10/2026 |
+| **Hạn nộp hồ sơ** | Thứ Bảy 14/11/2026 |
+| **Ngày bắt đầu** | Cuối tháng 11/2026 — ngày chính xác được ghi trong thư mời nhận việc |
 
 **Phụ trách lò nướng và trạm pizza của Sol: từng viên bột được kéo bằng tay, từng chiếc pizza được nướng đúng tiêu chuẩn — từ lúc làm nóng lò buổi chiều đến chiếc pizza cuối cùng của buổi tối.**
 
 ## Tóm tắt vị trí
 
-Pizza là trái tim của Sol, và bạn là người đưa pizza lên đĩa. Bạn làm việc tại trạm pizza và lò Pavesi dưới sự điều hành của Bếp trưởng và, từ ngày 22/10, Bếp phó — người phụ trách chương trình bột. Chúng tôi tuyển hai người để lò luôn có người đứng vào mọi buổi tối nhà hàng hoạt động. Gia nhập lúc này nghĩa là bạn tham gia trước khi nhà hàng khai trương: bạn có mặt từ những mẻ nướng thử đầu tiên, các buổi tối chạy thử và tuần đào tạo, và cách chúng tôi kéo bột, rắc nhân và nướng bánh sẽ được xây dựng cùng bạn thay vì chỉ giao lại cho bạn.
+Pizza là trái tim của Sol, và bạn là người đưa pizza lên đĩa. Bạn làm việc tại trạm pizza và lò Pavesi dưới sự điều hành của Bếp trưởng và Bếp phó — người phụ trách chương trình bột. Chúng tôi tuyển hai người để lò luôn có người đứng vào mọi buổi tối nhà hàng hoạt động. Gia nhập lúc này nghĩa là bạn tham gia trước khi nhà hàng khai trương: bạn có mặt từ những mẻ nướng thử đầu tiên, các buổi tối chạy thử và tuần đào tạo, và cách chúng tôi kéo bột, rắc nhân và nướng bánh sẽ được xây dựng cùng bạn thay vì chỉ giao lại cho bạn.
 
 - **Vận hành lò.** Làm nóng lò mỗi buổi chiều, giữ nhiệt suốt ca, tắt và vệ sinh lò cuối tối, ghi nhật ký nhiệt độ mỗi ca.
 - **Kéo bột và nướng đúng tiêu chuẩn.** Mọi chiếc pizza đều đúng kích thước, trọng lượng và độ vàng như bảng tiêu chuẩn, từ order đầu tiên đến order cuối cùng.
@@ -220,7 +220,7 @@ Pizza là trái tim của Sol, và bạn là người đưa pizza lên đĩa. B�
 - Có thói quen an toàn thực phẩm mà không cần nhắc: nhiệt độ, nhãn và hạn dùng, dọn dẹp liên tục, chất gây dị ứng.
 - Sẵn sàng khám sức khỏe cho người chế biến thực phẩm và tham gia tập huấn an toàn thực phẩm do chúng tôi sắp xếp trước khi vào làm.
 - Sẵn sàng làm việc buổi tối, cuối tuần và ngày lễ (bao gồm cả dịp Tết), 6 ca mỗi tuần.
-- Có thể bắt đầu muộn nhất từ thứ Hai, ngày 19 tháng 10 năm 2026.
+- Có thể bắt đầu đi làm từ cuối tháng 11/2026.
 
 ## Ưu tiên
 
@@ -255,7 +255,7 @@ Sáu ca mỗi tuần, tối đa 48 giờ, một ngày nghỉ theo lịch phân c
 
 ## Cách thức ứng tuyển
 
-Hạn chót nhận hồ sơ: Chủ nhật, ngày 4 tháng 10 năm 2026. Ngày bắt đầu làm việc: thứ Hai, ngày 12 tháng 10 năm 2026 (hoặc sớm nhất có thể tùy thời hạn báo nghỉ việc tại nơi làm việc hiện tại, nhưng muộn nhất là thứ Hai, ngày 19 tháng 10).
+Hạn chót nhận hồ sơ: thứ Bảy, ngày 14 tháng 11 năm 2026. Dự kiến bạn sẽ bắt đầu đi làm từ cuối tháng 11/2026. Nhà hàng đang hoàn thiện những hạng mục cuối, nên ngày bắt đầu chính xác sẽ được ghi trong thư mời nhận việc. Bạn chưa nên xin nghỉ ở nơi làm việc hiện tại cho đến khi nhận được thư mời.
 
 Vui lòng gửi hồ sơ đến [jobs@sol.pizza](mailto:jobs@sol.pizza) với tiêu đề “Pizzaiolo — [Tên của bạn]”, bao gồm:
 

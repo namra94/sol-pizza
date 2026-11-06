@@ -7,8 +7,8 @@ Front of House · Full-time · Tây Hồ, Hanoi
 | **Reports to** | Restaurant Supervisor |
 | **Base salary** | 9,000,000 – 10,000,000 VND gross per month, set on experience |
 | **Hours** | Six shifts a week, 48 hours maximum, one rostered day off |
-| **Applications close** | Sunday 4 October 2026 |
-| **Start** | Monday 12 October 2026, or by Monday 19 October at the latest |
+| **Applications close** | Saturday 14 November 2026 |
+| **Start** | Late November 2026 — the exact date is in your offer letter |
 
 **Own the door, the phone and the inbox at Sol: every booking, message and takeaway order, every arrival and every wait, from the first hello to the goodbye at the door.**
 
@@ -90,7 +90,7 @@ You are the first and the last person a guest sees at Sol, the voice that answer
 - Quick and accurate on a screen: you have used a reservation system, a POS or an ordering app and keep records complete when it is busy. We train ResDiary and CukCuk.
 - Steady when it stacks up — a ringing phone, three unread messages, a queue and a party of eight arriving early — without the guest in front of you seeing it.
 - Available for evenings, weekends and public holidays including Tết trading, six shifts a week.
-- Able to start by Monday 19 October 2026.
+- Able to start in late November 2026.
 
 ## Nice to have
 
@@ -125,7 +125,7 @@ Six shifts a week, 48 hours maximum, one rostered day off. We trade in the eveni
 
 ## How to apply
 
-Applications close Sunday 4 October 2026. Start Monday 12 October 2026, or as soon as your notice allows and by Monday 19 October at the latest.
+Applications close Saturday 14 November 2026. We expect you to start in late November 2026. The restaurant is finishing its fit-out, so the exact date will be in your offer letter. Please don’t hand in your notice at your current job until you have it.
 
 Send to [jobs@sol.pizza](mailto:jobs@sol.pizza) with the subject line “Host — [Your name]”:
 
@@ -145,8 +145,8 @@ Bộ phận phục vụ · Toàn thời gian · Tây Hồ, Hà Nội
 | **Báo cáo cho** | Giám sát Nhà hàng |
 | **Lương cơ bản** | 9.000.000 – 10.000.000 VNĐ gross/tháng, tùy kinh nghiệm |
 | **Giờ làm** | Sáu ca mỗi tuần, tối đa 48 giờ, một ngày nghỉ theo lịch |
-| **Hạn nộp hồ sơ** | Chủ nhật 04/10/2026 |
-| **Ngày bắt đầu** | Thứ Hai 12/10/2026, muộn nhất thứ Hai 19/10/2026 |
+| **Hạn nộp hồ sơ** | Thứ Bảy 14/11/2026 |
+| **Ngày bắt đầu** | Cuối tháng 11/2026 — ngày chính xác được ghi trong thư mời nhận việc |
 
 **Phụ trách toàn bộ khu vực đón khách, điện thoại và hộp thư của Sol: mọi lượt đặt bàn, mọi tin nhắn và đơn mang về, cũng như việc đón khách và điều phối thời gian chờ — xuyên suốt từ lời chào đầu tiên đến lời chào tạm biệt khi khách ra về.**
 
@@ -228,7 +228,7 @@ Bạn là người đầu tiên và cũng là người cuối cùng khách gặp
 - Thao tác nhanh và chính xác trên màn hình: đã từng sử dụng hệ thống đặt bàn, POS hoặc ứng dụng đặt món và duy trì việc ghi chép đầy đủ ngay cả khi đông khách. Chúng tôi sẽ đào tạo về ResDiary và CukCuk.
 - Giữ được sự bình tĩnh khi công việc dồn dập — ví dụ: điện thoại reo, có tin nhắn chưa đọc, khách xếp hàng chờ và một nhóm 8 người đến sớm — mà không để khách hàng đang đứng trước mặt nhận thấy sự căng thẳng đó.
 - Sẵn sàng làm việc vào các buổi tối, cuối tuần và ngày lễ (bao gồm cả dịp Tết), 6 ca mỗi tuần.
-- Có thể bắt đầu muộn nhất từ thứ Hai, ngày 19 tháng 10 năm 2026.
+- Có thể bắt đầu đi làm từ cuối tháng 11/2026.
 
 ## Ưu tiên
 
@@ -263,7 +263,7 @@ Sáu ca mỗi tuần, tối đa 48 giờ, một ngày nghỉ theo lịch phân c
 
 ## Cách thức ứng tuyển
 
-Hạn chót nhận hồ sơ: Chủ nhật, ngày 4 tháng 10 năm 2026. Ngày bắt đầu làm việc: thứ Hai, ngày 12 tháng 10 năm 2026 (hoặc sớm nhất có thể tùy thời hạn báo nghỉ việc tại nơi làm việc hiện tại, nhưng muộn nhất là thứ Hai, ngày 19 tháng 10).
+Hạn chót nhận hồ sơ: thứ Bảy, ngày 14 tháng 11 năm 2026. Dự kiến bạn sẽ bắt đầu đi làm từ cuối tháng 11/2026. Nhà hàng đang hoàn thiện những hạng mục cuối, nên ngày bắt đầu chính xác sẽ được ghi trong thư mời nhận việc. Bạn chưa nên xin nghỉ ở nơi làm việc hiện tại cho đến khi nhận được thư mời.
 
 Vui lòng gửi hồ sơ đến [jobs@sol.pizza](mailto:jobs@sol.pizza) với tiêu đề “Host — [Tên của bạn]”, bao gồm:
 
