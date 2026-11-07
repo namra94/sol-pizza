@@ -5,7 +5,7 @@ Front of House · Full-time · Tây Hồ, Hanoi
 |  |  |
 |---|---|
 | **Reports to** | General Director |
-| **Base salary** | 16,000,000 – 20,000,000 VND gross per month, set on experience |
+| **Base salary** | 11,000,000 – 14,000,000 VND gross per month, set on experience |
 | **Hours** | Six shifts a week, 48 hours maximum, one rostered day off |
 | **Applications close** | Saturday 14 November 2026 |
 | **Start** | Late November 2026 — the exact date is in your offer letter |
@@ -101,9 +101,9 @@ You report directly to the General Director and work in close partnership with t
 
 ### Pay
 
-- **Base salary:** 16,000,000 – 20,000,000 VND gross per month, set on experience.
+- **Base salary:** 11,000,000 – 14,000,000 VND gross per month, set on experience.
 - **Service charge & tips:** 2,000,000 – 4,000,000 VND per month from the venue’s 5% service charge and FOH tip pool, paid quarterly, starting once we open.
-- **Typical monthly total:** 18,000,000 – 24,000,000 VND once the estimated service charge share is included, before the quarterly bonus.
+- **Typical monthly total:** 13,000,000 – 18,000,000 VND once the estimated service charge share is included, before the quarterly bonus.
 - **Performance bonus:** quarterly KPI bonus of up to 10% of quarterly base salary.
 - 13-month bonus according to company KPIs.
 - Annual salary review based on performance.
@@ -144,7 +144,7 @@ Bộ phận phục vụ · Toàn thời gian · Tây Hồ, Hà Nội
 |  |  |
 |---|---|
 | **Báo cáo cho** | Giám đốc điều hành |
-| **Lương cơ bản** | 16.000.000 – 20.000.000 VNĐ gross/tháng, tùy kinh nghiệm |
+| **Lương cơ bản** | 11.000.000 – 14.000.000 VNĐ gross/tháng, tùy kinh nghiệm |
 | **Giờ làm** | Sáu ca mỗi tuần, tối đa 48 giờ, một ngày nghỉ theo lịch |
 | **Hạn nộp hồ sơ** | Thứ Bảy 14/11/2026 |
 | **Ngày bắt đầu** | Cuối tháng 11/2026 — ngày chính xác được ghi trong thư mời nhận việc |
@@ -240,9 +240,9 @@ Bạn báo cáo trực tiếp cho Giám đốc điều hành và phối hợp ch
 
 ### Mức lương
 
-- **Lương cơ bản:** 16.000.000 – 20.000.000 VNĐ gross/tháng, tùy kinh nghiệm.
+- **Lương cơ bản:** 11.000.000 – 14.000.000 VNĐ gross/tháng, tùy kinh nghiệm.
 - **Phí phục vụ & tip:** 2.000.000 – 4.000.000 VNĐ/tháng (từ 5% phí phục vụ của nhà hàng và quỹ tip của bộ phận phục vụ), chi trả theo quý, bắt đầu khi nhà hàng mở cửa.
-- **Tổng thu nhập hằng tháng (ước tính):** 18.000.000 – 24.000.000 VNĐ (đã bao gồm phần phí phục vụ dự kiến, chưa gồm thưởng quý).
+- **Tổng thu nhập hằng tháng (ước tính):** 13.000.000 – 18.000.000 VNĐ (đã bao gồm phần phí phục vụ dự kiến, chưa gồm thưởng quý).
 - **Thưởng hiệu suất:** thưởng KPI theo quý, tối đa 10% lương quý.
 - Thưởng tháng 13 dựa theo chỉ số KPI của công ty.
 - Xét tăng lương hằng năm dựa trên hiệu suất làm việc.

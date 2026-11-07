@@ -11,6 +11,20 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 
 The jobs pages reopen: applications close on Saturday 14 November, and no start date is printed any more, only “Cuối tháng 11/2026”, with the exact date in the offer letter. The Restaurant Supervisor moves from “Vừa tuyển xong” to an open role, in Vietnamese for the first time, with its own address, careers@sol.pizza. Back on the site with their words unchanged, as they are whenever a round is open: “Cùng chúng tôi dựng nên Sol” and its lines on `/about/`, and “Chúng tôi sắp khai trương…” on `/jobs/`. Where a line changed, the old English is in brackets.
 
+### The Restaurant Supervisor’s pay, 7 Nov 2026
+
+The base salary moves from 16–20 to 11–14 million VND a month, to match the ads starting on 10 November, and the typical total moves with it. Only the figures change, not the words. These lines replace the same lines in the tables below, which still show the figures first written.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /jobs/ | the Supervisor’s card: Base salary 11,000,000–14,000,000 VND gross a month (was: 16,000,000–20,000,000) | Lương cơ bản 16.000.000 – 20.000.000 VNĐ gross/tháng | Lương cơ bản 11.000.000 – 14.000.000 VNĐ gross/tháng |
+| /jobs/restaurant-supervisor/ | meta description: Restaurant Supervisor at Sol, Tây Hồ, Hanoi. Base salary 11,000,000–14,000,000 VND a month, plus service charge and tips, est. 2,000,000–4,000,000 VND a month. Applications close 14 November 2026. (was: Base salary 16,000,000–20,000,000 …) | Tuyển Giám sát Nhà hàng (Restaurant Supervisor) tại Sol, Tây Hồ, Hà Nội. Lương cơ bản 16–20 triệu + phí phục vụ ước tính 2–4 triệu/tháng. Hạn nộp 14/11/2026. | Tuyển Giám sát Nhà hàng (Restaurant Supervisor) tại Sol, Tây Hồ, Hà Nội. Lương cơ bản 11–14 triệu + phí phục vụ ước tính 2–4 triệu/tháng. Hạn nộp 14/11/2026. |
+| /jobs/restaurant-supervisor/ | share card (Vietnamese only) | Tuyển Restaurant Supervisor — Sol, Tây Hồ · Lương cơ bản 16–20 triệu + phí phục vụ ước tính 2–4 triệu/tháng. Hạn nộp 14/11/2026. | Tuyển Restaurant Supervisor — Sol, Tây Hồ · Lương cơ bản 11–14 triệu + phí phục vụ ước tính 2–4 triệu/tháng. Hạn nộp 14/11/2026. |
+| /jobs/restaurant-supervisor/ | the fact the build adds: Typical monthly total · 13,000,000 – 18,000,000 VND (was: 18,000,000 – 24,000,000 VND) | Tổng thu nhập hằng tháng (ước tính) · 18.000.000 – 24.000.000 VNĐ | Tổng thu nhập hằng tháng (ước tính) · 13.000.000 – 18.000.000 VNĐ |
+| /jobs/restaurant-supervisor/ | fact: Base salary · 11,000,000 – 14,000,000 VND gross per month, set on experience (was: 16,000,000 – 20,000,000 …) | Lương cơ bản · 16.000.000 – 20.000.000 VNĐ gross/tháng, tùy kinh nghiệm | Lương cơ bản · 11.000.000 – 14.000.000 VNĐ gross/tháng, tùy kinh nghiệm |
+| /jobs/restaurant-supervisor/ | **Base salary:** 11,000,000 – 14,000,000 VND gross per month, set on experience. (was: 16,000,000 – 20,000,000 …) | **Lương cơ bản:** 16.000.000 – 20.000.000 VNĐ gross/tháng, tùy kinh nghiệm. | **Lương cơ bản:** 11.000.000 – 14.000.000 VNĐ gross/tháng, tùy kinh nghiệm. |
+| /jobs/restaurant-supervisor/ | **Typical monthly total:** 13,000,000 – 18,000,000 VND once the estimated service charge share is included, before the quarterly bonus. (was: 18,000,000 – 24,000,000 …) | **Tổng thu nhập hằng tháng (ước tính):** 18.000.000 – 24.000.000 VNĐ (đã bao gồm phần phí phục vụ dự kiến, chưa gồm thưởng quý). | **Tổng thu nhập hằng tháng (ước tính):** 13.000.000 – 18.000.000 VNĐ (đã bao gồm phần phí phục vụ dự kiến, chưa gồm thưởng quý). |
+
 ### The round
 
 | Page | English | Old VI | New VI |
