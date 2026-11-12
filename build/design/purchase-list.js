@@ -1,8 +1,9 @@
 /* Sol — the recent purchase requests (/backoffice/purchases/). No dependencies; load
    with `defer`. Fetches the last 30 (GET /api/backoffice/purchases, worker/backoffice.js)
    and fills a copy of #request for each, newest first: its ref, who sent it and when,
-   the station, when it's needed, every item, and whether it reached Slack. Approving
-   and ordering happen in Slack, so where a request is after that isn't here.
+   the station, when it's needed, every item, and whether it reached Google Chat.
+   Approving and ordering happen in Google Chat, so where a request is after that
+   isn't here.
    build/gen.py (build_purchase_list) writes the template and #units, the units' names,
    every line in both languages; this fills the dates, quantities and units in the
    page's language and redraws them when EN / VI switches it. */
@@ -66,7 +67,7 @@
       li.textContent = x.item + ' — ' + qty(x.qty) + ' ' + unit(x.unit) + (x.note ? ' (' + x.note + ')' : '');
       items.appendChild(li);
     });
-    slot('slack_error', r.slack_error || 'Slack');
+    slot('chat_error', r.chat_error || 'Google Chat');
     ['sent', 'failed', 'sending'].forEach(function (s) { cond(s, r.status === s); });
     cond('dry', r.status === 'dry_run');
     el.classList.toggle('is-failed', r.status === 'failed');

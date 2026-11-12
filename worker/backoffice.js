@@ -5,13 +5,13 @@
    supplier, a brand or a price: management chooses those when they order. A staff
    member fills in /backoffice/purchase/ (build/design/purchase.js); this checks it
    all again, trusting nothing from the browser, keeps it in D1 and posts a
-   📝 PURCHASE REQUEST to Slack's #supply through an Incoming Webhook (the secret
-   SLACK_WEBHOOK_URL), mentioning the station's approver.
-   The rest happens in Slack: the approver reacts ✅ (or ❌, with the reason in the
-   thread); management chooses the supplier and the brand, posts the 🛒 orders with
+   📝 PURCHASE REQUEST to Google Chat, in the Supply space, through an incoming webhook
+   (the secret CHAT_WEBHOOK_URL), mentioning the station's approver.
+   The rest happens in Google Chat: the approver reacts ✅ (or ❌, with the reason in
+   the thread); management chooses the supplier and the brand, posts the 🛒 orders with
    the Order Sheet's Order helper (one per supplier, with Arman's ✅ rules as they have
    always been), then reacts 🛒 on the request. So a request never carries a 🛒: in
-   #supply that's an order to a supplier, and the Order desk agent reads it that way.
+   Supply that's an order to a supplier, and the Order desk agent reads it that way.
    The form's suggestions (the names that asked before, the items asked for at each
    station) come from the requests kept here and nowhere else: this repo is public,
    and nothing about suppliers, brands, prices or people is in it.
@@ -50,13 +50,14 @@ export const SCHEMA = [
     ref TEXT NOT NULL UNIQUE,         -- REQ-YYMMDD-HHMM, Hanoi time; -2, -3… for more in the same minute
     request_id TEXT NOT NULL UNIQUE,  -- the browser's id for it: a second tap or a retry never posts twice
     created_at TEXT NOT NULL,         -- UTC, ISO 8601
-    tried_at INTEGER NOT NULL,        -- when it was last sent to Slack, Unix seconds
+    tried_at INTEGER NOT NULL,        -- when it was last sent to Google Chat, Unix seconds
     requested_by TEXT NOT NULL,
     station TEXT NOT NULL,            -- Kitchen, Bar or FOH
     needed_by TEXT NOT NULL,          -- YYYY-MM-DD, or YYYY-MM-DD HH:MM, Hanoi time
     items TEXT NOT NULL,              -- JSON: [{item, qty, unit, note}], unit a code from UNITS or as typed
     note TEXT NOT NULL DEFAULT '',
-    message TEXT NOT NULL,            -- what went (or would go) to #supply
+    message TEXT NOT NULL,            -- what went (or would go) to Supply
+    -- the next two are Google Chat's now, named in Slack's time: kept, so nothing migrates
     slack_status TEXT NOT NULL,       -- sending, sent, failed or dry_run
     slack_error TEXT NOT NULL DEFAULT ''
   )`,
@@ -101,7 +102,7 @@ export async function purchases(db) {
   return {
     requests: results.map((r) => ({
       ref: r.ref, created_at: r.created_at, requested_by: r.requested_by, station: r.station, needed_by: r.needed_by,
-      items: JSON.parse(r.items), status: r.slack_status, slack_error: r.slack_error,
+      items: JSON.parse(r.items), status: r.slack_status, chat_error: r.slack_error,
     })),
   };
 }
@@ -168,13 +169,13 @@ async function settle(db, row) {
 }
 
 // What the browser gets for a request that's in: sent (or a dry run), still being
-// sent, or failed with what Slack said
+// sent, or failed with what Google Chat said
 function answer(row) {
   if (!row) return [500, { error: 'server' }];
   if (row.slack_status === 'sent') return [200, { ok: true, ref: row.ref, message: row.message }];
   if (row.slack_status === 'dry_run') return [200, { ok: true, dry_run: true, ref: row.ref, message: row.message }];
   if (row.slack_status === 'sending') return [409, { error: 'sending', ref: row.ref }];
-  return [502, { error: 'slack', detail: row.slack_error, ref: row.ref }];
+  return [502, { error: 'chat', detail: row.slack_error, ref: row.ref }];
 }
 
 // The request's own columns, in the order insert() and purchase() write them
@@ -256,21 +257,22 @@ function read(body, now) {
 }
 
 // The 📝 block. Its labels are fixed once it's live, never to change: an agent may
-// read #supply by them. It never has a 🛒 (an order to a supplier, which management
-// posts once they've chosen one) and mentions no one but the station's approver.
+// read Supply by them. It never has a 🛒 (an order to a supplier, which management
+// posts once they've chosen one) and mentions no one but the station's approver:
+// whatever a person typed (a name, an item, a unit, a note) goes in through plain().
 function message(r, ref, env) {
   const lines = [
     '📝 YÊU CẦU MUA HÀNG / PURCHASE REQUEST',
     'Bộ phận / Station: ' + STATIONS[r.station],
     'Cần lúc / Needed by: ' + when(r.needed_by),
     'Hàng / Items:',
-  ].concat(r.items.map((x) => '• ' + slack(x.item) + ' — ' + number(x.qty) + ' ' + unitText(x.unit) +
-    (x.note ? ' (' + slack(x.note) + ')' : '')));
-  lines.push('Người yêu cầu / Requested by: ' + slack(r.requested_by));
-  if (r.note) lines.push('Ghi chú / Note: ' + slack(r.note));
+  ].concat(r.items.map((x) => '• ' + plain(x.item) + ' — ' + number(x.qty) + ' ' + unitText(x.unit) +
+    (x.note ? ' (' + plain(x.note) + ')' : '')));
+  lines.push('Người yêu cầu / Requested by: ' + plain(r.requested_by));
+  if (r.note) lines.push('Ghi chú / Note: ' + plain(r.note));
   lines.push('Duyệt / Approve: ' + (r.station === 'Kitchen'
-    ? mention(env.SLACK_APPROVER_KITCHEN, 'Kitchen approver')
-    : mention(env.SLACK_APPROVER_BAR_FOH, 'Bar & FOH approver')) + ' ✅ / ❌');
+    ? mention(env.CHAT_APPROVER_KITCHEN, 'Kitchen approver')
+    : mention(env.CHAT_APPROVER_BAR_FOH, 'Bar & FOH approver')) + ' ✅ / ❌');
   lines.push('Đặt hàng / Ordering: quản lý chọn NCC và thương hiệu / management picks the supplier and brand');
   lines.push('_Gửi từ sol.pizza/backoffice · Ref ' + ref + '_');
   return lines.join('\n');
@@ -280,26 +282,38 @@ function message(r, ref, env) {
 // as it is), any other as typed
 function unitText(unit) {
   const names = UNITS.get(unit);
-  if (!names) return slack(unit);
+  if (!names) return plain(unit);
   return names[0] === names[1] ? names[0] : names.join('/');
 }
 
-// Posts to #supply: '' when Slack took it, else what went wrong (never the address)
+// Posts to Supply, as Google Chat's incoming webhooks take a message: {"text": …} and
+// nothing else. '' when Chat took it, else what went wrong, for staff to read. The
+// webhook's address is a secret, so what went wrong is made of this file's own words,
+// the HTTP status and Chat's status word (INVALID_ARGUMENT, NOT_FOUND…) and nothing
+// else: never Chat's own sentence or an error's, which may quote the address.
 async function post(env, text) {
-  const url = env.SLACK_WEBHOOK_URL;
-  if (!url) return 'SLACK_WEBHOOK_URL is not set';
+  const url = typeof env.CHAT_WEBHOOK_URL === 'string' ? env.CHAT_WEBHOOK_URL.trim() : '';
+  if (!url) return 'CHAT_WEBHOOK_URL is not set';
+  if (!/^https?:\/\/\S+$/.test(url)) return 'CHAT_WEBHOOK_URL is not a web address';
+  let res;
   try {
-    const res = await fetch(url, {
-      method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' },
-      body: JSON.stringify({ text, unfurl_links: false, unfurl_media: false }),
+    res = await fetch(url, {
+      method: 'POST', headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+      body: JSON.stringify({ text }),
       signal: AbortSignal.timeout(10000),
     });
-    if (res.ok) return '';
-    return `Slack answered ${res.status}: ${(await res.text()).slice(0, 200)}`;
   } catch (err) {
-    const why = err && err.name === 'TimeoutError' ? 'no answer in 10 seconds' : String((err && err.message) || err);
-    return ('Slack could not be reached: ' + why).split(url).join('…').slice(0, 300);
+    return 'Google Chat could not be reached: ' +
+      (err && err.name === 'TimeoutError' ? 'no answer in 10 seconds' : 'the connection failed');
   }
+  if (res.ok) return '';
+  let word = '';
+  try {
+    const said = JSON.parse(await res.text());
+    const status = said && said.error && said.error.status;      // google.rpc.Status
+    if (typeof status === 'string' && /^[A-Z][A-Z_]{2,39}$/.test(status)) word = ': ' + status;
+  } catch { /* not JSON (an error page, say): the HTTP status alone */ }
+  return `Google Chat answered ${res.status}${word}`;
 }
 
 /* The suggestions ------------------------------------------------------------ */
@@ -319,8 +333,9 @@ function usual(units) {
 /* Text ----------------------------------------------------------------------- */
 // Someone's text on one line: no control or invisible formatting characters, line
 // breaks and tabs as spaces, Vietnamese in one form (NFC) so names match, and no 🛒
-// (nor Slack's :shopping_trolley:, which shows as one): in #supply that's an order to
-// a supplier, never a request. Too long, or not text: undefined.
+// (nor :shopping_trolley:, the name Slack showed as one, left out as before): in
+// Supply that's an order to a supplier, never a request. Too long, or not text:
+// undefined.
 function oneLine(value, most) {
   if (typeof value !== 'string') return undefined;
   const s = value.normalize('NFC').replace(/[\r\n\t\u2028\u2029]+/g, ' ')
@@ -330,14 +345,24 @@ function oneLine(value, most) {
   return s.length <= most ? s : undefined;
 }
 
-// Slack reads &, < and > as markup (<!channel>, <@someone>, links): as text, always
-function slack(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// What a person typed, so that Google Chat shows it as text and nothing more. Chat
+// reads <users/…> as a mention and <address|words> as a link, turns any web address
+// it finds into a link (with a preview under the message), and has no way to write
+// < or > as plain text. So < and > go as ‹ and ›, and an address is opened up with a
+// space where it would start (https: //…, www. …, example. com): still readable,
+// never a mention or a link. A dot before one letter or a digit stays as typed
+// (D.O.P., 2.5 kg). check/backoffice.js proves it.
+function plain(s) {
+  return s.replace(/</g, '‹').replace(/>/g, '›')
+    .replace(/:(?=\/\/)/g, ': ')
+    .replace(/www\.(?=\S)/gi, (www) => www + ' ')
+    .replace(/\.(?=\p{L}[\p{L}\p{M}])/gu, '. ');
 }
 
-// A Slack mention by member id, or the role as text when the id isn't set
+// A Google Chat mention by user id, or the role as text when the id isn't set or
+// isn't one. An id is digits only, so nothing else put there ("all", say) mentions.
 function mention(id, role) {
-  return typeof id === 'string' && /^[UW][A-Z0-9]{2,}$/.test(id) ? `<@${id}>` : slack(role);
+  return typeof id === 'string' && /^\d{1,32}$/.test(id) ? `<users/${id}>` : role;
 }
 
 // The message's numbers, whatever the page's language: 1,250,000 and 1.5
