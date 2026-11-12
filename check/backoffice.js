@@ -13,9 +13,10 @@
 //    Google documents, in each place, then with 4,000 requests made of their pieces
 //    at random (the same ones every run).
 // 3. Posting. To CHAT_WEBHOOK_URL and nowhere else (never the old SLACK_WEBHOOK_URL),
-//    as {"text": …} and nothing more. When it fails, what staff are told is the
-//    Worker's own words, the HTTP status and Google's status word: never the webhook's
-//    address or a part of it, even when the answer or the error quotes it.
+//    as {"text": …} and nothing more. A wrong value pasted as the secret is refused
+//    before anything is sent. When a post fails, what staff are told is the Worker's
+//    own words, the HTTP status and Google's status word: never the webhook's address
+//    or a part of it, even when the answer or the error quotes it.
 const fs = require('fs'), path = require('path');
 const {randomUUID} = require('crypto');
 
@@ -297,23 +298,26 @@ async function main() {
       [status, out] = await send({...IDS, CHAT_WEBHOOK_URL: ADDRESS, BACKOFFICE_DRY_RUN: '1'});
       ok(status === 200 && out.dry_run === true && calls.length === 0, 'a dry run posts nothing');
 
-      // Google Chat's ways of saying no, each quoting the address where it can
+      // Google Chat's ways of saying no, and the ways of not reaching it: what staff
+      // should be told, and whether the answer or the error quotes the address
       const quote = 'No webhook at ' + ADDRESS + ' (spaces/AAAA-check-space, key check-key-0123456789, token check-token-abcdefghij=)';
+      const QUOTES = true;
       const refusals = [
         [json(400, {error: {code: 400, message: 'Invalid JSON payload received. Unknown name "unfurl_links"', status: 'INVALID_ARGUMENT'}}),
          'Google Chat answered 400: INVALID_ARGUMENT'],
-        [json(404, {error: {code: 404, message: quote, status: 'NOT_FOUND'}}), 'Google Chat answered 404: NOT_FOUND'],
+        [json(404, {error: {code: 404, message: quote, status: 'NOT_FOUND'}}), 'Google Chat answered 404: NOT_FOUND', QUOTES],
         [json(429, {error: {code: 429, message: 'Resource has been exhausted (e.g. check quota).', status: 'RESOURCE_EXHAUSTED'}}),
          'Google Chat answered 429: RESOURCE_EXHAUSTED'],
-        [json(403, {error: {code: 403, message: quote, status: quote}}), 'Google Chat answered 403'],
-        [json(400, {error: quote}), 'Google Chat answered 400'],
+        [json(403, {error: {code: 403, message: quote, status: quote}}), 'Google Chat answered 403', QUOTES],
+        [json(400, {error: quote}), 'Google Chat answered 400', QUOTES],
         [() => new Response('<!DOCTYPE html><p>The requested URL <code>' + ADDRESS + '</code> was not found.', {status: 404}),
-         'Google Chat answered 404'],
+         'Google Chat answered 404', QUOTES],
         [() => new Response('', {status: 503}), 'Google Chat answered 503'],
-        [() => { throw new TypeError('fetch failed: ' + ADDRESS); }, 'Google Chat could not be reached: the connection failed'],
+        [() => { throw new TypeError('fetch failed: ' + ADDRESS); }, 'Google Chat could not be reached: the connection failed', QUOTES],
         [() => { throw new DOMException('The operation timed out: ' + ADDRESS, 'TimeoutError'); },
-         'Google Chat could not be reached: no answer in 10 seconds'],
+         'Google Chat could not be reached: no answer in 10 seconds', QUOTES],
       ];
+      const quoting = refusals.filter(r => r[2]).length;
       const told = [], leaks = [];
       for (const [respond, wanted] of refusals) {
         answers(respond);
@@ -324,8 +328,8 @@ async function main() {
       }
       ok(!told.length, 'when Google Chat says no or can’t be reached, staff are told the HTTP status and Google’s status word, ' +
          'or that there was no answer' + (told.length ? '\n         ' + told.join('\n         ') : ''));
-      ok(!leaks.length, 'and never the webhook’s address or a part of it, in ' + refusals.length + ' answers and errors that quote it' +
-         (leaks.length ? '\n         ' + leaks.join('\n         ') : ''));
+      ok(!leaks.length, 'and never the webhook’s address or a part of it, in ' + refusals.length + ' answers and errors, ' + quoting +
+         ' of which quote it' + (leaks.length ? '\n         ' + leaks.join('\n         ') : ''));
     } finally {
       globalThis.fetch = real;
     }
