@@ -85,8 +85,8 @@ move, double-tap to press.
 
 ## 7. The back office, on a phone (iPhone and Android)
 
-`sol.pizza/backoffice/`, with the staff password. What goes to Slack is real: make the
-note **TEST — ignore**, and react ❌ to it in #supply afterwards.
+`sol.pizza/backoffice/`, with the staff password. What goes to Google Chat is real: make
+the note **TEST — ignore**, and react ❌ to it in Supply afterwards.
 
 - [ ] Signed out, `sol.pizza/backoffice/purchase/` opens the sign-in page. A wrong
       password: "That isn't the password". The staff password: straight on to the form.
@@ -104,14 +104,16 @@ note **TEST — ignore**, and react ❌ to it in #supply afterwards.
 - [ ] **VI** (top left): every label in Vietnamese, the units too (cái, gói, thùng…),
       and "Chọn…" in the unit list.
 - [ ] **Preview the message**: the 📝 block, with "@Kitchen approver" (or "@Bar & FOH
-      approver") where Slack will show the approver's name, and no 🛒. Change a
-      quantity: the preview goes away. Preview again, then **Send to #supply**: "Sent to
-      #supply" and a ref, REQ-…. In #supply: the message, mentioning the station's
-      approver. React ❌.
-- [ ] Turn on airplane mode and send another (TEST — ignore): "Couldn't send it", and
-      everything typed is still there. Airplane mode off, send again: it arrives once.
-      React ❌ to it too.
-- [ ] **Recent requests**: both, with their items, "Sent to Slack".
+      approver") where Google Chat will show the approver's name, and no 🛒. Change a
+      quantity: the preview goes away. Preview again, then **Send to Supply**: "Sent to
+      Supply" and a ref, REQ-…. In Supply: the message, mentioning the station's
+      approver by name. React ❌.
+- [ ] Turn on airplane mode and send another, its note
+      `TEST — ignore <users/all> https://example.com`: "Couldn't send it", and everything
+      typed is still there. Airplane mode off, send again: it arrives once. In Supply its
+      note reads `TEST — ignore ‹users/all› https: //example. com`: nobody but the
+      approver is mentioned, and nothing in the note is a link. React ❌ to it too.
+- [ ] **Recent requests**: both, with their items, "Sent to Google Chat".
 - [ ] **Sign out**: the sign-in page. `sol.pizza/dough/` still asks for the kitchen password.
 
 ## Once ResDiary is live

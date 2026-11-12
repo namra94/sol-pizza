@@ -210,11 +210,12 @@ requests are in the same database: a restore rewinds those too.
 from the kitchen's (README.md, "The back office"). Its first tool is the
 **purchase request** (`/backoffice/purchase/`): anyone with the staff password
 asks for **items only** on a phone (what, how much, for which station and by
-when), and the Worker posts it to Slack's **#supply** as a 📝 **PURCHASE
-REQUEST**. Staff never pick a supplier, a brand or a price: management chooses
-the supplier and the brand when they order.
+when), and the Worker posts it to Google Chat, in the space **Sol · Supply**
+("Supply" below and on the pages), as a 📝 **PURCHASE REQUEST**. Staff never
+pick a supplier, a brand or a price: management chooses the supplier and the
+brand when they order.
 
-In #supply:
+In Supply:
 
 1. **The station's approver** reacts to the 📝 request: ✅ approved, or ❌
    declined, with the reason in the thread. The message mentions the Kitchen
@@ -234,9 +235,21 @@ In #supply:
 | a 🛒 order | ✅ 📦 🚚 ❌ 🗂️ | As before: approved, ordered on Zalo, received and checked, cancelled, filed |
 
 The website never posts a 🛒 order, and a 📝 request never has a 🛒 in it (one
-typed in is left out): in #supply a 🛒 is an order to a supplier, and the Order
+typed in is left out): in Supply a 🛒 is an order to a supplier, and the Order
 desk agent reads it that way. For the same reason the 📝 message's labels never
 change once it's live.
+
+The message mentions the station's approver and no one else, and nothing a
+person types can make a mention or a link in it. Google Chat reads `<users/…>`
+as a mention and `<address|words>` as a link, turns any web address it finds
+into a link, and has no way to write `<` or `>` as plain text. So in a name, an
+item, a unit or a note, `<` and `>` go as `‹` and `›`, and an address is opened
+up with a space where it would start (`https: //…`, `www. …`, `example. com`):
+still readable, never a link. That reaches a few ordinary words too
+(`S.Pellegrino` goes as `S. Pellegrino`); a dot before a single letter or a
+number stays as typed (`D.O.P.`, `2.5 kg`). Only the message changes: the
+request is kept as typed, and Recent requests shows it that way.
+`npm run check` proves it (`check/backoffice.js`).
 
 Where its data is:
 
@@ -247,28 +260,37 @@ Where its data is:
   before, and the items asked for at each station, most-asked first, each with
   the unit used most (never a note). Nothing is kept anywhere else, and nothing
   about suppliers, brands, prices or people is in this repo, which is public.
-- **Who it mentions** in Slack: the Slack member ids in `wrangler.jsonc`
-  (`vars`: `SLACK_APPROVER_KITCHEN`, `SLACK_APPROVER_BAR_FOH`). They aren't
-  secrets. If an approver changes, change the id there (Slack → their profile →
-  ⋮ → Copy member ID). Without an id, the message names the role as text
-  ("Kitchen approver") and mentions no one.
+- **Who it mentions** in Google Chat: the Google user ids in `wrangler.jsonc`
+  (`vars`: `CHAT_APPROVER_KITCHEN`, `CHAT_APPROVER_BAR_FOH`), each in quotes:
+  they're too long to be numbers. They aren't secrets. If an approver changes,
+  change the id there. To find one: Google Contacts (contacts.google.com) →
+  **Directory** → open the person: the id is the number at the end of the
+  page's address. Without an id (digits and nothing else), the message names
+  the role as text ("Kitchen approver") and mentions no one.
 
 ### The two secrets
 
 | Secret | What it is |
 | --- | --- |
 | `BACKOFFICE_PASSWORD` | The staff password |
-| `SLACK_WEBHOOK_URL` | The Incoming Webhook into #supply (below) |
+| `CHAT_WEBHOOK_URL` | The incoming webhook into Supply (below) |
 
 ```
 npx wrangler secret put BACKOFFICE_PASSWORD     # type the staff password when asked
-npx wrangler secret put SLACK_WEBHOOK_URL       # paste the webhook's URL
+npx wrangler secret put CHAT_WEBHOOK_URL        # paste the webhook's address
 ```
 
 Each one goes straight into Cloudflare: never into the repo, a chat or a
 ticket. Without `BACKOFFICE_PASSWORD`, `/backoffice/` says signing in isn't set
-up and lets no one in. Without `SLACK_WEBHOOK_URL`, requests are kept but marked
+up and lets no one in. Without `CHAT_WEBHOOK_URL`, requests are kept but marked
 failed, and the sender sees why.
+
+When Google Chat doesn't take a request, the sender is told the HTTP status and
+Google's word for it ("Google Chat answered 404: NOT_FOUND"), or that there was
+no answer, and to send it again: it's never posted twice. The webhook's address
+is never part of what they're told. Chat takes one message a second in a space,
+so of two requests sent in the same second the later one may be refused (429):
+sending it again works.
 
 The staff password: four or five unrelated words, easy to type on a phone.
 After 10 wrong tries from one address, signing in from it waits 15 minutes.
@@ -276,17 +298,33 @@ Staff stay signed in on a phone for 30 days. **To change it** (when someone
 with it leaves), run `npx wrangler secret put BACKOFFICE_PASSWORD` again: every
 phone is signed out of the back office (not the kitchen) and needs the new one.
 
-### Creating the Slack webhook
+### Creating the Chat webhook
 
-1. api.slack.com/apps → **Create New App** → **From scratch**: name
-   "Sol Back Office", workspace **solhanoi** → Create App.
-2. **Incoming Webhooks** → turn it **On** → **Add New Webhook** (to Workspace)
-   → pick **#supply** → Allow.
-3. Copy the webhook URL (`https://hooks.slack.com/services/…`) and paste it
-   into `npx wrangler secret put SLACK_WEBHOOK_URL`.
+In a browser: webhooks can't be set up from the Chat app on a phone.
 
-Anyone with that URL can post to #supply. If it ever leaks: the app's Incoming
-Webhooks page → remove it, add a new one, and put the new URL as above.
+1. chat.google.com → the space **Sol · Supply** → the arrow next to its name →
+   **Apps & integrations** → **Add webhooks**.
+2. Name it "Sol Back Office" (the avatar's address can stay empty) → **Save**.
+3. On the webhook's line, **⋮** → **Copy link**: that's the webhook's address
+   (`https://chat.googleapis.com/v1/spaces/…`). Paste it into
+   `npx wrangler secret put CHAT_WEBHOOK_URL`.
+
+Anyone with that address can post to Supply. If it ever leaks: the same
+**Apps & integrations** page → remove the webhook, add a new one, and put the
+new address as above. If **Add webhooks** can't be clicked, incoming webhooks
+are off for the organisation: a Google Workspace admin turns them on
+(https://support.google.com/a/answer/7651360).
+
+### Retiring Slack
+
+Until the team moved to Google Chat (13 Nov 2026) the requests went to Slack's
+#supply, through the secret `SLACK_WEBHOOK_URL`. Nothing reads it now. Once a
+real request has arrived in Supply:
+
+1. `npx wrangler secret delete SLACK_WEBHOOK_URL`.
+2. In Slack, remove the webhook that address belonged to (api.slack.com/apps →
+   Sol Back Office → **Incoming Webhooks**), or the app itself: until then the
+   old address can still post to #supply.
 
 ### Retiring the Order Sheet's web app
 
@@ -308,7 +346,7 @@ The Order Sheet itself, its Order helper and the 🛒 format stay as they are.
 
 Locked, like the kitchen: a Preview gets no database, no passwords and no vars
 (`"previews": {}` in `wrangler.jsonc`), so its `/backoffice/` says signing in
-isn't set up, and nothing on a Preview can reach Slack.
+isn't set up, and nothing on a Preview can reach Google Chat.
 
 ### On your own machine
 
@@ -326,6 +364,9 @@ dry-run requests have been sent, then their names and items. Never set
   `npx wrangler d1 execute sol-dough --local --command "DELETE FROM backoffice_login_failures"`.
 - The requests sent locally:
   `npx wrangler d1 execute sol-dough --local --command "SELECT ref, slack_status, station, requested_by FROM backoffice_requests ORDER BY id DESC LIMIT 10"`.
+- The message itself (its lines, what becomes of markup someone types, what a
+  failed post says) is checked without a browser or `wrangler dev`:
+  `node check/backoffice.js`, which `npm run check` runs too.
 
 ### The production smoke test
 
@@ -333,18 +374,21 @@ Once the branch is merged (Workers Builds deploys it):
 
 1. On a phone, open sol.pizza/backoffice/ and sign in with the staff password.
 2. **Purchase request**: any station, one item, and the note **TEST — ignore**.
-   Preview the message, then **Send to #supply**: the page says "Sent to #supply"
+   Preview the message, then **Send to Supply**: the page says "Sent to Supply"
    with a ref, `REQ-…`.
-3. In #supply: the 📝 message, mentioning the station's approver. React ❌ to it
-   (declined), so nobody orders it.
-4. **Recent requests**: it's there, "Sent to Slack".
+3. In Supply: the 📝 message, mentioning the station's approver by name (a
+   real mention, not `<users/…>` as text). React ❌ to it (declined), so nobody
+   orders it.
+4. **Recent requests**: it's there, "Sent to Google Chat".
 
 ### The data
 
 - `backoffice_requests`: each request: its ref (`REQ-YYMMDD-HHMM`, Hanoi time;
   `-2`, `-3`… for more in the same minute), the browser's request id (a retry
   never posts twice), who asked, the station, when it's needed, the items (name,
-  quantity, unit, note), the note, the message and what Slack said. To look:
+  quantity, unit, note), the note, the message and what Google Chat said (in
+  `slack_status` and `slack_error`: the columns were named when requests went
+  to Slack, and kept, so there was nothing to migrate). To look:
   `npx wrangler d1 execute sol-dough --remote --command "SELECT ref, created_at, requested_by, station, slack_status FROM backoffice_requests ORDER BY id DESC LIMIT 20"`.
 - `backoffice_login_failures`: wrong passwords, for the 15-minute wait.
 - Two tables from before staff asked for items only, left as they were. Nothing

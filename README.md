@@ -37,7 +37,7 @@ come" and `README-DEPLOY.md`).
 | `/accessibility/` | Accessibility statement: the site and the restaurant | Draft, waits for the lawyer (`WAITING`) |
 | `/styleguide/` | The parts pages are built from (after-dark sections, image bands, galleries, cards, quotes) | Full build only, never on sol.pizza |
 | `/dough/`, `/dough/log/` | The kitchen's dough calculator and dough log (below) | Behind the kitchen password (`/dough/login/`): no tab or footer link, `noindex`, not in the sitemap, no analytics, no `/vi/` copy |
-| `/backoffice/`, `/backoffice/purchase/`, `/backoffice/purchases/` | The back office: its tools, the purchase request (to Slack's #supply) and the recent requests (below) | Behind the staff password (`/backoffice/login/`), the same way as the kitchen |
+| `/backoffice/`, `/backoffice/purchase/`, `/backoffice/purchases/` | The back office: its tools, the purchase request (to Google Chat's Supply space) and the recent requests (below) | Behind the staff password (`/backoffice/login/`), the same way as the kitchen |
 
 Also public: the 404 pages (English, and Vietnamese for any missing `/vi/…` address),
 `sitemap.xml` (both languages), `robots.txt`, and the assets and share cards those pages
@@ -100,9 +100,10 @@ npm run deploy         # builds the public site, then deploys it; see README-DEP
 
 npm --prefix check ci  # once, for the two below: Playwright, axe and Lighthouse, in check/
 npm run og             # re-render the share cards (then npm run pack-assets)
-npm run check          # both builds, behaviour, accessibility, screenshots; add -- <URL> to check
-                       # that address too (Lighthouse against the budgets, the photos online),
-                       # and to take the screenshots there instead of from dist/
+npm run check          # both builds, the back office's message, behaviour, accessibility,
+                       # screenshots; add -- <URL> to check that address too (Lighthouse against
+                       # the budgets, the photos online), and to take the screenshots there
+                       # instead of from dist/
 ```
 
 `npm run check -- <Preview URL>` before merging a pull request, and `npm run check --
@@ -412,11 +413,12 @@ stops if one is ever written). `npm run check` makes sure.
 ### The back office: purchase requests
 
 `/backoffice/` is for the team: one shared **staff password**, separate from the
-kitchen's (each opens only its own section), the same 30 days signed in on a phone. Only
-management is on Slack; the kitchen and floor are on Zalo and their phones, so the back
-office lets anyone with the staff password ask for supplies, and approving and ordering
-stay in Slack. Setting it up (the password, the Slack webhook) is in `README-DEPLOY.md`,
-"The back office: purchase requests".
+kitchen's (each opens only its own section), the same 30 days signed in on a phone.
+Management works in Google Chat; the kitchen and floor are on Zalo and their phones, so
+the back office lets anyone with the staff password ask for supplies, and approving and
+ordering stay in Google Chat, in the space Sol · Supply ("Supply"). Setting it up (the
+password, the Chat webhook) is in `README-DEPLOY.md`, "The back office: purchase
+requests".
 
 - **Purchase request** (`/backoffice/purchase/`): staff ask for **items only**: who's
   asking, the station, when it's needed, each item (what, how much, a unit from the list
@@ -425,21 +427,24 @@ stay in Slack. Setting it up (the password, the Slack webhook) is in `README-DEP
   order. The boxes suggest what earlier requests said: the names, and the items asked
   for at that station, most-asked first, found by typing part of one in English or
   Vietnamese, with or without accents; picking one fills in its usual unit. **Preview**
-  shows the message as Slack will; **Send to #supply** posts it, a 📝 PURCHASE REQUEST,
-  and gives a ref, `REQ-YYMMDD-HHMM`. In Slack the station's approver reacts ✅ or ❌,
-  management posts the 🛒 orders with the Order Sheet's Order helper (one per supplier)
-  and reacts 🛒 on the request.
+  shows the message as Google Chat will; **Send to Supply** posts it, a 📝 PURCHASE
+  REQUEST, and gives a ref, `REQ-YYMMDD-HHMM`. In Google Chat the station's approver
+  reacts ✅ or ❌, management posts the 🛒 orders with the Order Sheet's Order helper (one
+  per supplier) and reacts 🛒 on the request.
 - **Recent requests** (`/backoffice/purchases/`): the last 30, their items, and whether
-  each reached Slack. Where one is after that is in Slack: ask management.
+  each reached Google Chat. Where one is after that is in Google Chat: ask management.
 - A tile leads to the kitchen's `/dough/`, which keeps its own password.
 
 The Worker never trusts the browser: it checks every field again, keeps the request in
 D1, and posts it once (a second tap or a retry gets the first answer). The message's
-labels never change once it's live, as an agent may read #supply by them, and it never
-has a 🛒: there, that's an order to a supplier. The pages are the kitchen's shell, with
-`build/design/backoffice.css`, `purchase.js` and `purchase-list.js`; the Worker's side is
-`worker/backoffice.js`. Nothing about suppliers, brands, prices or people is in this
-repo, which is public: the suggestions come from the requests in D1.
+labels never change once it's live, as an agent may read Supply by them, and it never
+has a 🛒: there, that's an order to a supplier. It mentions the station's approver and
+no one else: nothing a person types can make a mention or a link in it
+(`README-DEPLOY.md` says how), and `npm run check` proves it. The pages are the
+kitchen's shell, with `build/design/backoffice.css`, `purchase.js` and
+`purchase-list.js`; the Worker's side is `worker/backoffice.js`. Nothing about
+suppliers, brands, prices or people is in this repo, which is public: the suggestions
+come from the requests in D1.
 
 ---
 
@@ -572,8 +577,8 @@ build/design/           tokens.css, printed-menu.css (the design), site.css (rep
 build/design/kitchen/   kitchen.css and kitchen.js: the kitchen pages' frozen shell
 worker/index.js         the Worker's own code: the passwords of the kitchen, the back office
                         and the main site, the dough log's API (D1)
-worker/backoffice.js    the purchase requests: the checks, the Slack message, what the form
-                        suggests
+worker/backoffice.js    the purchase requests: the checks, the message for Google Chat, what
+                        the form suggests
 build/assets/           logo, illustrations, sun pattern (SVG)
 build/og/               share cards: card.html (the template), cards.json (what each PNG
                         was rendered from); the words are OG_CARDS in gen.py
@@ -581,7 +586,8 @@ build/assets.b64.json   the share-card PNGs and BN Arora, as text (see build/pac
 check/                  the checks and tools that need a browser (own package.json):
                         og.js, behaviour.js, axe.js, lighthouse.js, media.js, screens.js,
                         check.js; consent.js (the cookie choice they store, in the
-                        build's CONSENT_VERSION)
+                        build's CONSENT_VERSION); and backoffice.js, which needs none (the
+                        purchase request's message, as the Worker writes and posts it)
 src/jobs/ src/privacy/  role pages and the privacy notice, re-wrapped at build time
 src/_redirects          copied to dist/ as it is, or rewritten while HIDDEN lists a
                         page (public build, see build/README.md); Cloudflare applies it

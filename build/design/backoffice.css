@@ -115,15 +115,18 @@
 .p-done .p-preview { text-align: left; }
 .p-done .dough-actions { justify-content: center; }
 
-/* the recent requests: a card each, like the dough log's */
+/* the recent requests: a card each, like the dough log's. The ref keeps to one line;
+   on a narrow phone it's the status beside it (Sent to Google Chat) that takes two */
 .office-list { margin-top: 28px; }
-.office-entry .log-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 16px; align-items: baseline; }
+.office-entry .log-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 16px; align-items: baseline; }
+.office-entry .log-batch { white-space: nowrap; }
 .office-entry .log-meta { grid-column: 1 / -1; }
 .office-status {        /* type: the labels rule in printed-menu.css */
   font-size: var(--fs-label);
   line-height: 18px;
   letter-spacing: .1em;
   text-transform: uppercase;
+  text-align: right;
   color: var(--basil);
 }
 .office-entry.is-failed { box-shadow: inset 3px 0 0 var(--sol-red); }

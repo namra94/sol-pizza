@@ -12,9 +12,9 @@
    unit, unless one has been chosen already. If they don't load, the form works the
    same without them, and says nothing.
    Preview asks the Worker for the exact message (POST /api/backoffice/purchase with
-   preview: true) and shows it as Slack will; Send posts it with an id made here, kept
-   until the request has gone through, so a second tap or a retry never posts it
-   twice. Nothing typed is lost on an error. */
+   preview: true) and shows it as Google Chat will; Send posts it with an id made
+   here, kept until the request has gone through, so a second tap or a retry never
+   posts it twice. Nothing typed is lost on an error. */
 (function () {
   'use strict';
   var form = document.getElementById('purchase');
@@ -88,17 +88,17 @@
     });
   }
 
-  // A message as Slack shows it: the approver's mention as @ and the role (Slack shows
-  // their name), and &amp;, &lt; and &gt; as the characters they stand for
-  function slackShown(m) {
+  // A message as Google Chat shows it: the approver's mention (<users/ID>) as @ and
+  // the role, where Chat shows their name. The rest is as the Worker wrote it: nothing
+  // a person typed is markup by then (worker/backoffice.js, plain()).
+  function chatShown(m) {
     var role = m.station === 'Kitchen' ? L('Kitchen approver', 'người duyệt của Bếp')
       : L('Bar & FOH approver', 'người duyệt của Bar và Sảnh');
-    return m.text.replace(/<@[UW][A-Z0-9]+>/g, function () { return '@' + role; })
-      .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+    return m.text.replace(/<users\/\d+>/g, function () { return '@' + role; });
   }
   function showMessages() {
-    if (messages.preview) els.message.textContent = slackShown(messages.preview);
-    if (messages.sent) els.sentMessage.textContent = slackShown(messages.sent);
+    if (messages.preview) els.message.textContent = chatShown(messages.preview);
+    if (messages.sent) els.sentMessage.textContent = chatShown(messages.sent);
   }
 
   /* The page's lines ------------------------------------------------------- */
@@ -429,7 +429,7 @@
     if (r.status === 401) sendLine('signed-out');
     else if (r.status === 503) sendLine('off');
     else if (r.status === 400 && d.field) { sendLine('invalid'); markField(d.field); }
-    else if (r.status === 502 && d.error === 'slack') { out('slack_error', d.detail || 'Slack'); sendLine('slack-failed'); }
+    else if (r.status === 502 && d.error === 'chat') { out('chat_error', d.detail || 'Google Chat'); sendLine('chat-failed'); }
     else if (r.status === 409) sendLine('busy');
     else sendLine('failed');
   }

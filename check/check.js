@@ -2,12 +2,15 @@
 //   1. both builds: the full one (every page, noindex) and the public one, each with
 //      its own checks (wine counts, job data, share cards, languages, gates; the
 //      public one also checks every link)
-//   2. behaviour: languages, cookies, header, phone bar, events, the booking frame (behaviour.js)
-//   3. accessibility: axe on every page in both languages (axe.js)
+//   2. the back office's message: the purchase request as the Worker writes it for
+//      Google Chat, that nothing a person types makes a mention or a link in it, and
+//      that a failed post never shows the webhook's address (backoffice.js; no browser)
+//   3. behaviour: languages, cookies, header, phone bar, events, the booking frame (behaviour.js)
+//   4. accessibility: axe on every page in both languages (axe.js)
 //   with a URL (npm run check -- https://…): behaviour and axe there too,
 //   Lighthouse against the budgets (lighthouse.js), and every photo in
 //   build/media.json loading from R2 and through Cloudflare (media.js)
-//   4. screenshots at 360, 390, 768, 1,024 and 1,440 px in both languages, of the URL
+//   5. screenshots at 360, 390, 768, 1,024 and 1,440 px in both languages, of the URL
 //      or of dist/ (screens.js; out/screens/index.html)
 // The public build is left in dist/ at the end. Nothing here is committed: reports go
 // to check/out/. First time: npm --prefix check ci (and, outside Claude's cloud,
@@ -20,6 +23,7 @@ const url = process.argv[2];
 const steps = [
   ['full build', 'python3', ['build/gen.py', '--full'], ROOT],
   ['public build', 'python3', ['build/gen.py', '--public'], ROOT],
+  ['the back office’s message', 'node', ['backoffice.js'], __dirname],
   ['behaviour', 'node', ['behaviour.js'], __dirname],
   ['accessibility', 'node', ['axe.js'], __dirname],
 ];

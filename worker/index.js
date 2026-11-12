@@ -7,7 +7,7 @@
      - keeps the dough log in D1 (the DOUGH_DB binding) and serves it as JSON for
        the pages and as a CSV to download;
      - keeps /backoffice/ behind the staff password, the secret BACKOFFICE_PASSWORD,
-       and sends its purchase requests to Slack (worker/backoffice.js;
+       and sends its purchase requests to Google Chat (worker/backoffice.js;
        README-DEPLOY.md, "The back office: purchase requests");
      - keeps the main site behind the site password while the secret SITE_PASSWORD
        is set (README-DEPLOY.md, "The site password").

@@ -4288,12 +4288,12 @@ def build_dough_login():
 # Tools for the team, not pages for guests, behind one shared staff password (the
 # Worker, worker/index.js): its own cookie, so the kitchen's password doesn't open it
 # and its password doesn't open the kitchen. The first tool is the purchase request:
-# staff ask for items only at /backoffice/purchase/, and the request goes to Slack's
-# #supply, where management approves it with reactions and chooses the supplier and
-# the brand when they order (worker/backoffice.js); /backoffice/purchases/ lists the
-# last 30. The pages are the kitchen's shell (kitchen_page(): one bilingual page each,
-# noindex, no analytics or consent banner, no /vi/ copy) with the kitchen's form parts
-# (kitchen.css) and build/design/backoffice.css; the scripts are
+# staff ask for items only at /backoffice/purchase/, and the request goes to Google
+# Chat's Supply space, where management approves it with reactions and chooses the
+# supplier and the brand when they order (worker/backoffice.js); /backoffice/purchases/
+# lists the last 30. The pages are the kitchen's shell (kitchen_page(): one bilingual
+# page each, noindex, no analytics or consent banner, no /vi/ copy) with the kitchen's
+# form parts (kitchen.css) and build/design/backoffice.css; the scripts are
 # build/design/purchase.js and purchase-list.js. What the form suggests (names, items)
 # comes from earlier requests at run time: no supplier, brand, price or person is
 # ever in this repo.
@@ -4301,7 +4301,7 @@ def build_dough_login():
 OFFICE_EYEBROW = t('Back office', 'Nội bộ')
 # The units a purchase request offers, in the form's order: (code, English,
 # Vietnamese). The Worker keeps the same list (UNITS in worker/backoffice.js) to write
-# them in the Slack message.
+# them in the message for Google Chat.
 OFFICE_UNITS = [('kg', 'kg', 'kg'), ('g', 'g', 'g'), ('L', 'L', 'L'), ('ml', 'ml', 'ml'), ('pc', 'pc', 'cái'),
                 ('pack', 'pack', 'gói'), ('box', 'box', 'hộp'), ('bottle', 'bottle', 'chai'), ('can', 'can', 'lon'),
                 ('jar', 'jar', 'hũ'), ('bag', 'bag', 'túi'), ('sack', 'sack', 'bao'), ('bunch', 'bunch', 'bó'),
@@ -4349,11 +4349,12 @@ def build_office_home():
         office_nav('home'),
         '<ul class="office-tiles">%s</ul>' % ''.join([
             tile('/backoffice/purchase/', t('Purchase request', 'Yêu cầu mua hàng'),
-                 t('Ask for the items you need. Management approves it in Slack and chooses the supplier and brand.',
-                   'Ghi những mặt hàng cần mua. Quản lý duyệt trên Slack rồi chọn nhà cung cấp và thương hiệu.')),
+                 t('Ask for the items you need. Management approves it in Google Chat and chooses the supplier and '
+                   'brand.',
+                   'Ghi những mặt hàng cần mua. Quản lý duyệt trên Google Chat rồi chọn nhà cung cấp và thương hiệu.')),
             tile('/backoffice/purchases/', t('Recent requests', 'Yêu cầu gần đây'),
-                 t('The last 30, and whether each one reached Slack.',
-                   '30 yêu cầu gần nhất, và yêu cầu nào đã lên Slack.')),
+                 t('The last 30, and whether each one reached Google Chat.',
+                   '30 yêu cầu gần nhất, và yêu cầu nào đã lên Google Chat.')),
             tile('/dough/', t('Dough (kitchen)', 'Bột (bếp)'),
                  t('The dough calculator and the dough log. They have their own password.',
                    'Công cụ tính bột và nhật ký bột. Có mật khẩu riêng.')),
@@ -4454,10 +4455,10 @@ def build_purchase():
         office_warn('data-send-line', 'invalid', t('Check the marked boxes.', 'Kiểm tra lại các ô được đánh dấu.')),
         office_warn('data-send-line', 'previewing', t('Writing the message…', 'Đang soạn tin nhắn…'), 'dough-status'),
         office_warn('data-send-line', 'sending', t('Sending…', 'Đang gửi…'), 'dough-status'),
-        office_warn('data-send-line', 'slack-failed',
-                    t('Slack didn’t take it (<span data-out="slack_error"></span>). Nothing you typed is lost: '
+        office_warn('data-send-line', 'chat-failed',
+                    t('Google Chat didn’t take it (<span data-out="chat_error"></span>). Nothing you typed is lost: '
                       'send it again. It won’t be posted twice.',
-                      'Slack chưa nhận yêu cầu (<span data-out="slack_error"></span>). Những gì bạn nhập vẫn còn: '
+                      'Google Chat chưa nhận yêu cầu (<span data-out="chat_error"></span>). Những gì bạn nhập vẫn còn: '
                       'hãy gửi lại. Yêu cầu sẽ không bị đăng hai lần.')),
         office_warn('data-send-line', 'busy',
                     t('It’s still being sent. Wait a moment, then send it again: it won’t be posted twice.',
@@ -4522,16 +4523,16 @@ def build_purchase():
 </main>
 """.format(
         title=page_title(OFFICE_EYEBROW, t('Purchase request', 'Yêu cầu mua hàng'),
-                         t('Ask for supplies. Management approves it in Slack, in #supply, then chooses the supplier '
-                           'and brand.',
-                           'Đề nghị mua hàng. Quản lý duyệt trên Slack, trong kênh #supply, rồi chọn nhà cung cấp và '
-                           'thương hiệu.')),
+                         t('Ask for supplies. Management approves it in Google Chat, in Supply, then chooses the '
+                           'supplier and brand.',
+                           'Đề nghị mua hàng. Quản lý duyệt trên Google Chat, trong không gian Supply, rồi chọn nhà '
+                           'cung cấp và thương hiệu.')),
         nav=office_nav('purchase'),
         nojs=t('The form needs JavaScript. Turn it on in the browser’s settings.',
                'Biểu mẫu này cần JavaScript. Hãy bật JavaScript trong cài đặt trình duyệt.'),
         page_notes=page_notes,
-        dry_run=t('Dry run: requests are kept here but not posted to Slack.',
-                  'Chạy thử: yêu cầu được lưu ở đây nhưng không đăng lên Slack.'),
+        dry_run=t('Dry run: requests are kept here but not posted to Google Chat.',
+                  'Chạy thử: yêu cầu được lưu ở đây nhưng không đăng lên Google Chat.'),
         h_request=t('The request', 'Yêu cầu'),
         l_who=t('Requested by', 'Người yêu cầu'),
         who=text_box('p-who', 'who', 60),
@@ -4550,29 +4551,29 @@ def build_purchase():
         items_full=t('30 items at most. Send the rest as another request.',
                      'Tối đa 30 mặt hàng. Hãy gửi phần còn lại trong một yêu cầu khác.'),
         l_note=t('Note', 'Ghi chú'),
-        next=t('Management approves it in Slack, then orders it from the supplier and brand they choose.',
-               'Quản lý duyệt trên Slack, rồi đặt hàng với nhà cung cấp và thương hiệu do quản lý chọn.'),
+        next=t('Management approves it in Google Chat, then orders it from the supplier and brand they choose.',
+               'Quản lý duyệt trên Google Chat, rồi đặt hàng với nhà cung cấp và thương hiệu do quản lý chọn.'),
         preview=t('Preview the message', 'Xem trước tin nhắn'),
-        l_message=t('The message for #supply', 'Tin nhắn gửi lên #supply'),
-        message_hint=t('As Slack will show it. Change anything above and preview it again.',
-                       'Tin nhắn sẽ hiện trên Slack như thế này. Nếu sửa gì ở trên, hãy xem trước lại.'),
-        send=t('Send to #supply', 'Gửi lên #supply'),
+        l_message=t('The message for Supply', 'Tin nhắn gửi lên Supply'),
+        message_hint=t('As Google Chat will show it. Change anything above and preview it again.',
+                       'Tin nhắn sẽ hiện trên Google Chat như thế này. Nếu sửa gì ở trên, hãy xem trước lại.'),
+        send=t('Send to Supply', 'Gửi lên Supply'),
         send_states=send_states,
-        sent=t('Sent to #supply', 'Đã gửi lên #supply'),
-        dry=t('Dry run: not posted to Slack', 'Chạy thử: chưa đăng lên Slack'),
+        sent=t('Sent to Supply', 'Đã gửi lên Supply'),
+        dry=t('Dry run: not posted to Google Chat', 'Chạy thử: chưa đăng lên Google Chat'),
         ref=t('Ref <strong data-out="ref"></strong>', 'Mã <strong data-out="ref"></strong>'),
-        approve=t('Management will approve it in Slack and choose the supplier and brand.',
-                  'Quản lý sẽ duyệt trên Slack rồi chọn nhà cung cấp và thương hiệu.'),
+        approve=t('Management will approve it in Google Chat and choose the supplier and brand.',
+                  'Quản lý sẽ duyệt trên Google Chat rồi chọn nhà cung cấp và thương hiệu.'),
         dry_hint=t('This copy of the site only pretends to post. The message it would have posted:',
                    'Bản này của trang chỉ chạy thử, không đăng thật. Tin nhắn lẽ ra sẽ được đăng:'),
         new=t('New request', 'Yêu cầu mới'),
         item_row=item_row,
     )
     return office_page('/backoffice/purchase/', 'purchase', ('Purchase request — Sol', 'Yêu cầu mua hàng — Sol'),
-                       ('Ask for supplies: the request goes to Slack, where management approves it and chooses the '
-                        'supplier and brand.',
-                        'Đề nghị mua hàng: yêu cầu được gửi lên Slack để quản lý duyệt rồi chọn nhà cung cấp và '
-                        'thương hiệu.'),
+                       ('Ask for supplies: the request goes to Google Chat, where management approves it and chooses '
+                        'the supplier and brand.',
+                        'Đề nghị mua hàng: yêu cầu được gửi lên Google Chat để quản lý duyệt rồi chọn nhà cung cấp '
+                        'và thương hiệu.'),
                        main, script='purchase.js')
 
 
@@ -4594,13 +4595,14 @@ def build_purchase_list():
              '<p class="log-meta">{by}</p></header>{why}<dl class="log-facts">{facts}</dl></article></template>').format(
         ref=slot('ref'),
         status=''.join('<span data-if="%s" hidden>%s</span>' % (k, v) for k, v in [
-            ('sent', t('Sent to Slack', 'Đã gửi lên Slack')),
+            ('sent', t('Sent to Google Chat', 'Đã gửi lên Google Chat')),
             ('failed', t('Not sent', 'Chưa gửi')),
             ('dry', t('Dry run', 'Chạy thử')),
             ('sending', t('Sending', 'Đang gửi'))]),
         by=t('%s, %s' % (slot('requested_by'), slot('time')), '%s, %s' % (slot('requested_by'), slot('time'))),
         why='<p class="dough-warn" data-if="failed" hidden>%s</p>' % t(
-            'Slack didn’t take it (%s).' % slot('slack_error'), 'Slack chưa nhận yêu cầu (%s).' % slot('slack_error')),
+            'Google Chat didn’t take it (%s).' % slot('chat_error'),
+            'Google Chat chưa nhận yêu cầu (%s).' % slot('chat_error')),
         facts=''.join([
             fact(t('Station', 'Bộ phận'), slot('station')),
             fact(t('Needed by', 'Cần lúc'), slot('needed_by')),
@@ -4611,10 +4613,10 @@ def build_purchase_list():
     main = '\n'.join([
         '<main id="main" class="wrap">',
         page_title(OFFICE_EYEBROW, t('Recent requests', 'Yêu cầu gần đây'),
-                   t('The last 30 purchase requests, newest first. Approving and ordering happen in Slack, so to know '
-                     'where a request is, ask management.',
-                     '30 yêu cầu mua hàng gần nhất, mới nhất ở trên. Việc duyệt và đặt hàng diễn ra trên Slack, nên muốn '
-                     'biết yêu cầu đã được xử lý đến đâu, hãy hỏi quản lý.')),
+                   t('The last 30 purchase requests, newest first. Approving and ordering happen in Google Chat, so to '
+                     'know where a request is, ask management.',
+                     '30 yêu cầu mua hàng gần nhất, mới nhất ở trên. Việc duyệt và đặt hàng diễn ra trên Google Chat, '
+                     'nên muốn biết yêu cầu đã được xử lý đến đâu, hãy hỏi quản lý.')),
         office_nav('purchases'),
         '<noscript><aside class="note-box"><p>%s</p></aside></noscript>'
         % t('The list needs JavaScript. Turn it on in the browser’s settings.',
@@ -4638,7 +4640,8 @@ def build_purchase_list():
         units,
         '</main>', ''])
     return office_page('/backoffice/purchases/', 'purchases', ('Recent requests — Sol', 'Yêu cầu gần đây — Sol'),
-                       ('The last 30 purchase requests sent to Slack.', '30 yêu cầu mua hàng gần nhất đã gửi lên Slack.'),
+                       ('The last 30 purchase requests sent to Google Chat.',
+                        '30 yêu cầu mua hàng gần nhất đã gửi lên Google Chat.'),
                        main, script='purchase-list.js')
 
 

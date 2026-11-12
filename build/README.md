@@ -60,7 +60,9 @@ the job descriptions against `jobs-data.json` (salaries, openings, dates), the
 announcements' dates (`announcements.json`), and the settings (`SITE_STATE`,
 `OPENING_DATE`).
 
-`npm run check` (in `check/`, its own package) runs both builds, then what a browser
+`npm run check` (in `check/`, its own package) runs both builds, then the back office's
+message for Google Chat as the Worker writes and posts it (`backoffice.js`, which needs
+no browser), then what a browser
 can check: the behaviour (languages, cookie banner, header, phone bar, analytics events,
 forms, Eclipse's dates, the keyboard, structured data: `behaviour.js`), accessibility
 with axe on every page in both languages (`axe.js`), and screenshots at five widths in
