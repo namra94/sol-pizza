@@ -29,8 +29,17 @@ Worker: make every change in Polarized Jar.
 
 ### 2. Mail: SPF and DMARC (Google Workspace)
 
-sol.pizza's mail runs on Google Workspace, and DKIM is already set up. SPF and DMARC are
-missing, so mail from @sol.pizza is easier to spoof and more likely to land in spam.
+sol.pizza's mail runs on Google Workspace, and DKIM is already set up. Without SPF and
+DMARC, mail from @sol.pizza is easier to spoof and more likely to land in spam.
+
+**Both records went in on 12 Nov 2026** (steps 1 to 3), added in Cloudflare and checked
+from public DNS that night: `sol.pizza` has one `v=spf1` record,
+`v=spf1 include:_spf.google.com ~all`, and `_dmarc.sol.pizza` has
+`v=DMARC1; p=none; rua=mailto:dmarc@sol.pizza; fo=1`. As far as we know only Google
+Workspace sends mail as @sol.pizza (nothing in this repo sends any), so the SPF record
+has no other `include:`. The reports go to the group dmarc@sol.pizza. The MX, DKIM and
+google-site-verification records are as they were. **Still open: step 4**, from about
+26 Nov 2026, once two weeks of reports are in; and step 5, Google's own check.
 
 1. First, list everything that sends mail **as** an @sol.pizza address: Google Workspace,
    and maybe ResDiary's confirmations, CukCuk, a newsletter tool. Each one needs its own
