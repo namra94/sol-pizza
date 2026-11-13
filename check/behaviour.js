@@ -253,6 +253,89 @@ async function main() {
     }
   }
 
+  // Pages in parts (/booking/, /privacy/): where a page ended up, and whether a part's
+  // heading landed clear of the bar that stays at the top (wide screens), in the top half
+  const where = async page => { const u = new URL(page.url()); return u.pathname + u.search + u.hash; };
+  const lands = async (page, heading) => {
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(500);
+    return page.evaluate(h => {
+      const bar = document.querySelector('.sitebar'), r = document.querySelector(h).getBoundingClientRect();
+      const end = bar && getComputedStyle(bar).display !== 'none' ? Math.max(0, bar.getBoundingClientRect().bottom) : 0;
+      return {end: Math.round(end), top: Math.round(r.top), clear: r.top >= end && r.bottom < innerHeight / 2};
+    }, heading);
+  };
+
+  console.log('One page for booking, Visit and private dining');
+  {
+    // /booking/ has three parts: the booking box (#book), Visit (#visit) and groups and
+    // private dining (#private-dining, its form at #enquire). The old pages lead to their
+    // part, and a link to a part lands with its heading clear of the bar at the top.
+    const parts = [['#book', '#book h1'], ['#visit', '#s-visit'], ['#private-dining', '#s-private-dining'], ['#enquire', '#s-enquire']];
+    const {ctx, page} = await visitor({width: 1280, height: 900});
+    await ctx.addInitScript(consent.store, consent.choice({}, V));
+    if ((await page.goto(base + '/booking/', {waitUntil: 'domcontentloaded'})).status() !== 200) {
+      console.log('  (no /booking/ in this build: not checked)');
+    } else {
+      const tabs = await page.$$eval('.sitebar .nav-links a', as => as.map(a => a.getAttribute('href')));
+      ok(tabs.includes('/booking/#visit') && !tabs.some(t => /private-dining|visit-us/.test(t)),
+         'the Visit tab leads to its part of the booking page, and private dining has no tab (' + tabs.join(' ') + ')');
+      for (const [from, to] of [['/visit-us/', '/booking/#visit'], ['/private-dining', '/booking/#private-dining'],
+                                ['/vi/visit-us', '/vi/booking/#visit'], ['/vi/private-dining/', '/vi/booking/#private-dining'],
+                                ['/visit-us/?lang=vi', '/vi/booking/#visit']]) {
+        await page.goto(base + from, {waitUntil: 'domcontentloaded'});
+        await page.waitForURL(u => u.pathname + u.search + u.hash === to, {timeout: 5000}).catch(() => {});
+        ok(await where(page) === to, 'the old address ' + from + ' leads to ' + to + ' (' + await where(page) + ')');
+      }
+      for (const [hash, heading] of parts) {
+        await page.goto('about:blank');                     // a fresh arrival, not a jump within the page
+        await page.goto(base + '/booking/' + hash, {waitUntil: 'domcontentloaded'});
+        const m = await lands(page, heading);
+        ok(m.clear, '/booking/' + hash + ' on a laptop: its heading is clear of the bar at the top (at ' + m.top + 'px, the bar ends at ' + m.end + ')');
+      }
+      const phone = await visitor({width: 390, height: 844});
+      await phone.ctx.addInitScript(consent.store, consent.choice({}, V));
+      for (const [hash, heading] of parts) {
+        await phone.page.goto('about:blank');
+        await phone.page.goto(base + '/vi/booking/' + hash, {waitUntil: 'domcontentloaded'});
+        const m = await lands(phone.page, heading);
+        ok(m.clear, '/vi/booking/' + hash + ' on a phone: its heading is at the top of the window (at ' + m.top + 'px)');
+      }
+      await phone.ctx.close();
+    }
+    await ctx.close();
+  }
+
+  console.log('One page for privacy and cookies');
+  {
+    // /privacy/ has the applicant privacy notice, then the cookie notice at #cookies. The
+    // old /privacy/cookies/ leads there, and so does the cookie banner's "Cookie notice"
+    // link; the footer has one "Privacy & cookies" link, beside Cookie settings.
+    const {ctx, page} = await visitor({width: 1280, height: 900});
+    await ctx.addInitScript(consent.store, consent.choice({}, V));
+    for (const [from, to] of [['/privacy/cookies/', '/privacy/#cookies'], ['/privacy/cookies', '/privacy/#cookies'],
+                              ['/vi/privacy/cookies/', '/vi/privacy/#cookies'], ['/vi/privacy/cookies', '/vi/privacy/#cookies']]) {
+      await page.goto(base + from, {waitUntil: 'domcontentloaded'});
+      ok(await where(page) === to, 'the old address ' + from + ' leads to ' + to + ' (' + await where(page) + ')');
+    }
+    for (const lang of ['', '/vi']) {
+      await page.goto(base + lang + '/', {waitUntil: 'domcontentloaded'});
+      const notice = await page.getAttribute('#consent .consent-text a', 'href');
+      const privacy = await page.$$eval('.site-footer nav a', as => as.map(a => a.getAttribute('href')).filter(h => /privacy/.test(h)));
+      ok(notice === lang + '/privacy/#cookies' && privacy.join(' ') === lang + '/privacy/' &&
+         (await page.$('.site-footer [data-consent-open]')) !== null,
+         lang + '/: the banner’s Cookie notice link goes to ' + notice + '; the footer has one privacy link, ' +
+         privacy.join(' ') + ', and Cookie settings');
+    }
+    await page.goto('about:blank');
+    await page.goto(base + '/privacy/#cookies', {waitUntil: 'domcontentloaded'});
+    const m = await lands(page, '#cookies h1');
+    ok(m.clear, '/privacy/#cookies: the cookie notice’s title is clear of the bar at the top (at ' + m.top + 'px, the bar ends at ' + m.end + ')');
+    await page.click('#cookies [data-consent-open]');
+    ok(await page.isVisible('#consent-settings'), 'the cookie notice’s own Cookie settings button opens the choices');
+    await ctx.close();
+  }
+
   console.log('Events');
   {
     const {ctx, page} = await visitor();
@@ -264,6 +347,14 @@ async function main() {
     await page.evaluate(() => document.addEventListener('click', e => e.preventDefault()));
     await page.click('.sitebar .btn-red');
     ok((await events()).includes('book_click'), 'book_click from the Book button');
+    // Visit and private dining are on the booking page too: only a link to its #book counts
+    const books = async () => (await events()).filter(e => e === 'book_click').length;
+    const before = await books();
+    await page.click('.sitebar .nav-links a[href="/booking/#visit"]');
+    await page.click('.site-footer a[href="/booking/#private-dining"]');
+    ok(await books() === before, 'no book_click from the Visit tab or the footer’s Private dining link');
+    await page.click('.site-footer a[href="/booking/#book"]');
+    ok(await books() === before + 1, 'book_click from the footer’s Booking link');
     await page.click('.site-footer a[href^="tel:"]');
     ok((await events()).includes('call_click'), 'call_click from a phone number');
     await page.click('.footer-cols a[href^="mailto:"]');
@@ -278,9 +369,10 @@ async function main() {
     const {ctx, page} = await visitor({width: 390, height: 844});
     await ctx.addInitScript(consent.store, consent.choice({analytics: true}, V));
     const events = () => page.evaluate(() => (window.dataLayer || []).filter(e => e[0] === 'event').map(e => [e[1], e[2] || {}]));
-    await page.goto(base + '/vi/private-dining/', {waitUntil: 'load'});
+    // The group enquiry, in the booking page's private dining part
+    await page.goto(base + '/vi/booking/#enquire', {waitUntil: 'domcontentloaded'});   // (not 'load': that waits for ResDiary)
     if (!(await page.$('#enquire form'))) {
-      console.log('  (no /private-dining/ in this build: its form is not checked)');
+      console.log('  (no /booking/ in this build: its enquiry form is not checked)');
     } else {
       await page.click('#enquire [type="submit"]');
       ok(!(await page.isVisible('#enquire .mailform-done')), 'a form with empty required fields stays put');
@@ -314,7 +406,8 @@ async function main() {
     if (live) console.log('  (online booking or opening day: no opening-week form to check)');
     else ok(await page.isVisible('#f-opening-week-name'), 'before online booking: the opening-week form on /booking/');
     const group = await page.$('.offer-note a');
-    ok(!group || (await group.getAttribute('href')) === '/private-dining/#enquire', 'seven or more: the group enquiry');
+    ok(!group || ((await group.getAttribute('href')) === '/booking/#enquire' && (await page.$('#enquire form')) !== null),
+       'seven or more: the group enquiry, further down the same page');
     await ctx.close();
   }
 
@@ -389,7 +482,7 @@ async function main() {
     ok(!(await page.isVisible('#navsheet')) &&
        await page.evaluate(() => document.activeElement.matches('[data-sheet-open]')),
        'Escape closes it, and the focus goes back to the button');
-    if (await page.goto(base + '/private-dining/').then(() => page.$('#enquire form'))) {
+    if (await page.goto(base + '/booking/#enquire', {waitUntil: 'domcontentloaded'}).then(() => page.$('#enquire form'))) {
       const soon = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
       await page.focus('#f-private-dining-name');
       await page.keyboard.type('Lan');

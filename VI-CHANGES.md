@@ -7,6 +7,47 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Role pages: titles and descriptions that fit search results, 13 Nov 2026
+
+The build listed one title over 60 characters and eight descriptions over 160 on the role pages (Google shortens those). The English descriptions now give the figures in millions, as the Vietnamese ones already did. In Vietnamese, one role’s name is long enough to need it: where the whole would be too long, the name drops the English in brackets, as the role’s card on /vi/jobs/ already does. No new words.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /vi/jobs/kitchen-porter/ | browser tab (and the page’s name in the breadcrumb search engines read) | Nhân viên rửa bát & vệ sinh bếp (Kitchen Porter) — Sol, Tây Hồ | Nhân viên rửa bát & vệ sinh bếp — Sol, Tây Hồ |
+| /vi/jobs/kitchen-porter/ | meta description | Tuyển Nhân viên rửa bát & vệ sinh bếp (Kitchen Porter) tại Sol, Tây Hồ, Hà Nội. Lương cơ bản 6,5–7,5 triệu + phí phục vụ ước tính 2–4 triệu/tháng. Hạn nộp 14/11/2026. | Tuyển Nhân viên rửa bát & vệ sinh bếp tại Sol, Tây Hồ, Hà Nội. Lương cơ bản 6,5–7,5 triệu + phí phục vụ ước tính 2–4 triệu/tháng. Hạn nộp 14/11/2026. |
+
+## One page for privacy and cookies, 13 Nov 2026
+
+The cookie notice (`/vi/privacy/cookies/`) is now on the privacy page, `/vi/privacy/`, under the applicant privacy notice, at `#cookies`, and the old address leads there. Both notices are word for word as they were, with their tables and their “Cập nhật lần cuối” dates (checked by comparing every piece of text on the old pages with the new one, in both languages). One link changed where it goes, not its words: in the cookie notice’s Câu hỏi, “thông báo bảo mật dành cho ứng viên” now goes to that notice’s heading higher up the same page, where it used to open the page again.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| every page, the footer | Privacy & cookies: one link, where there were two (Privacy · Cookies) | Bảo mật · Cookie | Bảo mật & cookie |
+| /vi/privacy/cookies/ | browser tab: Cookies — Sol | Cookie — Sol | — (the page is /vi/privacy/, whose tab is unchanged: Thông báo bảo mật dành cho ứng viên — Sol) |
+| /vi/privacy/cookies/ | meta description: What sol.pizza keeps in your browser, and how to change your choice. | Những gì sol.pizza lưu trong trình duyệt của bạn, và cách thay đổi lựa chọn. | — |
+| in the source, never shown | the footer once the guest privacy notice was public: Privacy · Applicant privacy | Quyền riêng tư · Bảo mật cho ứng viên | — (the guest notice will join /vi/privacy/ as a section, and the footer keeps its one link) |
+
+Question for Linh:
+
+6. **“Bảo mật & cookie”**, the footer’s one link to the privacy page (the two links were “Bảo mật” and “Cookie”): is “&” right in a footer, or would “Bảo mật và cookie” read better?
+
+## One page for booking, Visit and private dining, 13 Nov 2026
+
+Visit (`/vi/visit-us/`) and Private dining (`/vi/private-dining/`) are no longer pages of their own: they are the second and third parts of the booking page, `/vi/booking/`, under the booking box, and the old addresses lead there. **No Vietnamese line is new, and none changed.** Every line of the two old pages is on the booking page word for word (checked by comparing every piece of text on the three old pages with the new one, in both languages): “Ghé thăm · Tìm chúng tôi · Sol nằm ở hai tầng đầu của tòa nhà số 7, ngõ 88 Quảng An. Chúng tôi sắp khai trương.” and “Tiệc riêng · Nhóm đông và tiệc riêng · Từ bảy người trở lên, hay một buổi tối chỉ dành riêng cho bạn…” now open their parts of the page as headings, where they were page titles. In the header, “Ghé thăm” leads to that part of the booking page and “Tiệc riêng” is no longer a tab; it is still in the footer and on the home page’s card.
+
+These lines left the site, because the merge made them redundant or their page is gone:
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /vi/visit-us/ | the box at the end: Book a table (heading and button), with the “Seven or more?” line | Đặt bàn · Nhóm từ bảy người trở lên? Hãy cho chúng tôi biết về nhóm của bạn, chúng tôi sẽ sắp xếp riêng. | — (the booking box is now at the top of the same page; the “Seven or more?” line is still in it, unchanged) |
+| /vi/booking/ | the closing line: Tuesday to Sunday, 5pm–11pm, from the day we open · No 7, Lane 88 Quang An Street, Tây Hồ, Hanoi · Hours, address and getting here | Thứ Ba đến Chủ Nhật, 17:00 – 23:00, kể từ ngày khai trương · Số 7, Ngõ 88 Quảng An, Tây Hồ, Hà Nội · Giờ mở cửa, địa chỉ và đường đến | — (Visit’s hours and address are just below it now) |
+| /vi/visit-us/ | browser tab: Visit — Sol, Tây Hồ | Ghé thăm — Sol, Tây Hồ | — (the page is /vi/booking/: Đặt bàn — Sol, Tây Hồ) |
+| /vi/visit-us/ | meta description: Sol is at No 7, Lane 88 Quang An Street, Tây Hồ, Hanoi. Open Tuesday to Sunday, 5pm–11pm, from the day we open. | Sol ở số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Mở cửa Thứ Ba đến Chủ Nhật, 17:00 – 23:00, kể từ ngày khai trương. | — (the booking page’s, unchanged: Số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Thứ Ba đến Chủ Nhật, 17:00 – 23:00, kể từ ngày khai trương. Đặt bàn trực tuyến, hoặc gọi điện hay gửi email.) |
+| /vi/private-dining/ | browser tab: Private dining — Sol, Tây Hồ | Tiệc riêng — Sol, Tây Hồ | — |
+| /vi/private-dining/ | meta description: Groups of seven or more and private dining at Sol, No 7, Lane 88 Quang An, Tây Hồ, Hanoi. Tell us what you have in mind. | Nhóm từ bảy người trở lên và tiệc riêng tại Sol, số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Hãy cho chúng tôi biết bạn muốn tổ chức thế nào. | — |
+| /vi/private-dining/ | share card: Private dining · Tây Hồ, Hanoi · Groups and private dining. | Tiệc riêng · Tây Hồ, Hà Nội · Nhóm đông và tiệc riêng. | — (retired: the booking page keeps its card, Tây Hồ, Hà Nội · Tìm chúng tôi và đặt bàn.) |
+| in the source, never shown | Seven or more? Email us and we’ll look after you personally. (for a booking page without the enquiry form, which can’t happen on one page) | Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn. | — |
+
 ## The back office: Google Chat, 12 Nov 2026
 
 The team moves from Slack to Google Chat on Friday 13 November, so purchase requests now go to Google Chat, to the space “Sol · Supply”. Every back-office line that said Slack says Google Chat, and #supply is Supply: “kênh #supply” became “không gian Supply”. Nothing else in these lines changed, and the 📝 message’s own lines are exactly as they were. The two back-office sections below (31 Oct, 29 Oct) keep the lines that stay as they were; the ones that changed are here, with what they said before. The old English is in brackets.
