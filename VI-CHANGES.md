@@ -7,6 +7,21 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## One page for privacy and cookies, 13 Nov 2026
+
+The cookie notice (`/vi/privacy/cookies/`) is now on the privacy page, `/vi/privacy/`, under the applicant privacy notice, at `#cookies`, and the old address leads there. Both notices are word for word as they were, with their tables and their “Cập nhật lần cuối” dates (checked by comparing every piece of text on the old pages with the new one, in both languages). One link changed where it goes, not its words: in the cookie notice’s Câu hỏi, “thông báo bảo mật dành cho ứng viên” now goes to that notice’s heading higher up the same page, where it used to open the page again.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| every page, the footer | Privacy & cookies: one link, where there were two (Privacy · Cookies) | Bảo mật · Cookie | Bảo mật & cookie |
+| /vi/privacy/cookies/ | browser tab: Cookies — Sol | Cookie — Sol | — (the page is /vi/privacy/, whose tab is unchanged: Thông báo bảo mật dành cho ứng viên — Sol) |
+| /vi/privacy/cookies/ | meta description: What sol.pizza keeps in your browser, and how to change your choice. | Những gì sol.pizza lưu trong trình duyệt của bạn, và cách thay đổi lựa chọn. | — |
+| in the source, never shown | the footer once the guest privacy notice was public: Privacy · Applicant privacy | Quyền riêng tư · Bảo mật cho ứng viên | — (the guest notice will join /vi/privacy/ as a section, and the footer keeps its one link) |
+
+Question for Linh:
+
+6. **“Bảo mật & cookie”**, the footer’s one link to the privacy page (the two links were “Bảo mật” and “Cookie”): is “&” right in a footer, or would “Bảo mật và cookie” read better?
+
 ## One page for booking, Visit and private dining, 13 Nov 2026
 
 Visit (`/vi/visit-us/`) and Private dining (`/vi/private-dining/`) are no longer pages of their own: they are the second and third parts of the booking page, `/vi/booking/`, under the booking box, and the old addresses lead there. **No Vietnamese line is new, and none changed.** Every line of the two old pages is on the booking page word for word (checked by comparing every piece of text on the three old pages with the new one, in both languages): “Ghé thăm · Tìm chúng tôi · Sol nằm ở hai tầng đầu của tòa nhà số 7, ngõ 88 Quảng An. Chúng tôi sắp khai trương.” and “Tiệc riêng · Nhóm đông và tiệc riêng · Từ bảy người trở lên, hay một buổi tối chỉ dành riêng cho bạn…” now open their parts of the page as headings, where they were page titles. In the header, “Ghé thăm” leads to that part of the booking page and “Tiệc riêng” is no longer a tab; it is still in the footer and on the home page’s card.

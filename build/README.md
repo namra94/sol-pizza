@@ -18,8 +18,9 @@ section still waiting for content, with `noindex`; see "Build modes" below. Eith
    each Eclipse edition (from `events-data.json`), Booking (one page with Visit and
    private dining as its second and third parts),
    Press, Gift cards, Jobs and the opening-team role pages (from `jobs-data.json` and
-   `jobs/*.md`), the filled role pages and the applicant privacy notice (re-wrapped
-   from `src/`), the cookie notice, the guest privacy notice and the accessibility
+   `jobs/*.md`), the filled role pages (re-wrapped from `src/`), Privacy (the
+   applicant privacy notice, re-wrapped from `src/`, then the cookie notice at
+   `#cookies`), the guest privacy notice and the accessibility
    statement, 404, and in the full build the components page (`/styleguide/`). Pages
    in `WAITING` (gift cards, an edition without its details, the legal drafts) are
    built in both modes but written only in the full build. Photographs come from
@@ -90,7 +91,7 @@ changes then. Every build prints its mode on its first line.
 | Pages | Every page not in `HIDDEN` (now all of them) or `WAITING` (gift cards, the legal drafts, an Eclipse edition without its details), in both languages. A hidden page isn't written, and neither are the share cards and illustrations only it uses | Every page, in both languages, and the components page |
 | Sections waiting for content (`gate()`) | Left out | Shown, with a yellow "Content needed" label and the key in `CONTENT-NEEDED.md` |
 | Header | The public tabs whose pages exist (`BUILT`), plus Work with us while anything is hidden; no Food / Wine / Bar tabs while Menu is hidden. Now Menu · About · Events · Visit (Visit is `/booking/#visit`) | The same, whatever `HIDDEN` says |
-| Footer "More" | The public tabs, Private dining and Booking (the booking page's other two parts), Press, Work with us, Privacy, Cookies (and the waiting pages once they're public) | The same, whatever `HIDDEN` says, with the waiting pages |
+| Footer "More" | The public tabs, Private dining and Booking (the booking page's other two parts), Press, Work with us, Privacy & cookies (and Gift cards and Accessibility once they're public) | The same, whatever `HIDDEN` says, with the waiting pages |
 | Home buttons | The first two of Book a table, See the menu, See open roles and @solhanoi on Instagram whose page is public (red, then outline): now Book a table and See the menu | Book a table, See the menu |
 | 404 buttons | The first two of Menu, Booking, Home and See open roles whose page is public: now Menu and Booking | Menu, Booking |
 | Home JSON-LD | `hasMenu` and `acceptsReservations` only while Menu and Booking are public (now both) | Both |

@@ -71,6 +71,9 @@ Put the mouse away; Tab moves forward, Shift+Tab back, Enter or Space presses.
       in the booking box, which goes down to the enquiry form.
 - [ ] `/booking/#enquire`: fill the form and send it with the keyboard alone.
 - [ ] The footer's **Cookie settings** opens the choices again.
+- [ ] The banner's **Cookie notice** link, and the old address `sol.pizza/privacy/cookies/`:
+      the privacy page at "Cookies on sol.pizza", below the applicant notice, the title
+      clear of the bar at the top.
 
 ## 5. VoiceOver, a spot check (iPhone)
 

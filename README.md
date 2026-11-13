@@ -29,9 +29,8 @@ come" and `README-DEPLOY.md`).
 | `/jobs/<slug>/` | The six opening-team roles: `host`, `server`, `bartender`, `pizzaiolo`, `line-cook`, `kitchen-porter` | Public |
 | `/jobs/<slug>` | The three filled roles, under "Recently filled": `restaurant-accountant`, `sous-chef`, `restaurant-supervisor`. Their descriptions are in English only: the Vietnamese pages say so, in Vietnamese, above the English text | Public, `noindex` |
 | `/login/` | The site password's sign-in page, with a link to careers (below) | Only while `SITE_PASSWORD` is set, `noindex` |
-| `/privacy/` | Applicant privacy notice (the address in the job descriptions and ads; `/privacy/#vi` opens `/vi/privacy/`) | Public, `noindex` |
-| `/privacy/cookies/` | Cookie notice: what the site keeps in the browser, and the choice | Public, `noindex` |
-| `/privacy/guests/` | Guest privacy notice: bookings, enquiries, the newsletter, rights | Draft, waits for the lawyer (`WAITING`), then `noindex` |
+| `/privacy/` | Privacy and cookies, two notices on one page: the applicant privacy notice first (the address in the job descriptions and ads; `/privacy/#vi` opens `/vi/privacy/`), then the cookie notice at `#cookies`: what the site keeps in the browser, and the choice. Until 13 Nov 2026 the cookie notice was a page of its own: `/privacy/cookies/` redirects to `#cookies`, in both languages | Public, `noindex`, open while the site password is on |
+| `/privacy/guests/` | Guest privacy notice: bookings, enquiries, the newsletter, rights. A page only while it's a draft: once approved it joins `/privacy/` as a section, not as a page (CONTENT-NEEDED.md, `legal-guest-privacy`) | Draft, waits for the lawyer (`WAITING`) |
 | `/accessibility/` | Accessibility statement: the site and the restaurant | Draft, waits for the lawyer (`WAITING`) |
 | `/styleguide/` | The parts pages are built from (after-dark sections, image bands, galleries, cards, quotes) | Full build only, never on sol.pizza |
 | `/dough/`, `/dough/log/` | The kitchen's dough calculator and dough log (below) | Behind the kitchen password (`/dough/login/`): no tab or footer link, `noindex`, not in the sitemap, no analytics, no `/vi/` copy |
@@ -57,7 +56,8 @@ is open (they have the Apply bar then). Menu keeps its Food /
 Wine / Bar tabs. The footer has the newsletter sign-up (on the home page it's in the
 page instead), Instagram and any other address in `SOCIAL`, and lists the pages (Private
 dining and Booking among them, each a link to its part of the booking page), Press,
-Work with us, Privacy, Cookies and **Cookie settings**; its last line is the company, with
+Work with us, Privacy & cookies (one page: the applicant privacy notice and the cookie
+notice) and **Cookie settings**; its last line is the company, with
 its tax code once `TAX_CODE` is set.
 
 ### Taking a page down
@@ -115,7 +115,7 @@ Accessibility 100, Best Practices 95+, SEO 100, LCP 2.5 s or less, CLS under 0.1
 200 ms or less, for Home, Menu and Booking, each run three times as a guest's first page
 (the median counts). On sol.pizza, Cloudflare's bot script costs every first page Best
 Practices points and some blocking time (LAUNCH-CHECKLIST.md §6); previews don't have it.
-Screenshots of 13 pages at 360, 390, 768, 1,024 and 1,440 px in both
+Screenshots of 12 pages at 360, 390, 768, 1,024 and 1,440 px in both
 languages land in `check/out/screens/` (open its `index.html`); a page that scrolls
 sideways fails the check. What only people can check (real phones, the apps' own
 browsers, a screen reader, paper) is in `MANUAL-TESTS.md`.
@@ -526,8 +526,10 @@ says yes, on the guest pages only (never the kitchen's), from `build/design/site
   is asked again sooner if the banner's wording changes (`CONSENT_VERSION` in
   `build/gen.py`). **Cookie settings** in every footer reopens it; taking a yes back
   removes that tool's cookies.
-- `/privacy/cookies/` lists everything kept in the browser. If that changes, change the
-  notice, the banner and `CONSENT_VERSION` together.
+- The cookie notice, on `/privacy/` at `#cookies` (under the applicant privacy notice; the
+  banner's "Cookie notice" link and the old `/privacy/cookies/` lead there), lists everything
+  kept in the browser. If that changes, change the notice, the banner and
+  `CONSENT_VERSION` together.
 - Events, with a yes: `book_click` (a link to the booking box, `/booking/#book`: links
   to Visit and private dining, on the same page, don't count), `call_click`, `zalo_click`, `whatsapp_click`,
   `email_click`, `directions_click`, `menu_view` (with the section), `enquiry_submit`

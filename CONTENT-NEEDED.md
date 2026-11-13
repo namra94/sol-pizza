@@ -77,9 +77,14 @@ Cleared by the lawyer on 13 October 2026: the cookie banner and its notice, no a
 for the drinks pages, and the site is not an e-commerce platform (no Ministry of Industry
 and Trade notification for online booking). The drinks offers stay as they are.
 
+Since 13 November 2026 the cookie notice is on `/privacy/`, at `#cookies`, under the
+applicant privacy notice, word for word. The guest privacy notice joins them there, as a
+section, once the lawyer approves it: not as a page of its own (`legal-guest-privacy`,
+below).
+
 | What | Where it goes | Format | Who has it |
 | --- | --- | --- | --- |
-| The guest privacy notice's facts | `/privacy/guests/`: how long booking and enquiry details are kept, and who processes them (ResDiary, Google Workspace, Cloudflare, Adobe Fonts; Google Analytics and Meta with a yes to cookies) | Retention periods; any processor missing from the list | Arman, the lawyer |
+| The guest privacy notice's facts | `/privacy/guests/` while it's a draft (a section of `/privacy/` once approved): how long booking and enquiry details are kept, and who processes them (ResDiary, Google Workspace, Cloudflare, Adobe Fonts; Google Analytics and Meta with a yes to cookies) | Retention periods; any processor missing from the list | Arman, the lawyer |
 | Allergies (health data) | `/privacy/guests/` says the team asks a guest's consent before recording an allergy or dietary need: is that how it will work, and is that consent enough under Law 91/2025? | Yes or what to change | Arman, the lawyer |
 
 ## Gated sections
@@ -113,5 +118,5 @@ show on `/booking/`, at `#visit` and `#private-dining`.
 | `home-press` | The home page: press or review quotes (Press and review quotes, above) |
 | `event-<slug>` | The whole page of each Eclipse edition, `/events/<slug>/`: a line or two on what it is. It goes live by itself once `summary_en` and `summary_vi` are in `build/events-data.json`; a new edition needs nothing here |
 | `gift-cards` | The whole page `/gift-cards/`: the values, how long a card lasts, how to buy one (Gift cards, above). To publish it, delete its line in `WAITING` in `build/gen.py` |
-| `legal-guest-privacy` | The whole page `/privacy/guests/`, the guest privacy notice: the lawyer's approval, and the retention periods (Legal, above). Then delete its line in `WAITING` |
+| `legal-guest-privacy` | The guest privacy notice, a whole page, `/privacy/guests/`, only while it's a draft: the lawyer's approval, and the retention periods (Legal, above). Once approved it joins `/privacy/` as a section beside the applicant and cookie notices, not as a new page: its sections move into `build_privacy()` (as `cookie_notice()` did), the page and its line in `WAITING` go, and `/privacy/guests/` redirects to `/privacy/#guests`. The build stops if its `WAITING` line is deleted on its own |
 | `legal-accessibility` | The whole page `/accessibility/`, the accessibility statement: the lawyer's approval, and the building's access facts (Getting here, above). Then delete its line in `WAITING` |

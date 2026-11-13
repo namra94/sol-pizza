@@ -13,7 +13,7 @@ const consent = require('./consent.js');
 
 const WIDTHS = [360, 390, 768, 1024, 1440];
 const PAGES = ['/', '/menu/', '/menu/wine/', '/menu/bar/', '/about/', '/events/', '/booking/', '/press/', '/jobs/',
-               '/jobs/host/', '/privacy/', '/privacy/cookies/', '/no-such-page/'];
+               '/jobs/host/', '/privacy/', '/no-such-page/'];
 
 (async () => {
   let base = process.argv[2], server = null;

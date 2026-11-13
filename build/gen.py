@@ -435,8 +435,9 @@ BUILT = {'menu', 'about', 'events', 'booking'}
 # path: (key, what's missing). They're built every time, so a mistake in one still
 # stops the build, and the full build shows them with a "Content needed" label; the
 # public build leaves them out like a HIDDEN page (no file, link, sitemap entry or
-# share card). To make one public, delete its line. An event's page waits by itself
-# until its details are in build/events-data.json (EVENTS below).
+# share card). To make one public, delete its line; all but the guest privacy notice,
+# which joins /privacy/ as a section once approved (build_guest_privacy()). An event's
+# page waits by itself until its details are in build/events-data.json (EVENTS below).
 WAITING = {
     '/gift-cards/': ('gift-cards', 'gift card values, how long a card lasts, and how to buy one'),
     '/privacy/guests/': ('legal-guest-privacy', 'the lawyer’s approval of the guest privacy notice, with the '
@@ -1156,11 +1157,9 @@ def footer(news=True):
             + [(href, name) for href, name in (('/press/', t('Press', 'Báo chí')),
                                                ('/gift-cards/', t('Gift cards', 'Thẻ quà tặng'))) if not hidden(href)]
             + [('/jobs/', JOBS_TAB)]
-            # Privacy: the guests' notice once it's public, the applicants' beside it
-            + ([('/privacy/guests/', t('Privacy', 'Quyền riêng tư')),
-                ('/privacy/', t('Applicant privacy', 'Bảo mật cho ứng viên'))] if not hidden('/privacy/guests/')
-               else [('/privacy/', t('Privacy', 'Bảo mật'))])
-            + [('/privacy/cookies/', t('Cookies', 'Cookie'))]
+            # One page for the notices (build_privacy()): the applicants', the cookie notice
+            # and, once the lawyer approves it, the guests'
+            + [('/privacy/', t('Privacy &amp; cookies', 'Bảo mật &amp; cookie'))]
             + ([('/accessibility/', t('Accessibility', 'Hỗ trợ tiếp cận'))] if not hidden('/accessibility/') else []))
     return """<footer class="site-footer">
   <div class="wrap"><div class="footer-inner">
@@ -1240,7 +1239,7 @@ def consent_banner():
     return """<div class="consent" id="consent" role="region" aria-labelledby="consent-h">
   <div class="wrap consent-in">
     <p class="label" id="consent-h">{h}</p>
-    <p class="consent-text">{text} <a href="/privacy/cookies/">{notice}</a></p>
+    <p class="consent-text">{text} <a href="/privacy/#cookies">{notice}</a></p>
     <div class="consent-settings" id="consent-settings" hidden>{analytics}{ads}</div>
     <div class="consent-actions"><button class="btn btn-outline btn-sm" type="button" data-consent="all">{all}</button><button class="btn btn-outline btn-sm" type="button" data-consent="none">{none}</button><button class="btn btn-outline btn-sm" type="button" data-consent="settings" aria-expanded="false" aria-controls="consent-settings">{settings}</button><button class="btn btn-outline btn-sm" type="button" data-consent="save" hidden>{save}</button></div>
   </div>
@@ -3357,7 +3356,17 @@ def build_site_login():
 
 
 # ==========================================================================
-# PRIVACY  /privacy/   (src/privacy/index.html, text untouched)
+# PRIVACY AND COOKIES  /privacy/   two notices on one page, both cleared by the lawyer:
+#   the applicant privacy notice (src/privacy/index.html, its text untouched), first:
+#     the job descriptions and the ads link to /privacy/ for it, and /privacy/#vi
+#     opens the Vietnamese page
+#   the cookie notice, at #cookies (cookie_notice()): what the site stores in the
+#     browser, and the choice. A page of its own until 13 Nov 2026, /privacy/cookies/,
+#     which now redirects here; the cookie banner's "Cookie notice" link leads here
+# Each keeps its own title and "Last updated" date, word for word: they are two
+# notices, so the page has two h1s. The guest privacy notice joins them as a third
+# section, not a page, once the lawyer approves it (build_guest_privacy()). The page
+# is noindex, and stays outside the site password (wrangler.jsonc).
 # ==========================================================================
 def build_privacy():
     h = read(os.path.join(SRC, 'privacy', 'index.html'))
@@ -3376,7 +3385,10 @@ def build_privacy():
         return ('<div data-l="%s" lang="%s" id="%s"><header class="page-title">%s</header>\n'
                 '<div class="prose">\n%s\n</div></div>\n' % (lang, lang, block_id, h1, part))
 
-    main = ('<main id="main" class="wrap">\n' + block(en, 'en', 'en') + block(vi, 'vi', 'vi-notice') + '</main>\n')
+    # The page is verbatim, so nothing touches the applicants' notice; the cookie notice
+    # keeps the nbsp() it had on its own page.
+    main = ('<main id="main" class="wrap">\n' + block(en, 'en', 'en') + block(vi, 'vi', 'vi-notice')
+            + nbsp(cookie_notice()) + '</main>\n')
     return page('/privacy/', 'page-privacy',
                 (title, 'Thông báo bảo mật dành cho ứng viên — Sol'),
                 (desc, 'Cách Sol thu thập, sử dụng và lưu trữ dữ liệu cá nhân của ứng viên, theo Luật '
@@ -3385,16 +3397,17 @@ def build_privacy():
                 body_attrs=' data-page="privacy"', verbatim=True)
 
 
-# ==========================================================================
-# COOKIES  /privacy/cookies/   what the site stores in the browser, and the choice
-# The short notice that goes with the consent banner (consent_banner(), site.js).
-# Cleared by the lawyer with the banner (13 Oct 2026). If what the site stores
+# --------------------------------------------------------------------------
+# The cookie notice, /privacy/#cookies: what the site stores in the browser, and the
+# choice. The short notice that goes with the consent banner (consent_banner(),
+# site.js). Cleared by the lawyer with the banner (13 Oct 2026): its words, its tables
+# and its date are as they were on /privacy/cookies/. If what the site stores
 # changes, change this table, the banner and CONSENT_VERSION together.
-# ==========================================================================
+# --------------------------------------------------------------------------
 COOKIES_UPDATED = date(2026, 10, 13)
 
 
-def build_cookies():
+def cookie_notice():
     def row(name, what, how_long, who):
         return '<tr><td><code>%s</code></td><td>%s</td><td>%s</td><td>%s</td></tr>' % (name, what, how_long, who)
 
@@ -3466,35 +3479,42 @@ def build_cookies():
             % t('Cookie settings', 'Cài đặt cookie')),
         '<h2>%s</h2><p>%s</p>' % (
             t('Questions', 'Câu hỏi'),
+            # the applicants' notice is above it on the same page now: the link goes to its
+            # title (#en, the English block; #vi, the Vietnamese heading), not to the page again
             t('Write to <a href="mailto:%s">%s</a>. If you applied for a job with us, the '
-              '<a href="/privacy/">applicant privacy notice</a> explains how we handle your application.'
+              '<a href="/privacy/#en">applicant privacy notice</a> explains how we handle your application.'
               % (EMAIL, EMAIL),
               'Hãy viết cho chúng tôi qua <a href="mailto:%s">%s</a>. Nếu bạn đã ứng tuyển tại Sol, '
-              '<a href="/privacy/">thông báo bảo mật dành cho ứng viên</a> giải thích cách chúng tôi xử lý '
+              '<a href="/privacy/#vi">thông báo bảo mật dành cho ứng viên</a> giải thích cách chúng tôi xử lý '
               'hồ sơ của bạn.' % (EMAIL, EMAIL))),
     ]
-    main = ('<main id="main" class="wrap">\n<header class="page-title"><p class="eyebrow">%s</p><h1>%s</h1>'
-            '<p class="page-lead updated">%s</p></header>\n<div class="prose prose-legal">\n%s\n</div>\n</main>\n'
+    # A notice of its own on the shared page: its title is an h1, as it was
+    return ('<section class="page-part" id="cookies" aria-labelledby="cookies-h">\n<header class="page-title">'
+            '<p class="eyebrow">%s</p><h1 id="cookies-h">%s</h1>'
+            '<p class="page-lead updated">%s</p></header>\n<div class="prose prose-legal">\n%s\n</div>\n</section>\n'
             % (t('Privacy', 'Bảo mật'), t('Cookies on sol.pizza', 'Cookie trên sol.pizza'),
                t('Last updated %d %s %d' % (COOKIES_UPDATED.day, EN_MONTHS[COOKIES_UPDATED.month - 1],
                                            COOKIES_UPDATED.year),
                  'Cập nhật lần cuối: %02d/%02d/%d' % (COOKIES_UPDATED.day, COOKIES_UPDATED.month,
                                                      COOKIES_UPDATED.year)),
                '\n'.join(sections)))
-    return page('/privacy/cookies/', 'page-legal',
-                ('Cookies — Sol', 'Cookie — Sol'),
-                ('What sol.pizza keeps in your browser, and how to change your choice.',
-                 'Những gì sol.pizza lưu trong trình duyệt của bạn, và cách thay đổi lựa chọn.'),
-                main, index=False, extra='<meta name="robots" content="noindex, follow">')
 
 
 # ==========================================================================
 # GUEST PRIVACY  /privacy/guests/   ACCESSIBILITY  /accessibility/
 # Drafts for the lawyer, written in full; each waits (WAITING) until approved, so
 # only the full previews show it, with a "Draft" note that goes with the approval.
+# The guest privacy notice is a page only while it is a draft, so the lawyer has one
+# address to read: once approved it joins /privacy/ as a section (#guests), as the
+# cookie notice did, and this page goes. Don't publish it by deleting its WAITING
+# line: the build stops if that is tried (below).
 # ==========================================================================
 LEGAL_UPDATED = date(2026, 10, 13)
 TO_COME = t('[to come]', '[sẽ cập nhật]')
+assert '/privacy/guests/' in WAITING, \
+    'The guest privacy notice isn\'t published as a page: once the lawyer approves it, move its sections into ' \
+    '/privacy/ as a third notice (build_privacy(), like cookie_notice(), at #guests), take build_guest_privacy() ' \
+    'out, redirect /privacy/guests/ there, and delete this check (CONTENT-NEEDED.md, legal-guest-privacy).'
 
 
 def legal_page(path, eyebrow, h1, sections, title, desc, index=False):
@@ -3545,9 +3565,9 @@ def build_guest_privacy():
                     t('To send you news from Sol now and then, until you ask us to stop',
                       'Để thỉnh thoảng gửi tin từ Sol, cho đến khi bạn yêu cầu dừng')),
             ])),
-        '<p>%s</p>' % t('What the website keeps in your browser is in the <a href="/privacy/cookies/">cookie '
+        '<p>%s</p>' % t('What the website keeps in your browser is in the <a href="/privacy/#cookies">cookie '
                         'notice</a>.',
-                        'Những gì trang web lưu trong trình duyệt của bạn có trong <a href="/privacy/cookies/">'
+                        'Những gì trang web lưu trong trình duyệt của bạn có trong <a href="/privacy/#cookies">'
                         'thông báo về cookie</a>.'),
         '<h2>%s</h2><p>%s</p>' % (
             t('Allergies and dietary needs', 'Dị ứng và chế độ ăn'),
@@ -3573,9 +3593,9 @@ def build_guest_privacy():
                   'trình duyệt và đếm lượt xem trang)'),
             ]),
             t('If you say yes to them in the cookie banner, Google Analytics and Meta also receive information '
-              'about your visit: the <a href="/privacy/cookies/">cookie notice</a> explains.',
+              'about your visit: the <a href="/privacy/#cookies">cookie notice</a> explains.',
               'Nếu bạn đồng ý trong bảng chọn cookie, Google Analytics và Meta cũng nhận thông tin về lượt truy '
-              'cập của bạn: <a href="/privacy/cookies/">thông báo về cookie</a> giải thích rõ.'),
+              'cập của bạn: <a href="/privacy/#cookies">thông báo về cookie</a> giải thích rõ.'),
             t('Some of them keep data outside Vietnam.', 'Một số công ty lưu dữ liệu ở ngoài Việt Nam.')),
         '<h2>%s</h2><ul>%s</ul>' % (
             t('How long we keep it', 'Chúng tôi lưu trong bao lâu'),
@@ -5298,7 +5318,7 @@ if __name__ == '__main__':
         build_event(e)
     for fn in (build_home, build_about, build_food, build_wine, build_bar, build_events, build_booking,
                build_gift_cards, build_press, build_guest_privacy, build_accessibility,
-               build_jobs, build_site_login, build_privacy, build_cookies, build_styleguide, build_dough, build_dough_log,
+               build_jobs, build_site_login, build_privacy, build_styleguide, build_dough, build_dough_log,
                build_dough_login, build_office_home, build_office_login, build_purchase, build_purchase_list,
                build_404):
         fn()

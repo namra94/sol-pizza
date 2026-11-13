@@ -253,21 +253,24 @@ async function main() {
     }
   }
 
+  // Pages in parts (/booking/, /privacy/): where a page ended up, and whether a part's
+  // heading landed clear of the bar that stays at the top (wide screens), in the top half
+  const where = async page => { const u = new URL(page.url()); return u.pathname + u.search + u.hash; };
+  const lands = async (page, heading) => {
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(500);
+    return page.evaluate(h => {
+      const bar = document.querySelector('.sitebar'), r = document.querySelector(h).getBoundingClientRect();
+      const end = bar && getComputedStyle(bar).display !== 'none' ? Math.max(0, bar.getBoundingClientRect().bottom) : 0;
+      return {end: Math.round(end), top: Math.round(r.top), clear: r.top >= end && r.bottom < innerHeight / 2};
+    }, heading);
+  };
+
   console.log('One page for booking, Visit and private dining');
   {
     // /booking/ has three parts: the booking box (#book), Visit (#visit) and groups and
     // private dining (#private-dining, its form at #enquire). The old pages lead to their
     // part, and a link to a part lands with its heading clear of the bar at the top.
-    const where = async page => { const u = new URL(page.url()); return u.pathname + u.search + u.hash; };
-    const lands = async (page, heading) => {
-      await page.evaluate(() => document.fonts.ready);
-      await page.waitForTimeout(500);
-      return page.evaluate(h => {
-        const bar = document.querySelector('.sitebar'), r = document.querySelector(h).getBoundingClientRect();
-        const end = bar && getComputedStyle(bar).display !== 'none' ? Math.max(0, bar.getBoundingClientRect().bottom) : 0;
-        return {end: Math.round(end), top: Math.round(r.top), clear: r.top >= end && r.bottom < innerHeight / 2};
-      }, heading);
-    };
     const parts = [['#book', '#book h1'], ['#visit', '#s-visit'], ['#private-dining', '#s-private-dining'], ['#enquire', '#s-enquire']];
     const {ctx, page} = await visitor({width: 1280, height: 900});
     await ctx.addInitScript(consent.store, consent.choice({}, V));
@@ -300,6 +303,36 @@ async function main() {
       }
       await phone.ctx.close();
     }
+    await ctx.close();
+  }
+
+  console.log('One page for privacy and cookies');
+  {
+    // /privacy/ has the applicant privacy notice, then the cookie notice at #cookies. The
+    // old /privacy/cookies/ leads there, and so does the cookie banner's "Cookie notice"
+    // link; the footer has one "Privacy & cookies" link, beside Cookie settings.
+    const {ctx, page} = await visitor({width: 1280, height: 900});
+    await ctx.addInitScript(consent.store, consent.choice({}, V));
+    for (const [from, to] of [['/privacy/cookies/', '/privacy/#cookies'], ['/privacy/cookies', '/privacy/#cookies'],
+                              ['/vi/privacy/cookies/', '/vi/privacy/#cookies'], ['/vi/privacy/cookies', '/vi/privacy/#cookies']]) {
+      await page.goto(base + from, {waitUntil: 'domcontentloaded'});
+      ok(await where(page) === to, 'the old address ' + from + ' leads to ' + to + ' (' + await where(page) + ')');
+    }
+    for (const lang of ['', '/vi']) {
+      await page.goto(base + lang + '/', {waitUntil: 'domcontentloaded'});
+      const notice = await page.getAttribute('#consent .consent-text a', 'href');
+      const privacy = await page.$$eval('.site-footer nav a', as => as.map(a => a.getAttribute('href')).filter(h => /privacy/.test(h)));
+      ok(notice === lang + '/privacy/#cookies' && privacy.join(' ') === lang + '/privacy/' &&
+         (await page.$('.site-footer [data-consent-open]')) !== null,
+         lang + '/: the banner’s Cookie notice link goes to ' + notice + '; the footer has one privacy link, ' +
+         privacy.join(' ') + ', and Cookie settings');
+    }
+    await page.goto('about:blank');
+    await page.goto(base + '/privacy/#cookies', {waitUntil: 'domcontentloaded'});
+    const m = await lands(page, '#cookies h1');
+    ok(m.clear, '/privacy/#cookies: the cookie notice’s title is clear of the bar at the top (at ' + m.top + 'px, the bar ends at ' + m.end + ')');
+    await page.click('#cookies [data-consent-open]');
+    ok(await page.isVisible('#consent-settings'), 'the cookie notice’s own Cookie settings button opens the choices');
     await ctx.close();
   }
 

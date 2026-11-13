@@ -182,7 +182,7 @@ The listing is "Sol Hanoi" and still carries Sol Pizza's reviews.
         off, which sets a cookie, `m`, on `m.stripe.com` for 13 months.
 
       Ask ResDiary whether Google's tags can be turned off for Sol's widget. Ask the lawyer
-      whether the cookie notice (`/privacy/cookies/`) needs a line until then. (Watched from
+      whether the cookie notice (`/privacy/#cookies`) needs a line until then. (Watched from
       a PC with AdGuard, which stops the ad servers and Cloudflare Insights, and in Google's
       PageSpeed Insights, which has no blocker and where they all went through. No Google
       Analytics hit, `/g/collect`, showed in either. On a PC with a blocker, this list can't
@@ -279,15 +279,16 @@ Drafts waiting in the full preview, each marked "Draft": `/privacy/guests/` and
 `/accessibility/`. (The booking terms on `/booking/` wait for their content first.)
 
 - [ ] The guest privacy notice: the retention periods, the list of companies that handle
-      guests' data, and the wording. Once approved, delete its line in `WAITING`
-      (`build/gen.py`) and merge: it goes live, and into the footer.
+      guests' data, and the wording. Once approved, it joins `/privacy/` as a section
+      beside the applicant and cookie notices, not as a page (CONTENT-NEEDED.md,
+      `legal-guest-privacy`, says how); the footer keeps its one "Privacy & cookies" link.
 - [ ] The accessibility statement: the building's facts (step-free access, the lift, the
       toilets), then the same.
 - [ ] Once the guest notice is live, link it from the enquiry forms and the newsletter
       sign-up.
 
 Already signed off by the lawyer (13 October 2026): the cookie banner and the cookie
-notice, the line on alcohol on the wine and bar pages, Happy hour and Wine night, and no
+notice (moved word for word to `/privacy/#cookies` on 13 Nov 2026), the line on alcohol on the wine and bar pages, Happy hour and Wine night, and no
 age check. The site isn't an e-commerce platform: booking a table needs no notification.
 
 - [ ] **Before selling anything on the site** (gift cards bought online, Eclipse tickets
