@@ -16,13 +16,18 @@ sol.pizza → Delete).
 - [ ] Scroll the home page: nothing jumps as it loads; the bar at the foot stays.
 - [ ] **VI** (top left): the page in Vietnamese at `sol.pizza/vi/`. In the same tab, type
       `sol.pizza` again: it opens in Vietnamese. **EN**: back to English.
-- [ ] The menu button (top right): the menu opens over the page; **Menu**, **Events**,
-      **Visit**… each opens its page; the × closes it.
+- [ ] The menu button (top right): the menu opens over the page; **Menu**, **Events**…
+      each opens its page; **Visit** opens the booking page at "Find us", its heading at
+      the top of the screen; the × closes it.
+- [ ] An old link, `sol.pizza/visit-us/`, lands on "Find us" too, and
+      `sol.pizza/private-dining/` on "Groups and private dining", both on the booking
+      page.
 - [ ] **Book** in the phone bar: the booking page: the booking form loads, and a test
       booking goes through (cancel it after).
 - [ ] **Directions**: Google Maps (the app, or the website) opens with the way to Sol.
       Check the pin is on the new building.
-- [ ] `/private-dining/`: fill the form, **Send by email**: Mail opens with the message
+- [ ] `/booking/#enquire` (the footer's **Private dining**, then down to "Tell us about
+      it"): fill the form, **Send by email**: Mail opens with the message
       ready, to hello@sol.pizza. The message is also on the page below the form. (Don't
       send it, or send it to yourself.)
 - [ ] The footer's **Sign up by email**: Mail opens with "Please add this email address…".
@@ -61,7 +66,10 @@ Put the mouse away; Tab moves forward, Shift+Tab back, Enter or Space presses.
       with the focus hides behind the cookie banner or the bar at the top.
 - [ ] Narrow the window below 1,024 px: the menu button opens the menu with Enter, and
       Esc closes it, the focus back on the button.
-- [ ] `/private-dining/`: fill the form and send it with the keyboard alone.
+- [ ] **Visit** in the bar at the top: the booking page at "Find us", the heading below
+      the bar, not under it. The same for **Book**, and for "Tell us about your group"
+      in the booking box, which goes down to the enquiry form.
+- [ ] `/booking/#enquire`: fill the form and send it with the keyboard alone.
 - [ ] The footer's **Cookie settings** opens the choices again.
 
 ## 5. VoiceOver, a spot check (iPhone)

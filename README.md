@@ -22,9 +22,7 @@ come" and `README-DEPLOY.md`).
 | `/menu/bar/` | Menu: Bar | Public |
 | `/events/` | Events: Eclipse, Sol's popup series, coming up and past (from `build/events-data.json`) | Public |
 | `/events/<slug>/` | An Eclipse edition: what it is, when, the chefs, the menu, the price, how to book | Waits for its details (`summary_en`, `summary_vi`) |
-| `/private-dining/` | Private dining: groups of seven or more and private events, the enquiry form (the spaces, set menus and minimum spend wait for their figures) | Public |
-| `/visit-us/` | Visit: hours, address, contact, good to know (not `/visit/`: browsers remember its old redirect to `/booking/`) | Public |
-| `/booking/` | Booking: the booking box at `/booking/#book`, where every Book button leads (the old `/visit/`, `/book` and `/reservations` redirect here) | Public |
+| `/booking/` | Booking, Visit and private dining on one page, in that order: the booking box at `/booking/#book`, where every Book button leads; Visit at `#visit` (hours, address, contact, good to know); groups of seven or more and private events at `#private-dining`, with the enquiry form at `#enquire` (the spaces, set menus and minimum spend wait for their figures). Until 13 Nov 2026 Visit and Private dining were pages of their own: `/visit-us/` and `/private-dining/` now redirect to their parts, in both languages (the older `/visit/`, `/book` and `/reservations` redirect here too) | Public |
 | `/press/` | Press: the facts, the logo to download, photographs (waiting) and who to ask | Public |
 | `/gift-cards/` | Gift cards: values, how long a card lasts, how to buy | Waits for its facts (`WAITING`) |
 | `/jobs/` | Work with us: the opening-team cards, plus the role pages under `/jobs/` | Public |
@@ -41,28 +39,33 @@ come" and `README-DEPLOY.md`).
 
 Also public: the 404 pages (English, and Vietnamese for any missing `/vi/…` address),
 `sitemap.xml` (both languages), `robots.txt`, and the assets and share cards those pages
-use. The old addresses in `src/_redirects` (`/story`, `/visit`, `/wine`, `/wines`,
-`/drinks`, `/menu.html`, `/book`, `/reservations`, `/careers` and the rest) go to their
-pages with a 301, and keep any `?lang=vi`, which then opens the Vietnamese page.
+use. The old addresses in `src/_redirects` (`/story`, `/visit`, `/visit-us`,
+`/private-dining`, `/wine`, `/wines`, `/drinks`, `/menu.html`, `/book`, `/reservations`,
+`/careers` and the rest) go to their pages with a 301, and keep any `?lang=vi`, which
+then opens the Vietnamese page. No link on the site goes through one: the build stops
+if a page links to an address that redirects (`build/README.md`, "Link check").
 
 The header: the logo at the top; under it a bar that stays at the top of the window as the
-page scrolls, with Menu · About · Events · Private dining · Visit (`NAV_TABS` and `BUILT`
-in `build/gen.py`), EN · VI and the red **Book** button, which goes to the
+page scrolls, with Menu · About · Events · Visit (`NAV_TABS` and `BUILT` in
+`build/gen.py`; Visit leads to its part of the booking page, `/booking/#visit`, and
+private dining has no tab), EN · VI and the red **Book** button, which goes to the
 booking page in the same language. On phones and tablets (below 1024px wide): a slim bar
 with EN · VI, the logo and the menu button, and at the foot of the window a bar with Book,
 Call on English pages and Zalo on Vietnamese ones (Call until there's a Zalo number), and
 Directions, hidden on the booking page, and on the role pages while a hiring round
 is open (they have the Apply bar then). Menu keeps its Food /
 Wine / Bar tabs. The footer has the newsletter sign-up (on the home page it's in the
-page instead), Instagram and any other address in `SOCIAL`, and lists the pages, Press,
+page instead), Instagram and any other address in `SOCIAL`, and lists the pages (Private
+dining and Booking among them, each a link to its part of the booking page), Press,
 Work with us, Privacy, Cookies and **Cookie settings**; its last line is the company, with
 its tax code once `TAX_CODE` is set.
 
 ### Taking a page down
 
 `HIDDEN`, near the top of `build/gen.py`, lists the pages that aren't public by
-their section: `'menu'` (Food, Wine and Bar go together), `'about'`, `'visit'`,
-`'booking'`, `'events'`, `'private-dining'`. It is empty: every page is public. To take
+their section: `'menu'` (Food, Wine and Bar go together), `'about'`, `'events'`,
+`'booking'` (one page: the booking box, Visit and private dining go together). It is
+empty: every page is public. To take
 one down, add its key, open a pull request, check its Preview URL, and merge. The
 tab, the footer link, the home and 404 buttons, the sitemap entry, the structured
 data, the share card and the redirects (to the home page in the same language, with a
@@ -112,7 +115,7 @@ Accessibility 100, Best Practices 95+, SEO 100, LCP 2.5 s or less, CLS under 0.1
 200 ms or less, for Home, Menu and Booking, each run three times as a guest's first page
 (the median counts). On sol.pizza, Cloudflare's bot script costs every first page Best
 Practices points and some blocking time (LAUNCH-CHECKLIST.md §6); previews don't have it.
-Screenshots of 15 pages at 360, 390, 768, 1,024 and 1,440 px in both
+Screenshots of 13 pages at 360, 390, 768, 1,024 and 1,440 px in both
 languages land in `check/out/screens/` (open its `index.html`); a page that scrolls
 sideways fails the check. What only people can check (real phones, the apps' own
 browsers, a screen reader, paper) is in `MANUAL-TESTS.md`.
@@ -254,6 +257,14 @@ tells you what to update.
 
 ### Booking
 
+`/booking/` is one page in three parts: the booking box (`#book`), Visit (`#visit`) and
+groups and private dining (`#private-dining`), built by `build_booking()`,
+`visit_part()` and `private_dining_part()` in `build/gen.py`. The page's title is the
+booking box's; the other two parts open with what was each one's page title, a heading
+level down, and space sets the parts apart, never a rule. A link to a part lands with
+its heading clear of the bar at the top (`npm run check` measures it, on a laptop and a
+phone). The rest of this section is the booking box.
+
 Online booking is on. `RESDIARY_URL` near the top of `build/gen.py` holds the ResDiary
 widget's address (ResDiary → Promote → Widget configurator → Embed Code), and the Booking
 page's booking box shows the widget in a frame and says "Book online below, or call or
@@ -309,9 +320,9 @@ pressing **Send by email** opens the guest's email app with the message ready, t
 `ENQUIRIES` (hello@sol.pizza), the subject in English so the inbox sorts them
 (`Private dining — Lan`) and the details in the page's language;
 the message also appears on the page, to copy, for a computer with no email app. There's
-one: groups and private dining (`/private-dining/#enquire`, where every "seven or
-more?" line leads). A second, a table for opening week, is on `/booking/` only while
-`RESDIARY_URL` is empty.
+one: groups and private dining (`/booking/#enquire`, in the booking page's third part,
+where every "seven or more?" line leads). A second, a table for opening week, is on
+`/booking/` only while `RESDIARY_URL` is empty.
 The **Sign up by email** button in every footer sends "Please add this email address to
 Sol's newsletter": the email from the guest's own address is their consent. Keep the
 list somewhere the team can find it (LAUNCH-CHECKLIST.md, "Enquiries and the
@@ -517,7 +528,8 @@ says yes, on the guest pages only (never the kitchen's), from `build/design/site
   removes that tool's cookies.
 - `/privacy/cookies/` lists everything kept in the browser. If that changes, change the
   notice, the banner and `CONSENT_VERSION` together.
-- Events, with a yes: `book_click`, `call_click`, `zalo_click`, `whatsapp_click`,
+- Events, with a yes: `book_click` (a link to the booking box, `/booking/#book`: links
+  to Visit and private dining, on the same page, don't count), `call_click`, `zalo_click`, `whatsapp_click`,
   `email_click`, `directions_click`, `menu_view` (with the section), `enquiry_submit`
   (once per form per visit, with the form's name: Private dining) and
   `newsletter_signup`; with a yes to Advertising, the matching Meta events (`BookClick`,

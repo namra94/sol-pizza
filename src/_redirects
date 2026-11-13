@@ -9,6 +9,17 @@
 /story/index.html /about/   301
 /visit/index.html /booking/ 301
 
+# Visit and Private dining became parts of the Booking page (13 Nov 2026), in both
+# languages. (/visit, above, is older: it has gone to the top of /booking/ since 24 Sep.)
+/visit-us/           /booking/#visit              301
+/visit-us            /booking/#visit              301
+/vi/visit-us/        /vi/booking/#visit           301
+/vi/visit-us         /vi/booking/#visit           301
+/private-dining/     /booking/#private-dining     301
+/private-dining      /booking/#private-dining     301
+/vi/private-dining/  /vi/booking/#private-dining  301
+/vi/private-dining   /vi/booking/#private-dining  301
+
 # Wine moved under Menu (Printed menu build)
 /wine /menu/wine/ 301
 /wine/ /menu/wine/ 301

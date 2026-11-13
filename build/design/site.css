@@ -375,6 +375,20 @@ html:not(.is-open) .when-open, html.is-open .when-pre { display: none !important
 .booking-visit { margin-top: 40px; text-align: center; font-size: var(--fs-small); line-height: 1.6; color: var(--ink-muted); }
 .booking-visit .link-sc { margin-top: 10px; font-size: var(--fs-label); }
 .page-booking .offer.booking { margin-top: 40px; }
+/* /booking/ is one page in three parts: the booking box (#book), then Visit (#visit) and
+   groups and private dining (#private-dining), each of those two opening with what was
+   its page title (.section-intro). Space sets the parts apart, never a rule: the box
+   above and the hours below bring their own. A link to a part lands with its heading
+   clear of the bar that stays at the top (scroll-padding-top, on wide screens) and a
+   little air above it. */
+.page-part { margin-top: 120px; }
+.page-part, .page-part .form-section, .page-booking .page-title { scroll-margin-top: 24px; }
+.page-part .section-intro p:last-child { max-width: 700px; }     /* as wide as the page lead it was */
+.page-part .visit-info { margin-top: 48px; }
+@media (max-width: 760.98px) {
+  .page-part { margin-top: 80px; }
+  .page-part .visit-info { margin-top: 36px; }
+}
 
 /* ------------------------------------------------------------------ legal pages
    The cookie notice: long text with tables. */

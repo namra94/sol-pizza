@@ -7,6 +7,23 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## One page for booking, Visit and private dining, 13 Nov 2026
+
+Visit (`/vi/visit-us/`) and Private dining (`/vi/private-dining/`) are no longer pages of their own: they are the second and third parts of the booking page, `/vi/booking/`, under the booking box, and the old addresses lead there. **No Vietnamese line is new, and none changed.** Every line of the two old pages is on the booking page word for word (checked by comparing every piece of text on the three old pages with the new one, in both languages): “Ghé thăm · Tìm chúng tôi · Sol nằm ở hai tầng đầu của tòa nhà số 7, ngõ 88 Quảng An. Chúng tôi sắp khai trương.” and “Tiệc riêng · Nhóm đông và tiệc riêng · Từ bảy người trở lên, hay một buổi tối chỉ dành riêng cho bạn…” now open their parts of the page as headings, where they were page titles. In the header, “Ghé thăm” leads to that part of the booking page and “Tiệc riêng” is no longer a tab; it is still in the footer and on the home page’s card.
+
+These lines left the site, because the merge made them redundant or their page is gone:
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /vi/visit-us/ | the box at the end: Book a table (heading and button), with the “Seven or more?” line | Đặt bàn · Nhóm từ bảy người trở lên? Hãy cho chúng tôi biết về nhóm của bạn, chúng tôi sẽ sắp xếp riêng. | — (the booking box is now at the top of the same page; the “Seven or more?” line is still in it, unchanged) |
+| /vi/booking/ | the closing line: Tuesday to Sunday, 5pm–11pm, from the day we open · No 7, Lane 88 Quang An Street, Tây Hồ, Hanoi · Hours, address and getting here | Thứ Ba đến Chủ Nhật, 17:00 – 23:00, kể từ ngày khai trương · Số 7, Ngõ 88 Quảng An, Tây Hồ, Hà Nội · Giờ mở cửa, địa chỉ và đường đến | — (Visit’s hours and address are just below it now) |
+| /vi/visit-us/ | browser tab: Visit — Sol, Tây Hồ | Ghé thăm — Sol, Tây Hồ | — (the page is /vi/booking/: Đặt bàn — Sol, Tây Hồ) |
+| /vi/visit-us/ | meta description: Sol is at No 7, Lane 88 Quang An Street, Tây Hồ, Hanoi. Open Tuesday to Sunday, 5pm–11pm, from the day we open. | Sol ở số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Mở cửa Thứ Ba đến Chủ Nhật, 17:00 – 23:00, kể từ ngày khai trương. | — (the booking page’s, unchanged: Số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Thứ Ba đến Chủ Nhật, 17:00 – 23:00, kể từ ngày khai trương. Đặt bàn trực tuyến, hoặc gọi điện hay gửi email.) |
+| /vi/private-dining/ | browser tab: Private dining — Sol, Tây Hồ | Tiệc riêng — Sol, Tây Hồ | — |
+| /vi/private-dining/ | meta description: Groups of seven or more and private dining at Sol, No 7, Lane 88 Quang An, Tây Hồ, Hanoi. Tell us what you have in mind. | Nhóm từ bảy người trở lên và tiệc riêng tại Sol, số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Hãy cho chúng tôi biết bạn muốn tổ chức thế nào. | — |
+| /vi/private-dining/ | share card: Private dining · Tây Hồ, Hanoi · Groups and private dining. | Tiệc riêng · Tây Hồ, Hà Nội · Nhóm đông và tiệc riêng. | — (retired: the booking page keeps its card, Tây Hồ, Hà Nội · Tìm chúng tôi và đặt bàn.) |
+| in the source, never shown | Seven or more? Email us and we’ll look after you personally. (for a booking page without the enquiry form, which can’t happen on one page) | Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn. | — |
+
 ## The back office: Google Chat, 12 Nov 2026
 
 The team moves from Slack to Google Chat on Friday 13 November, so purchase requests now go to Google Chat, to the space “Sol · Supply”. Every back-office line that said Slack says Google Chat, and #supply is Supply: “kênh #supply” became “không gian Supply”. Nothing else in these lines changed, and the 📝 message’s own lines are exactly as they were. The two back-office sections below (31 Oct, 29 Oct) keep the lines that stay as they were; the ones that changed are here, with what they said before. The old English is in brackets.

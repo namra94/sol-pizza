@@ -15,7 +15,8 @@ section still waiting for content, with `noindex`; see "Build modes" below. Eith
    PNG was rendered, or the PNG isn't the one packed after (`og/cards.json`; "Share
    cards" below).
 3. **Pages.** Home, About, the three menu pages (from `menu-data.json`), Events and
-   each Eclipse edition (from `events-data.json`), Private dining, Visit, Booking,
+   each Eclipse edition (from `events-data.json`), Booking (one page with Visit and
+   private dining as its second and third parts),
    Press, Gift cards, Jobs and the opening-team role pages (from `jobs-data.json` and
    `jobs/*.md`), the filled role pages and the applicant privacy notice (re-wrapped
    from `src/`), the cookie notice, the guest privacy notice and the accessibility
@@ -51,8 +52,11 @@ section still waiting for content, with `noindex`; see "Build modes" below. Eith
 7. **Link check** (public build). Every `href`, `src`, canonical and alternate
    link, `og:url`, `og:image`, JSON-LD address, CSS `url()`, sitemap and
    `robots.txt` address, font preload and redirect destination must be a file in
-   `dist/`, a redirect or an address the Worker answers (`WORKER_PATHS`: the
-   kitchen's and the back office's `/api/`), and none may lead to a page in `HIDDEN` (nor may such a
+   `dist/`, at the address it is served at, or an address the Worker answers
+   (`WORKER_PATHS`: the kitchen's and the back office's `/api/`). None may go through a
+   redirect: not an old address in `_redirects` (`/visit-us/`), and not one that only
+   differs by its last slash (`/menu` for `/menu/`); so no redirect leads to another
+   either. And none may lead to a page in `HIDDEN` (nor may such a
    page be in `dist/`). If one does, the build stops and lists it.
 
 The checks on the data run in both modes: the wine counts (`PROSE_WINE_COUNTS`),
@@ -75,8 +79,9 @@ every photo online (`media.js`).
 
 Every page is public: `HIDDEN`, near the top of `gen.py`, is empty, so the public
 build is the whole site and starts "Build mode: PUBLIC: not yet public: nothing,
-the whole site". To take a page down, add its section's key (`menu`, `about`, `visit`,
-`booking`, `events`, `private-dining`, as in `SECTIONS`); the Public column says what
+the whole site". To take a page down, add its section's key (`menu`, `about`, `events`,
+`booking`, as in `SECTIONS`; `booking` is the one page with the booking box, Visit and
+private dining); the Public column says what
 changes then. Every build prints its mode on its first line.
 
 | | Public (the default) | Full |
@@ -84,13 +89,13 @@ changes then. Every build prints its mode on its first line.
 | Run by | `npm run build`, `npm run deploy` (`--public`), Workers Builds on `main` and on every other branch (pull request previews) | `npm run build:full` (`--full`), Workers Builds on the `full-site` branch and on the `full/…` branches (`WORKERS_CI_BRANCH`), each pull request's full preview |
 | Pages | Every page not in `HIDDEN` (now all of them) or `WAITING` (gift cards, the legal drafts, an Eclipse edition without its details), in both languages. A hidden page isn't written, and neither are the share cards and illustrations only it uses | Every page, in both languages, and the components page |
 | Sections waiting for content (`gate()`) | Left out | Shown, with a yellow "Content needed" label and the key in `CONTENT-NEEDED.md` |
-| Header | The public tabs whose pages exist (`BUILT`), plus Work with us while anything is hidden; no Food / Wine / Bar tabs while Menu is hidden. Now Menu · About · Events · Private dining · Visit | The same, whatever `HIDDEN` says |
-| Footer "More" | The public tabs, Booking, Press, Work with us, Privacy, Cookies (and the waiting pages once they're public) | The same, whatever `HIDDEN` says, with the waiting pages |
+| Header | The public tabs whose pages exist (`BUILT`), plus Work with us while anything is hidden; no Food / Wine / Bar tabs while Menu is hidden. Now Menu · About · Events · Visit (Visit is `/booking/#visit`) | The same, whatever `HIDDEN` says |
+| Footer "More" | The public tabs, Private dining and Booking (the booking page's other two parts), Press, Work with us, Privacy, Cookies (and the waiting pages once they're public) | The same, whatever `HIDDEN` says, with the waiting pages |
 | Home buttons | The first two of Book a table, See the menu, See open roles and @solhanoi on Instagram whose page is public (red, then outline): now Book a table and See the menu | Book a table, See the menu |
 | 404 buttons | The first two of Menu, Booking, Home and See open roles whose page is public: now Menu and Booking | Menu, Booking |
 | Home JSON-LD | `hasMenu` and `acceptsReservations` only while Menu and Booking are public (now both) | Both |
-| Sitemap | Only public pages (now all of them), in both languages: `/`, About, the three menu pages, Visit, Booking, `/jobs/` and the six open role pages | The same pages, whatever `HIDDEN` says |
-| `_redirects` | While anything is hidden, its pages (with and without the slash, and anything under them, English and `/vi/`) and every old address in `src/_redirects` that leads to one go to the home page in the same language with a **302** (browsers cache a 301, and these pages come back), and the rest of `src/_redirects` stays as it is. Now `src/_redirects` as it is | `src/_redirects` as it is |
+| Sitemap | Only public pages (now all of them), in both languages: `/`, About, the three menu pages, Events, Booking, Press, `/jobs/` and the open role pages | The same pages, whatever `HIDDEN` says |
+| `_redirects` | While anything is hidden, its pages (with and without the slash, and anything under them, English and `/vi/`) and every old address in `src/_redirects` that leads to one (`/visit-us/` and `/private-dining/`, say, while Booking is hidden) go to the home page in the same language with a **302** (browsers cache a 301, and these pages come back), and the rest of `src/_redirects` stays as it is. Now `src/_redirects` as it is | `src/_redirects` as it is |
 | Search | Indexable | `noindex`: `X-Robots-Tag: noindex` in `_headers`, `Disallow: /` in `robots.txt` |
 | Link check | Yes | No |
 
@@ -163,7 +168,11 @@ npm run pack-assets    # reduces the PNGs to 96 colours (Pillow), packs them int
 npm run build          # passes again
 ```
 
-and commit `build/assets.b64.json` and `build/og/cards.json`. `npm run og` needs the
+and commit `build/assets.b64.json` and `build/og/cards.json`. To retire a card, take it
+out of `OG_CARDS`, and its two PNGs out of `assets.b64.json` and their entries out of
+`og/cards.json`: the next build deletes its page and PNGs from `build/og/`, so an older
+checkout can't ship, render or pack it again. (Private dining's went on 13 Nov 2026:
+the booking page, which it is now part of, uses the `visit` card.) `npm run og` needs the
 check package (`npm --prefix check ci`); it answers the cards' font requests
 (`localhost:8897`) from `build/` itself, so no server runs. The build stops while any card
 was rendered from words that have since changed, or was rendered but not packed (the PNG

@@ -39,8 +39,9 @@ TODAY  = date.today().isoformat()
 # --------------------------------------------------------------------------
 # NOT PUBLIC: EDIT THIS to take a page down
 #   Empty: every page is public and sol.pizza is the whole site. To take a page
-#   down, add its section's key ('menu', 'about', 'visit', 'booking', 'events' or
-#   'private-dining', as in SECTIONS; 'menu' takes Food, Wine and Bar). It stays in
+#   down, add its section's key ('menu', 'about', 'events' or 'booking', as in
+#   SECTIONS; 'menu' takes Food, Wine and Bar, and 'booking' is one page: the booking
+#   box, Visit and groups and private dining go together). It stays in
 #   the repo and on the full-site preview, but the public build leaves it out, in
 #   both languages: no page in dist/, no share card, tab, footer link, home or 404
 #   button, sitemap entry or structured data, and its addresses (and the old ones in
@@ -418,13 +419,18 @@ SECTIONS = {
     'menu': '/menu/',                       # Food, with Wine and Bar under it
     'about': '/about/',
     'events': '/events/',
-    'private-dining': '/private-dining/',
-    'visit': '/visit-us/',                  # not /visit/: browsers cache its old 301 to /booking/
-    'booking': '/booking/',
+    'booking': '/booking/',                 # one page: the booking box, Visit, groups and private dining
 }
+# The booking page's parts, by their anchors (build_booking()). Every Book button leads
+# to the first, and only a link to it counts as a book_click (buttons(), site.js). The
+# old pages /visit-us/ and /private-dining/ redirect to the other two (src/_redirects).
+BOOK_URL = '/booking/#book'
+VISIT_URL = '/booking/#visit'
+PRIVATE_DINING_URL = '/booking/#private-dining'
+ENQUIRE_URL = '/booking/#enquire'           # the group enquiry form, inside private dining
 # The sections this build has pages for. A tab whose page doesn't exist yet stays
 # out of the header, the nav sheet and the footer.
-BUILT = {'menu', 'about', 'events', 'private-dining', 'visit', 'booking'}
+BUILT = {'menu', 'about', 'events', 'booking'}
 # Whole pages waiting for their content or the lawyer's approval (CONTENT-NEEDED.md):
 # path: (key, what's missing). They're built every time, so a mistake in one still
 # stops the build, and the full build shows them with a "Content needed" label; the
@@ -439,14 +445,15 @@ WAITING = {
                                                'building’s access facts'),
 }
 # The header's tabs, the nav sheet's and the footer's: (key, href, name). Menu keeps
-# its Food / Wine / Bar sub-tabs (MENU_TABS). Booking has no tab: the Book button is on
-# every page. The public build shows the public ones, plus Work with us while anything
-# is HIDDEN (shown_tabs()).
+# its Food / Wine / Bar sub-tabs (MENU_TABS). Visit leads to its part of the booking
+# page. The booking box has no tab (the Book button is on every page), and neither has
+# private dining: the home page's card, the footer and every "Seven or more?" line lead
+# to it. The public build shows the public ones, plus Work with us while anything is
+# HIDDEN (shown_tabs()).
 NAV_TABS = [('menu', '/menu/', t('Menu', 'Thực đơn')),
             ('about', '/about/', t('About', 'Giới thiệu')),
             ('events', '/events/', t('Events', 'Sự kiện')),
-            ('private-dining', '/private-dining/', t('Private dining', 'Tiệc riêng')),
-            ('visit', '/visit-us/', t('Visit', 'Ghé thăm'))]
+            ('booking', VISIT_URL, t('Visit', 'Ghé thăm'))]
 MENU_TABS = [  # (key, href, name, descriptor)
     ('food', '/menu/',      t('Food', 'Món ăn'),   t('Pizza, pasta and small plates', 'Pizza, mì Ý và món khai vị')),
     ('wine', '/menu/wine/', t('Wine', 'Vang'),     WINE_TAB),
@@ -488,10 +495,12 @@ def shown_tabs():
 
 def buttons(options):
     """The first two options whose page is public, as a red button and an outline one.
-    options: (SECTIONS key, or None for a page that is always public, href, name)."""
+    options: (SECTIONS key, or None for a page that is always public, href, name). Only a
+    button to the booking box (BOOK_URL) is a book_click: Visit and private dining are
+    on the same page, and a link to those isn't one."""
     shown = [(href, name) for key, href, name in options if key is None or live(key)][:2]
     return ''.join('<a class="btn %s" href="%s"%s>%s</a>'
-                   % (cls, href, ' data-track="book_click"' if href.startswith('/booking/') else '', name)
+                   % (cls, href, ' data-track="book_click"' if href == BOOK_URL else '', name)
                    for cls, (href, name) in zip(('btn-red', 'btn-outline'), shown))
 
 
@@ -981,8 +990,6 @@ OG_CARDS = {  # name: ((English eyebrow, title), (Vietnamese eyebrow, title))
               ('Tây Hồ, Hà Nội', 'Tìm chúng tôi<br>và đặt bàn.')),
     'jobs':  (('Work with us · Tây Hồ, Hanoi', 'Come and build<br>the new Sol.'),
               ('Tuyển dụng · Tây Hồ, Hà Nội', 'Cùng xây dựng<br>Sol mới.')),
-    'private-dining': (('Private dining · Tây Hồ, Hanoi', 'Groups and<br>private dining.'),
-                       ('Tiệc riêng · Tây Hồ, Hà Nội', 'Nhóm đông<br>và tiệc riêng.')),
     'events': (('Events · Tây Hồ, Hanoi', 'Eclipse,<br>Sol’s pop-up series.'),
                ('Sự kiện · Tây Hồ, Hà Nội', 'Eclipse, chuỗi<br>pop-up của Sol.')),
 }
@@ -992,10 +999,19 @@ OG_DIR = os.path.join(HERE, 'og')
 def og_cards():
     """Write each card's page into build/og/html/ for `npm run og`, and stop if a card in
     build/og/png/ was rendered from other words, or isn't the one packed after rendering
-    (build/og/cards.json: what each was rendered from, and the hash of its PNG)."""
+    (build/og/cards.json: what each was rendered from, and the hash of its PNG). A card
+    that is no longer in OG_CARDS (private dining's, retired 13 Nov 2026) may still be in
+    an older checkout's build/og/: its page and PNG are taken out, so it can't be copied
+    to dist/, rendered or packed again."""
     template = read(os.path.join(OG_DIR, 'card.html'))
     rendered = json.loads(read(os.path.join(OG_DIR, 'cards.json'))) \
         if os.path.exists(os.path.join(OG_DIR, 'cards.json')) else {}
+    cards = {'og-%s%s' % (name, suffix) for name in OG_CARDS for suffix in ('', '-vi')}
+    for folder, ext in (('html', '.html'), ('png', '.png')):
+        for f in sorted(os.listdir(os.path.join(OG_DIR, folder))) if os.path.isdir(os.path.join(OG_DIR, folder)) else []:
+            if f.startswith('og-') and f.endswith(ext) and f[:-len(ext)] not in cards:
+                os.remove(os.path.join(OG_DIR, folder, f))
+                print('share cards: removed build/og/%s/%s (no longer in OG_CARDS)' % (folder, f))
     stale = []
     for name, sides in OG_CARDS.items():
         for lang, (eyebrow, title) in zip(LANGS, sides):
@@ -1108,9 +1124,9 @@ def header(cur, en_href, vi_href):
            open_l=label('Open navigation', 'Mở menu điều hướng'), burger=BURGER,
            main_l=label('Main', 'Điều hướng chính'), tabs=tabs(True),
            # Book: only while the booking page is public (HIDDEN)
-           book=('<a class="btn btn-red btn-sm" href="/booking/#book" data-track="book_click">%s</a>' % BOOK_SHORT
+           book=('<a class="btn btn-red btn-sm" href="%s" data-track="book_click">%s</a>' % (BOOK_URL, BOOK_SHORT)
                  if live('booking') else ''),
-           book_long=('<a class="btn btn-red" href="/booking/#book" data-track="book_click">%s</a>' % BOOK
+           book_long=('<a class="btn btn-red" href="%s" data-track="book_click">%s</a>' % (BOOK_URL, BOOK)
                       if live('booking') else ''),
            dropdown=('  ' + subnav(' subnav-drop') + '\n') if live('menu') and not menu_page else '',
            static=(subnav(' subnav-static') + '\n') if menu_page else '',
@@ -1133,7 +1149,10 @@ def company_line():
 
 def footer(news=True):
     more = ([(href, name) for key, href, name in NAV_TABS if live(key)]
-            + ([('/booking/', t('Booking', 'Đặt bàn'))] if live('booking') else [])
+            # the booking page's other two parts, which have no tab: private dining, and the
+            # booking box itself (a link to it is a book_click, like the Book button: site.js)
+            + ([(PRIVATE_DINING_URL, t('Private dining', 'Tiệc riêng')), (BOOK_URL, t('Booking', 'Đặt bàn'))]
+               if live('booking') else [])
             + [(href, name) for href, name in (('/press/', t('Press', 'Báo chí')),
                                                ('/gift-cards/', t('Gift cards', 'Thẻ quà tặng'))) if not hidden(href)]
             + [('/jobs/', JOBS_TAB)]
@@ -1199,7 +1218,7 @@ def actionbar():
     ones (Call until there's a Zalo number), then Directions. Not on /booking/ (it is the
     booking page), and on a role page only once its hiring round has closed (until then it
     has the Apply bar)."""
-    book = ('<a class="btn btn-red" href="/booking/#book" data-track="book_click">%s</a>' % BOOK_SHORT
+    book = ('<a class="btn btn-red" href="%s" data-track="book_click">%s</a>' % (BOOK_URL, BOOK_SHORT)
             if live('booking') else '')
     call = ''
     if CONTACT_LIVE:
@@ -1656,29 +1675,30 @@ def week_plain(lang):
 
 
 def home_paths():
-    """Three ways in: the first three of these whose pages are public."""
+    """Three ways in: the first three of these whose pages are public. Each: (SECTIONS key,
+    photo slot, address, name, line, link). Private dining and Visit are parts of the
+    booking page, so they share its key."""
     paths = [
-        ('menu', '/menu/', t('Menu', 'Thực đơn'),
+        ('menu', 'home-menu', '/menu/', t('Menu', 'Thực đơn'),
          t('Pizza from the wood oven, pasta made in-house and %d wines by the glass.' % WINES_GLASS,
            'Pizza từ lò củi, mì Ý làm tại nhà hàng và %d loại vang theo ly.' % WINES_GLASS),
          t('See the menu', 'Xem thực đơn')),
-        ('private-dining', '/private-dining/', t('Private dining', 'Tiệc riêng'),
+        ('booking', 'home-private-dining', PRIVATE_DINING_URL, t('Private dining', 'Tiệc riêng'),
          t('Seven or more, or a night that’s all yours.',
            'Từ bảy người trở lên, hay một buổi tối chỉ dành riêng cho bạn.'),
          t('Tell us about it', 'Cho chúng tôi biết')),
-        ('events', '/events/', t('Events', 'Sự kiện'), EV_SERIES, t('See what’s on', 'Xem lịch sự kiện')),
-        ('visit', '/visit-us/', t('Visit', 'Ghé thăm'),
+        ('events', 'home-events', '/events/', t('Events', 'Sự kiện'), EV_SERIES, t('See what’s on', 'Xem lịch sự kiện')),
+        ('booking', 'visit', VISIT_URL, t('Visit', 'Ghé thăm'),
          t('No 7, Lane 88 Quang An, Tây Hồ: how to find us.', 'Số 7, ngõ 88 Quảng An, Tây Hồ: đường đến Sol.'),
          t('Find us', 'Tìm chúng tôi')),
     ]
-    def photo(key):
+    def photo(slot):
         # The Visit card (it shows only when one of the first three is off) takes Visit's photo
-        slot = 'visit' if key == 'visit' else 'home-' + key
-        spec = (SLOTS['visit'][0],) + SLOTS['home-menu'][1:] if key == 'visit' else SLOTS[slot]
+        spec = (SLOTS['visit'][0],) + SLOTS['home-menu'][1:] if slot == 'visit' else SLOTS[slot]
         p = next(iter(photos_for(slot)), None)
         return picture(p, spec) if p else (photo_placeholder(slot, spec) if FULL else '')
     cards = ['<li class="card">%s<div class="card-body"><h2>%s</h2><p>%s</p><a class="link-sc" href="%s">%s</a></div></li>'
-             % (photo(key), name, line, href, link) for key, href, name, line, link in paths if live(key)][:3]
+             % (photo(slot), name, line, href, link) for key, slot, href, name, line, link in paths if live(key)][:3]
     return '<div class="wrap"><ul class="cards home-paths">%s</ul></div>' % ''.join(cards)
 
 
@@ -1756,7 +1776,7 @@ def build_home():
         hand=t('sunshine, after dark', 'ánh nắng, sau hoàng hôn'),
         # Book a table and See the menu; while those pages aren't public, See open
         # roles and Instagram
-        actions=buttons([('booking', '/booking/', BOOK), ('menu', '/menu/', t('See the menu', 'Xem thực đơn')),
+        actions=buttons([('booking', BOOK_URL, BOOK), ('menu', '/menu/', t('See the menu', 'Xem thực đơn')),
                          (None, '/jobs/', SEE_ROLES), (None, INSTAGRAM, INSTA_TEXT)]),
         today=today_line(),
         # the first picture: as wide as the window, loaded first, never faded in
@@ -1776,8 +1796,8 @@ def build_home():
         facts=facts,
         visit_actions=''.join([
             '<a class="btn btn-outline" href="%s" data-track="directions_click">%s</a>' % (DIRECTIONS_URL, DIRECTIONS),
-            ('<a class="btn btn-outline" href="/visit-us/">%s</a>' % t('Hours and address', 'Giờ mở cửa và địa chỉ')
-             if live('visit') else '')]),
+            ('<a class="btn btn-outline" href="%s">%s</a>' % (VISIT_URL, t('Hours and address', 'Giờ mở cửa và địa chỉ'))
+             if live('booking') else '')]),
     )
     return page('/', 'page-home',
                 ('Sol — Italian-American restaurant in Tây Hồ, Hanoi',
@@ -2225,9 +2245,15 @@ def build_about():
 
 
 # ==========================================================================
-# BOOKING  /booking/   the booking box: where every Book button leads (/booking/#book)
-# VISIT    /visit-us/  hours, address, contact and good to know
-# (/visit/ redirects to /booking/: browsers cache that 301, so Visit has a new address)
+# BOOKING  /booking/   one page, three parts (13 Nov 2026: Visit and Private dining were
+# pages of their own, /visit-us/ and /private-dining/, which now redirect here):
+#   #book            the booking box, where every Book button leads (build_booking())
+#   #visit           hours, address, contact, the building's photo, good to know (visit_part())
+#   #private-dining  groups of seven or more and private events, with the enquiry
+#                    form at #enquire (private_dining_part())
+# The page's own title is the booking box's; the other two parts open with their old
+# page titles, a heading level down. No phone bar here: the page is the booking page.
+# (/visit/, older still, has redirected to /booking/ since 24 Sep 2026.)
 # ==========================================================================
 def from_opening():
     """", from the day we open" while we're not open yet (English, Vietnamese)."""
@@ -2278,15 +2304,11 @@ def mailform(kind, subject, fields, submit):
 
 
 def groups_line():
-    """Seven or more: to the group enquiry on /private-dining/ while that page is public,
-    else by email."""
-    if live('private-dining'):
-        return t('Seven or more? <a href="/private-dining/#enquire">Tell us about your group</a> and we’ll look '
-                 'after you personally.',
-                 'Nhóm từ bảy người trở lên? <a href="/private-dining/#enquire">Hãy cho chúng tôi biết về nhóm của '
-                 'bạn</a>, chúng tôi sẽ sắp xếp riêng.')
-    return t('Seven or more? Email us and we’ll look after you personally.',
-             'Nhóm từ bảy người trở lên: vui lòng gửi email, chúng tôi sẽ sắp xếp riêng cho bạn.')
+    """Seven or more: to the group enquiry, further down the booking page (#enquire)."""
+    return t('Seven or more? <a href="%s">Tell us about your group</a> and we’ll look after you personally.'
+             % ENQUIRE_URL,
+             'Nhóm từ bảy người trở lên? <a href="%s">Hãy cho chúng tôi biết về nhóm của bạn</a>, chúng tôi sẽ '
+             'sắp xếp riêng.' % ENQUIRE_URL)
 
 
 def build_booking():
@@ -2360,24 +2382,21 @@ def build_booking():
                          t('How long a table is yours', 'Thời gian giữ bàn'),
                          t('Booking online', 'Đặt bàn trực tuyến')))), tag='div')
     frm = from_opening()
+    # The booking box, then Visit, then groups and private dining. The hours and address
+    # that used to close the booking page are Visit's, just below.
     main = """<main id="main">
 <div class="wrap">{title}</div>
 <div class="wrap"><div class="offer booking">
   {widget}<dl class="book-contact">{rows}</dl>
   <p class="offer-note">{groups}</p>
 </div></div>
-{hold}<div class="wrap">{terms}</div>
-<div class="wrap"><p class="booking-visit">{hours} · {addr}{visit}</p></div>
-</main>
+{hold}{terms}{visit}{private_dining}</main>
 """.format(
         title=page_title(t('Reservations', 'Đặt chỗ'), BOOK, booking_p).replace(
             '<header class="page-title">', '<header class="page-title" id="book">', 1),
         widget=widget, rows=''.join('<div><dt>%s</dt><dd>%s</dd></div>' % r for r in rows),
-        groups=groups_line(), hold=hold, terms=terms,
-        hours=t(*HOURS_PLAIN) + by_state(t(', from the day we open', ', kể từ ngày khai trương'), ''),
-        addr=t(ADDRESS_EN, ADDRESS_VI),
-        visit=('<br><a class="link-sc" href="/visit-us/">%s</a>'
-               % t('Hours, address and getting here', 'Giờ mở cửa, địa chỉ và đường đến') if live('visit') else ''),
+        groups=groups_line(), hold=hold, terms='<div class="wrap">%s</div>\n' % terms if terms else '',
+        visit=visit_part(), private_dining=private_dining_part(),
     )
     how = ('Book online, or call or email us.', 'Đặt bàn trực tuyến, hoặc gọi điện hay gửi email.') if RESDIARY_URL \
         else ('Call or email to hold a table.', 'Gọi điện hoặc gửi email để giữ bàn.')
@@ -2390,37 +2409,47 @@ def build_booking():
                 extra=['' if CONTACT_LIVE else '<meta name="format-detection" content="telephone=no">\n', schema])
 
 
-def build_private_dining():
-    """/private-dining/: groups of seven or more, and private events. What we know (the
-    enquiry, by email) is public; the spaces, set menus and minimum spend wait for their
-    figures (CONTENT-NEEDED.md)."""
+def part_intro(sid, eyebrow, heading, lead):
+    """How the booking page's second and third parts open: what was each one's page title
+    (eyebrow, heading, lead), word for word, now a section's: an h2 under the page's h1."""
+    return ('<div class="wrap"><header class="section-intro"><p class="eyebrow">%s</p>'
+            '<h2 class="h-lg" id="%s">%s</h2><p>%s</p></header></div>' % (eyebrow, sid, heading, lead))
+
+
+def private_dining_part():
+    """Groups and private dining, the booking page's third part (#private-dining): groups
+    of seven or more, and private events. What we know (the enquiry, by email, at #enquire)
+    is public; the spaces, set menus and minimum spend wait for their figures
+    (CONTENT-NEEDED.md). Its photographs: the private-dining slot."""
     def placeholder(sid, heading, rows):
-        return ('<section class="prose-section" aria-labelledby="%s"><header class="section-head"><h2 id="%s">%s</h2>'
+        return ('<section class="prose-section" aria-labelledby="%s"><header class="section-head"><h3 id="%s">%s</h3>'
                 '</header><dl class="gtk-items">%s</dl></section>'
                 % (sid, sid, heading,
                    ''.join('<div><dt>%s</dt><dd>%s</dd></div>' % (k, t('[to come]', '[sẽ cập nhật]')) for k in rows)))
-    main = '\n'.join([
-        '<main id="main">',
-        '<div class="wrap">%s</div>' % page_title(
-            t('Private dining', 'Tiệc riêng'), t('Groups and private dining', 'Nhóm đông và tiệc riêng'),
-            t('For seven or more, or a night that’s all yours: tell us what you have in mind, and we’ll come back '
-              'to you.',
-              'Từ bảy người trở lên, hay một buổi tối chỉ dành riêng cho bạn: hãy cho chúng tôi biết bạn muốn tổ '
-              'chức thế nào, chúng tôi sẽ liên hệ lại.')),
-        '<div class="wrap">%s</div>' % gallery('private-dining', eager=True),
-        '<div class="wrap">%s%s%s</div>' % (
-            gate('private-dining-spaces', 'the spaces on each floor and how many each seats',
-                 placeholder('s-spaces', t('The spaces', 'Không gian'),
-                             [t('Ground floor', 'Tầng 1'), t('Upstairs', 'Tầng 2'),
-                              t('The whole restaurant', 'Cả nhà hàng')])),
-            gate('private-dining-menus', 'set menus for groups',
-                 placeholder('s-set-menus', t('Set menus', 'Thực đơn set'),
-                             [t('Menus and prices', 'Thực đơn và giá')])),
-            gate('private-dining-minimum', 'the minimum spend for a private space',
-                 placeholder('s-minimum', t('Minimum spend', 'Mức chi tối thiểu'),
-                             [t('For a private space', 'Cho một không gian riêng')]))),
+    photos = gallery('private-dining')
+    waiting = ''.join([
+        gate('private-dining-spaces', 'the spaces on each floor and how many each seats',
+             placeholder('s-spaces', t('The spaces', 'Không gian'),
+                         [t('Ground floor', 'Tầng 1'), t('Upstairs', 'Tầng 2'),
+                          t('The whole restaurant', 'Cả nhà hàng')])),
+        gate('private-dining-menus', 'set menus for groups',
+             placeholder('s-set-menus', t('Set menus', 'Thực đơn set'),
+                         [t('Menus and prices', 'Thực đơn và giá')])),
+        gate('private-dining-minimum', 'the minimum spend for a private space',
+             placeholder('s-minimum', t('Minimum spend', 'Mức chi tối thiểu'),
+                         [t('For a private space', 'Cho một không gian riêng')]))])
+    return '\n'.join([
+        '<section class="page-part" id="private-dining" aria-labelledby="s-private-dining">',
+        part_intro('s-private-dining',
+                   t('Private dining', 'Tiệc riêng'), t('Groups and private dining', 'Nhóm đông và tiệc riêng'),
+                   t('For seven or more, or a night that’s all yours: tell us what you have in mind, and we’ll come '
+                     'back to you.',
+                     'Từ bảy người trở lên, hay một buổi tối chỉ dành riêng cho bạn: hãy cho chúng tôi biết bạn muốn '
+                     'tổ chức thế nào, chúng tôi sẽ liên hệ lại.'))]
+        # the photographs and the sections still waiting: only where there are any
+        + ['<div class="wrap">%s</div>' % x for x in (photos, waiting) if x] + [
         '<div class="wrap"><section class="form-section" id="enquire" aria-labelledby="s-enquire"><header class="section-head">'
-        '%s<h2 id="s-enquire">%s</h2><p>%s</p></header>%s</section></div>' % (
+        '%s<h3 id="s-enquire">%s</h3><p>%s</p></header>%s</section></div>' % (
             sun(5), t('Tell us about it', 'Cho chúng tôi biết về buổi tiệc'),
             t('The date, how many of you, and anything we should know. We’ll write back with what we can do.',
               'Ngày nào, bao nhiêu người, và những điều chúng tôi nên biết. Chúng tôi sẽ phản hồi và cho bạn biết '
@@ -2435,14 +2464,7 @@ def build_private_dining():
                 ('budget', t('Budget per person', 'Ngân sách mỗi người'), 'text', False),
                 ('notes', t('Anything else', 'Thông tin thêm'), 'textarea', False),
             ], t('Send by email', 'Gửi qua email'))),
-        '</main>', ''])
-    return page('/private-dining/', 'page-private-dining',
-                ('Private dining — Sol, Tây Hồ', 'Tiệc riêng — Sol, Tây Hồ'),
-                ('Groups of seven or more and private dining at Sol, No 7, Lane 88 Quang An, Tây Hồ, Hanoi. Tell us '
-                 'what you have in mind.',
-                 'Nhóm từ bảy người trở lên và tiệc riêng tại Sol, số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Hãy cho '
-                 'chúng tôi biết bạn muốn tổ chức thế nào.'),
-                main, cur='private-dining', og='private-dining')
+        '</section>', ''])
 
 
 # ==========================================================================
@@ -2621,23 +2643,25 @@ def visit_faq():
             % (''.join('<div><dt>%s</dt><dd>%s</dd></div>' % r for r in rows), waiting))
 
 
-def build_visit():
-    frm = from_opening()
+def visit_part():
+    """Visit, the booking page's second part (#visit): the hours, the address, how to reach
+    us, the photograph of the building (the visit slot) and Good to know. The booking box
+    is the page's first part, so Visit no longer ends with a Book a table box of its own."""
     hours_rows = ''.join('<div><dt>%s</dt><dd>%s</dd></div>' % row for row in (
         [(t(en_list([EN_DAYS[d] for d in CLOSED_DAYS]), ' và '.join(VI_DAYS_CAP[d] for d in CLOSED_DAYS)),
           t('Closed', 'Đóng cửa'))] if CLOSED_DAYS else []) + [(HOURS_DAYS, HOURS_SPAN)])
-    main = """<main id="main">
-<div class="wrap">{title}</div>
+    return """<section class="page-part" id="visit" aria-labelledby="s-visit">
+{intro}
 <div class="wrap"><div class="visit-info">
-  <section aria-labelledby="v-hours"><h2 class="label" id="v-hours">{l_hours}</h2><dl class="hours">{hours_rows}</dl>{last}{from_open}</section>
-  <section aria-labelledby="v-addr"><h2 class="label" id="v-addr">{l_addr}</h2><p>{addr}</p><a class="link-sc" href="{maps}">{maps_t}</a></section>
-  <section aria-labelledby="v-contact"><h2 class="label" id="v-contact">{l_talk}</h2><p><a href="{tel}">{phone}</a><br><a href="mailto:{email}">{email}</a><br>{insta}</p></section>
+  <section aria-labelledby="v-hours"><h3 class="label" id="v-hours">{l_hours}</h3><dl class="hours">{hours_rows}</dl>{last}{from_open}</section>
+  <section aria-labelledby="v-addr"><h3 class="label" id="v-addr">{l_addr}</h3><p>{addr}</p><a class="link-sc" href="{maps}">{maps_t}</a></section>
+  <section aria-labelledby="v-contact"><h3 class="label" id="v-contact">{l_talk}</h3><p><a href="{tel}">{phone}</a><br><a href="mailto:{email}">{email}</a><br>{insta}</p></section>
 </div></div>
 {photo}
-<section class="prose-section wrap" aria-labelledby="s-gtk"><header class="section-head">{sun}<h2 id="s-gtk">{gtk}</h2></header>{faq}</section>
-{book_box}</main>
+<section class="prose-section wrap" aria-labelledby="s-gtk"><header class="section-head">{sun}<h3 id="s-gtk">{gtk}</h3></header>{faq}</section>
+</section>
 """.format(
-        title=page_title(t('Visit', 'Ghé thăm'), t('Find us', 'Tìm chúng tôi'),
+        intro=part_intro('s-visit', t('Visit', 'Ghé thăm'), t('Find us', 'Tìm chúng tôi'),
                          t('Sol is on the first two floors of No 7, Lane 88 Quang An.%s'
                            % by_state(' We’re opening soon.', ''),
                            'Sol nằm ở hai tầng đầu của tòa nhà số 7, ngõ 88 Quảng An.%s'
@@ -2651,17 +2675,10 @@ def build_visit():
         l_addr=t('Address', 'Địa chỉ'), addr=t(ADDRESS_EN, ADDRESS_VI),
         maps=MAPS_URL, maps_t=MAPS_LINK_TEXT,
         l_talk=t('Talk to us', 'Liên hệ'), tel=PHONE_TEL, phone=PHONE, email=EMAIL, insta=INSTA_LINK,
-        sun=sun(3), gtk=t('Good to know', 'Thông tin hữu ích'), faq=visit_faq(), photo=band('visit', 'band wrap-wide', eager=True),
-        # Book a table: while the booking page is public (HIDDEN)
-        book_box=('<div class="wrap"><section class="offer" aria-labelledby="s-book"><h2 id="s-book">%s</h2><p>%s</p>'
-                  '<a class="btn btn-red" href="/booking/#book" data-track="book_click">%s</a></section></div>\n' % (
-                      BOOK, groups_line(), BOOK) if live('booking') else ''),
+        sun=sun(3), gtk=t('Good to know', 'Thông tin hữu ích'), faq=visit_faq(),
+        # the building from the lane: well down the page now, so it loads as it comes into view
+        photo=band('visit', 'band wrap-wide'),
     )
-    return page('/visit-us/', 'page-visit',
-                ('Visit — Sol, Tây Hồ', 'Ghé thăm — Sol, Tây Hồ'),
-                ('Sol is at No 7, Lane 88 Quang An Street, Tây Hồ, Hanoi. Open %s%s.' % (HOURS_PLAIN[0], frm[0]),
-                 'Sol ở số 7, ngõ 88 Quảng An, Tây Hồ, Hà Nội. Mở cửa %s%s.' % (HOURS_PLAIN[1], frm[1])),
-                main, cur='visit', og='visit')
 
 
 # ==========================================================================
@@ -3761,7 +3778,7 @@ def build_styleguide():
         '<section class="after-dark" aria-labelledby="sg-dark"><div class="wrap measure">'
         '<p class="eyebrow">%s</p><h2 class="h-lg" id="sg-dark">%s</h2><p>%s</p>'
         '<div class="actions"><a class="btn btn-red" href="/booking/#book">%s</a><a class="btn btn-outline" href="/menu/">%s</a></div>'
-        '<p style="margin-top:22px"><a href="/visit-us/">%s</a></p></div></section>' % (
+        '<p style="margin-top:22px"><a href="/booking/#visit">%s</a></p></div></section>' % (
             t('After dark', 'Sau hoàng hôn'), t('Wood brown, cream and sun', 'Nâu gỗ, kem và vàng nắng'),
             t('Cream type on wood is 11:1, sun yellow 8.5:1. Buttons turn sun yellow here, and so does the focus ring.',
               'Chữ màu kem trên nền nâu gỗ đạt 11:1, vàng nắng 8,5:1. Ở đây nút bấm và viền tiêu điểm chuyển sang vàng nắng.'),
@@ -3779,7 +3796,7 @@ def build_styleguide():
                                      (t('About', 'Giới thiệu'), t('Three to a row on a wide screen.',
                                                                   'Ba thẻ một hàng trên màn hình rộng.'), '/about/'),
                                      (t('Visit', 'Ghé thăm'), t('One to a row on a phone.', 'Một thẻ một hàng trên điện thoại.'),
-                                      '/visit-us/'))),
+                                      VISIT_URL))),
         '<figure class="quote wrap"><blockquote><p>%s</p></blockquote><figcaption>%s</figcaption></figure>' % (
             t('We’d rather cook a short menu well than a long one adequately.',
               'Chúng tôi thà nấu ít món cho thật ngon, còn hơn nhiều món mà tàm tạm.'), 'Sol'),
@@ -4649,9 +4666,9 @@ def build_purchase_list():
 # 404 and support files
 # ==========================================================================
 def build_404():
-    # Menu and Booking; while those pages aren't public, Home and See open roles. Then
-    # the main pages that are public.
-    options = [('menu', '/menu/', t('Menu', 'Thực đơn')), ('booking', '/booking/', t('Booking', 'Đặt bàn')),
+    # Menu and Booking (the booking box); while those pages aren't public, Home and See
+    # open roles. Then the main pages that are public.
+    options = [('menu', '/menu/', t('Menu', 'Thực đơn')), ('booking', BOOK_URL, t('Booking', 'Đặt bàn')),
                (None, '/', t('Home', 'Trang chủ')), (None, '/jobs/', SEE_ROLES)]
     as_buttons = [href for key, href, _ in options if key is None or live(key)][:2]
     paths = [(href, name) for key, href, name in NAV_TABS + [(None, '/', t('Home', 'Trang chủ'))]
@@ -4671,8 +4688,8 @@ def build_404():
                 switch=('/', '/vi/'))
 
 
-SITEMAP_PAGES = ['/', '/about/', '/menu/', '/menu/wine/', '/menu/bar/', '/events/', '/private-dining/', '/visit-us/',
-                 '/booking/', '/gift-cards/', '/press/', '/accessibility/', '/jobs/'] + \
+SITEMAP_PAGES = ['/', '/about/', '/menu/', '/menu/wine/', '/menu/bar/', '/events/', '/booking/', '/gift-cards/',
+                 '/press/', '/accessibility/', '/jobs/'] + \
     [e['path'] for e in EVENTS]
 
 
@@ -4682,8 +4699,7 @@ def build_support():
     pages = [p for p in pages if not hidden(p)]
     urls = []
     for p in pages:
-        pri = '1.0' if p == '/' else ('0.9' if p.startswith(('/about/', '/menu/', '/private-dining/', '/visit-us/',
-                                                             '/booking/')) else '0.6')
+        pri = '1.0' if p == '/' else ('0.9' if p.startswith(('/about/', '/menu/', '/booking/')) else '0.6')
         # Each page in both languages, each listing both and English as the default
         alts = ''.join('    <xhtml:link rel="alternate" hreflang="%s" href="%s%s"/>\n' % (code, SITE, lang_path(p, code))
                        for code in LANGS) + \
@@ -4722,8 +4738,9 @@ def redirects():
     page is public (the full build, or HIDDEN empty) it is src/_redirects as it is.
     Otherwise the addresses of the pages that aren't public yet and every old address in
     src/_redirects that leads to one, each with and without the slash, go to the home
-    page with a 302, not a 301: browsers cache a 301, and these pages come back. The
-    rest of src/_redirects stays as it is. Static rules first, splats last."""
+    page (the Vietnamese one, from an address under /vi/) with a 302, not a 301: browsers
+    cache a 301, and these pages come back. The rest of src/_redirects stays as it is.
+    Static rules first, splats last."""
     src, out = os.path.join(SRC, '_redirects'), os.path.join(DIST, '_redirects')
     if not HIDE:
         shutil.copy2(src, out)
@@ -4736,6 +4753,9 @@ def redirects():
         if path.endswith('.html') or dynamic(path):
             return [path]
         return [path, path.rstrip('/')] if path.endswith('/') else [path, path + '/']
+
+    def home(path):
+        return '/vi/' if path.startswith('/vi/') else '/'
 
     # each hidden page, with and without the slash, and as .html where no splat below
     # catches it (/about.html; /menu/wine.html falls under /menu/*)
@@ -4766,11 +4786,11 @@ def redirects():
     lines += rules('Not public yet', [(p, '/', 302) for p in pages if not dynamic(p)]
                    + [(p, '/vi/', 302) for p in vi_pages if not dynamic(p)])
     lines += rules('Old addresses (src/_redirects) that led to them',
-                   ((p, '/', 302) for p in old if not dynamic(p)))
+                   ((p, home(p), 302) for p in old if not dynamic(p)))
     lines += rules('The rest of src/_redirects', (r for r in kept if not dynamic(r[0])))
     lines += rules('Splats last: anything else under a page not public yet, then src/_redirects',
                    [('%s*' % p, '/', 302) for p in HIDDEN_PATHS] + [('/vi%s*' % p, '/vi/', 302) for p in HIDDEN_PATHS]
-                   + [(p, '/', 302) for p in pages + old if dynamic(p)]
+                   + [(p, home(p), 302) for p in pages + old if dynamic(p)]
                    + [r for r in kept if dynamic(r[0])])
     write(out, '\n'.join(lines) + '\n')
 
@@ -4944,10 +4964,12 @@ def optimise():
 
 # ==========================================================================
 # LINK CHECK   (the end of every public build)
-# Every address in dist/ must be a file there or a redirect, and none may lead
-# to a page that isn't public yet: href and src (canonical and alternate links
-# included), og:url and og:image, the JSON-LD, CSS url()s, the sitemap,
-# robots.txt, the font preloads in _headers and the redirects' destinations.
+# Every address in dist/ must be a file there, as it is served: none may pass
+# through a redirect (an old address in _redirects, or one that only differs by
+# its last slash), and none may lead to a page that isn't public yet. Checked:
+# href and src (canonical and alternate links included), og:url and og:image,
+# the JSON-LD, CSS url()s, the sitemap, robots.txt, the font preloads in
+# _headers and the redirects' own destinations (so no redirect leads to another).
 # ==========================================================================
 class _Links(HTMLParser):
     """The addresses in one page: (where, address)."""
@@ -5008,21 +5030,32 @@ def _site_path(url, base):
 WORKER_PATHS = ('/api/',)
 
 
-def _served(path, rules):
-    """True if the sol-pizza Worker answers this path with a redirect from dist/_redirects,
-    a file from dist/ (html_handling auto-trailing-slash) or its own code (WORKER_PATHS),
-    not the 404 page."""
+def _redirected(path, rules):
+    """True if dist/_redirects sends this path somewhere else."""
+    return any(path == source or (source.endswith('*') and path.startswith(source[:-1])) for source, _, _ in rules)
+
+
+def _served(path):
+    """How the sol-pizza Worker answers this path: 'file', a file from dist/ as it is
+    served (html_handling auto-trailing-slash: /menu/ is menu/index.html, /jobs/sous-chef
+    is jobs/sous-chef.html) or the Worker's own code (WORKER_PATHS); 'slash', a redirect
+    to the same address as it is served (/menu to /menu/, /jobs/sous-chef/ to
+    /jobs/sous-chef, /menu/index.html to /menu/); or None, the 404 page."""
     if path.startswith(WORKER_PATHS):
-        return True
-    for source, _, _ in rules:
-        if path == source or (source.endswith('*') and path.startswith(source[:-1])):
-            return True
+        return 'file'
     if path in ('/_headers', '/_redirects'):
-        return False
+        return None
     f = os.path.join(DIST, *[p for p in path.split('/') if p])
     if path.endswith('/'):
-        return os.path.isfile(os.path.join(f, 'index.html')) or (path != '/' and os.path.isfile(f.rstrip(os.sep) + '.html'))
-    return os.path.isfile(f) or os.path.isfile(f + '.html') or os.path.isfile(os.path.join(f, 'index.html'))
+        if os.path.isfile(os.path.join(f, 'index.html')):
+            return 'file'
+        return 'slash' if path != '/' and os.path.isfile(f.rstrip(os.sep) + '.html') else None
+    if path.endswith('.html'):
+        # (404.html is what a missing address is answered with: the 404 pages name themselves so)
+        return ('file' if path.endswith('/404.html') else 'slash') if os.path.isfile(f) else None
+    if os.path.isfile(f) or os.path.isfile(f + '.html'):
+        return 'file'
+    return 'slash' if os.path.isfile(os.path.join(f, 'index.html')) else None
 
 
 def check_links():
@@ -5036,8 +5069,14 @@ def check_links():
         count[1] += 1
         if hidden(path) or path in HIDDEN_REDIRECTS:
             problems.append("%s: %s %s leads to a page that isn't public yet" % (where, what, url))
-        elif not _served(path, rules):
-            problems.append('%s: %s %s is neither in dist/ nor a redirect' % (where, what, url))
+        elif _redirected(path, rules):
+            problems.append('%s: %s %s goes through a redirect (dist/_redirects): give the address it leads to'
+                            % (where, what, url))
+        elif _served(path) == 'slash':
+            problems.append('%s: %s %s redirects to the address as it is served (its last slash, or .html): '
+                            'give that address' % (where, what, url))
+        elif not _served(path):
+            problems.append('%s: %s %s is not in dist/' % (where, what, url))
 
     for root, _, files in os.walk(DIST):
         for f in sorted(files):
@@ -5065,7 +5104,7 @@ def check_links():
         check('dist/_redirects', source + ' ->', re.sub(r'/:[A-Za-z]\w*.*$', '/', dest))
     if problems:
         raise SystemExit('Link check failed (public build):\n  ' + '\n  '.join(problems))
-    print('link check: %d pages, %d addresses, all in dist/ or redirects; none lead to %s'
+    print('link check: %d pages, %d addresses, all in dist/, none through a redirect; none lead to %s'
           % (count[0], count[1], ', '.join(HIDDEN) or 'a hidden page'))
 
 
@@ -5257,8 +5296,8 @@ if __name__ == '__main__':
     # Every page is built in both modes; write_pages() doesn't write the ones not public yet.
     for e in EVENTS:
         build_event(e)
-    for fn in (build_home, build_about, build_food, build_wine, build_bar, build_events, build_private_dining,
-               build_visit, build_booking, build_gift_cards, build_press, build_guest_privacy, build_accessibility,
+    for fn in (build_home, build_about, build_food, build_wine, build_bar, build_events, build_booking,
+               build_gift_cards, build_press, build_guest_privacy, build_accessibility,
                build_jobs, build_site_login, build_privacy, build_cookies, build_styleguide, build_dough, build_dough_log,
                build_dough_login, build_office_home, build_office_login, build_purchase, build_purchase_list,
                build_404):

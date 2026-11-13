@@ -64,7 +64,8 @@ Zalo keep the old picture until they look again. Once this is on sol.pizza:
 
 1. https://developers.facebook.com/tools/debug/ → paste each address → **Scrape Again**:
    `https://sol.pizza/`, `/vi/`, `/menu/`, `/menu/wine/`, `/about/`, `/booking/`,
-   `/visit-us/`, `/private-dining/`, `/events/`, `/press/`, `/jobs/`.
+   `/events/`, `/press/`, `/jobs/`. (Visit and private dining are parts of `/booking/`
+   since 13 Nov 2026, which keeps its card, "Find us, and book a table.")
 2. Zalo has no such tool: its previews update by themselves within a few days.
 
 ### 4. Adobe Fonts: show the hand-written line straight away
@@ -103,8 +104,11 @@ reaches `/vi/about/`. Left out: the kitchen (`/dough/`) and the back office
 (`/backoffice/`), which have no Vietnamese address (if the rule is already in place,
 add the `/backoffice` line to it), files
 (addresses with a dot), and the old addresses in `src/_redirects`: those go to their new
-page first, which then opens in Vietnamese. If `src/_redirects` gains an address, add it
-to the list in braces.
+page first, which then opens in Vietnamese. If `src/_redirects` gains an address that has
+no `/vi/` twin there, add it to the list in braces. (The ones added on 13 Nov 2026,
+`/visit-us` and `/private-dining`, have their `/vi/` twins in `src/_redirects`, so they
+work with this rule as it is: `/visit-us/?lang=vi` reaches `/vi/booking/#visit` either
+way.)
 
 ### 6. Cloudflare's bot script (decide)
 
@@ -302,7 +306,8 @@ hours or the booking page, and search engines are told to leave those pages out.
 ## Opening day
 
 1. [ ] In `build/gen.py`, set `SITE_STATE = 'open'` (and `OPENING_DATE`, if it isn't set
-       already). Merge it: the home page, Booking, Visit, the descriptions and the
+       already). Merge it: the home page, the booking page (its booking box and Visit),
+       the descriptions and the
        structured data all switch, and every "opening soon" line goes. (With an
        `OPENING_DATE` set, the pages already switch in the browser at the opening time;
        this makes it permanent and tells search engines.)

@@ -13,7 +13,7 @@ When something arrives, send it over (or put it where the table says), and the s
 goes live with the next build. Every key in `backticks` below is a gated section: the
 build stops if `gen.py` gates a section that isn't listed here.
 
-Last updated 4 November 2026.
+Last updated 13 November 2026.
 
 ## Needed soon: before opening
 
@@ -42,13 +42,13 @@ Last updated 4 November 2026.
 
 | What | Where it goes | Format | Who has it |
 | --- | --- | --- | --- |
-| Private dining | `/private-dining/`: the spaces on each floor and how many each seats, set menus, minimum spend | Figures, a line on each space, English and Vietnamese | Arman |
-| Large groups | Visit and Private dining: how many seats in all, the largest table | Figures | Supervisor |
+| Private dining | The booking page's private dining part, `/booking/#private-dining`: the spaces on each floor and how many each seats, set menus, minimum spend | Figures, a line on each space, English and Vietnamese | Arman |
+| Large groups | Visit and private dining, both on the booking page (`/booking/#visit`, `/booking/#private-dining`): how many seats in all, the largest table | Figures | Supervisor |
 | The team | `/about/`: portraits and a few lines on each person (Ngọc runs the kitchen; should "and Long runs the floor" be added?) | 2–3 lines each, English and Vietnamese, a portrait | Arman |
 | The dough | `/about/`, "The dough": the flours, how long it ferments, how it's baked | A few lines, English and Vietnamese | The kitchen |
 | Sol Pizza to Sol | `/about/`: one line on what closing Sol Pizza meant to you and the team | A line or two | Arman |
 | The terrace | `/about/` says "a terrace for when the weather behaves": is there one? | Yes or no | Arman |
-| Getting here | Visit & FAQ: motorbike and car parking, where Grab drops off, the lift and step-free access, dress code, corkage, payment methods, dogs, smoking | A line each, English and Vietnamese | Supervisor |
+| Getting here | Visit's Good to know, on the booking page (`/booking/#visit`): motorbike and car parking, where Grab drops off, the lift and step-free access, dress code, corkage, payment methods, dogs, smoking | A line each, English and Vietnamese | Supervisor |
 | Press and review quotes | The home page | The quote, who said it, where and when, and their OK to use it | Arman |
 | Press contact | `PRESS_CONTACT` in `build/gen.py`: `/press/`, which is live with the facts and the logo, and says hello@sol.pizza until then | Name and email | Arman |
 | Gift cards | `/gift-cards/`, built and waiting: values, how long a card lasts; how to buy is "at the restaurant, or by email" (online sales would need the Ministry of Industry and Trade notification first) | Values in đồng, how long a card lasts | Arman |
@@ -61,7 +61,7 @@ Last updated 4 November 2026.
 
 | What | Where it goes | Format | Who has it |
 | --- | --- | --- | --- |
-| Photographs: the room on each floor, the bar, the oven, the food, the team, the building from the lane | Cloudflare R2 (the `sol-media` bucket, `media.sol.pizza`) and `build/media.json`: the home page, About, Menu, Private dining, Visit, Events, Press (README.md, "Photographs", says how) | sRGB JPEG, long edge 3,000–4,000 px, with a credit; alt text in English and Vietnamese for each; which photos the press may use | The photographer |
+| Photographs: the room on each floor, the bar, the oven, the food, the team, the building from the lane | Cloudflare R2 (the `sol-media` bucket, `media.sol.pizza`) and `build/media.json`: the home page, About, Menu, the booking page (Visit, private dining), Events, Press (README.md, "Photographs", says how) | sRGB JPEG, long edge 3,000–4,000 px, with a credit; alt text in English and Vietnamese for each; which photos the press may use | The photographer |
 | A video for the home page (optional) | The home page's first screen, muted, with a still for phones | MP4, about 2 MB at most, and a poster frame | The photographer |
 
 ## Search
@@ -85,28 +85,31 @@ and Trade notification for online booking). The drinks offers stay as they are.
 ## Gated sections
 
 Each key below is a section the public build leaves out until its content arrives.
+Visit and private dining are parts of the booking page since 13 November 2026: their
+keys and their two photo slots (`visit`, `private-dining`) are the same, and they now
+show on `/booking/`, at `#visit` and `#private-dining`.
 
 | Key | What it waits for |
 | --- | --- |
-| `booking-terms` | `/booking/`, "Before you book": cancellations, deposits, how long a table is held, the largest party that can book online (Booking terms, above) |
-| `private-dining-spaces` | `/private-dining/`, "The spaces": each floor and the whole restaurant, and how many each seats (Private dining, above) |
-| `private-dining-menus` | `/private-dining/`, "Set menus": menus for groups and their prices |
-| `private-dining-minimum` | `/private-dining/`, "Minimum spend" for a private space |
-| `visit-last-orders` | `/visit-us/`, under the hours: last orders (Last orders, above) |
-| `visit-capacity` | `/visit-us/`, Good to know, "Big groups": how many seats in all, the largest table (Large groups, above) |
-| `visit-getting-here` | `/visit-us/`, "Getting here and parking": motorbike and car parking, where Grab drops off (Getting here, above) |
-| `visit-access` | `/visit-us/`, "Step-free access and the lift": the lift, steps, the toilets (Getting here, above) |
-| `visit-payment` | `/visit-us/`, "Paying": cash, which cards, transfer, e-wallets (`PAYMENT_ACCEPTED`; Payment methods, above) |
-| `visit-corkage` | `/visit-us/`, "Bringing your own wine": whether guests can, and the corkage fee (Getting here, above) |
-| `visit-dress` | `/visit-us/`, "What to wear": whether there's a dress code (Getting here, above) |
-| `visit-dogs` | `/visit-us/`, "Dogs": whether dogs are welcome, inside or out (Getting here, above) |
-| `visit-smoking` | `/visit-us/`, "Smoking": whether there's anywhere to smoke (Getting here, above) |
+| `booking-terms` | `/booking/`, "Before you book", under the booking box and above Visit: cancellations, deposits, how long a table is held, the largest party that can book online (Booking terms, above) |
+| `private-dining-spaces` | `/booking/#private-dining`, "The spaces", between the photographs and the enquiry form: each floor and the whole restaurant, and how many each seats (Private dining, above) |
+| `private-dining-menus` | `/booking/#private-dining`, "Set menus", after The spaces: menus for groups and their prices |
+| `private-dining-minimum` | `/booking/#private-dining`, "Minimum spend" for a private space, after Set menus |
+| `visit-last-orders` | `/booking/#visit`, under the hours: last orders (Last orders, above) |
+| `visit-capacity` | `/booking/#visit`, Good to know, "Big groups": how many seats in all, the largest table (Large groups, above) |
+| `visit-getting-here` | `/booking/#visit`, Good to know, "Getting here and parking": motorbike and car parking, where Grab drops off (Getting here, above) |
+| `visit-access` | `/booking/#visit`, Good to know, "Step-free access and the lift": the lift, steps, the toilets (Getting here, above) |
+| `visit-payment` | `/booking/#visit`, Good to know, "Paying": cash, which cards, transfer, e-wallets (`PAYMENT_ACCEPTED`; Payment methods, above) |
+| `visit-corkage` | `/booking/#visit`, Good to know, "Bringing your own wine": whether guests can, and the corkage fee (Getting here, above) |
+| `visit-dress` | `/booking/#visit`, Good to know, "What to wear": whether there's a dress code (Getting here, above) |
+| `visit-dogs` | `/booking/#visit`, Good to know, "Dogs": whether dogs are welcome, inside or out (Getting here, above) |
+| `visit-smoking` | `/booking/#visit`, Good to know, "Smoking": whether there's anywhere to smoke (Getting here, above) |
 | `about-closing` | `/about/`, Sol Pizza: a line or two on what closing it meant to you and the team (Sol Pizza to Sol, above) |
 | `about-dough` | `/about/`, "The dough": its flours, how long it ferments, how it's baked, in the kitchen's words |
 | `about-team` | `/about/`, "The team": a portrait and two or three lines on each person (The team, above) |
 | `company-tax-code` | The footer's last line: the tax code (`TAX_CODE` in `build/gen.py`; Tax code, above) |
 | `press-contact` | `/press/`, "Who to ask": a name and an email (`PRESS_CONTACT`; Press contact, above). Until then it says hello@sol.pizza |
-| `photography` | Every photograph: the home page (the first picture, the story, the three cards), About (the room, the oven), the menus, Private dining, Visit, each Eclipse edition, and the ones the press may use on `/press/`. Each placeholder on the full preview gives its slot, what to shoot and its shapes; `python3 build/media_tool.py slots` lists them (Photography, above) |
+| `photography` | Every photograph: the home page (the first picture, the story, the three cards), About (the room, the oven), the menus, the booking page (the `visit` slot, the building from the lane, under Visit's hours and address at `/booking/#visit`; the `private-dining` slot, up to three, under the private dining intro at `/booking/#private-dining`), each Eclipse edition, and the ones the press may use on `/press/`. Each placeholder on the full preview gives its slot, what to shoot and its shapes; `python3 build/media_tool.py slots` lists them (Photography, above) |
 | `home-press` | The home page: press or review quotes (Press and review quotes, above) |
 | `event-<slug>` | The whole page of each Eclipse edition, `/events/<slug>/`: a line or two on what it is. It goes live by itself once `summary_en` and `summary_vi` are in `build/events-data.json`; a new edition needs nothing here |
 | `gift-cards` | The whole page `/gift-cards/`: the values, how long a card lasts, how to buy one (Gift cards, above). To publish it, delete its line in `WAITING` in `build/gen.py` |
