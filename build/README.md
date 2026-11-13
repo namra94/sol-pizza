@@ -35,6 +35,10 @@ section still waiting for content, with `noindex`; see "Build modes" below. Eith
    `office_page()`).
    The public build builds any page in `HIDDEN` but doesn't write it, so a
    mistake in one still stops every build, pull request previews included.
+   Each page carries, inline, only the suns it draws from `assets/suns-sprite.svg`
+   (`sun_sprite()`): the eight together are 16 KB, about half a page's compressed
+   HTML, and most pages draw two or three (the role pages, the ads' landing pages,
+   none).
 4. **Support files.** `sitemap.xml` (every public page in both languages, each listing
    both and English as the default, including the six role pages), `robots.txt`, and
    `dist/_redirects`: `src/_redirects` as it is, or, in a public build while `HIDDEN`

@@ -314,6 +314,14 @@ phone: Performance 66, Best Practices 96, Total Blocking Time 1,670 ms, against 
 0 ms for the same page without the widget. Any other FAIL in that run means something else has
 changed.
 
+Since 13 Nov 2026 Visit and private dining are on this page too, so their readers load the
+widget as well, even arriving at `#visit` or `#private-dining`: the frame is near enough to the
+top for the browser to load it (`loading="lazy"` holds back only frames far from the screen).
+Measured that day with Lighthouse on a phone, `main` against the merged page on the same local
+server: Visit's readers went from Performance 99, Total Blocking Time 0 ms and 104 KB on
+`/visit-us/` to 83, 643 ms and 1,166 KB on `/booking/#visit` (private dining's alike). Loading
+the widget only when asked, behind a button, would give that back: a change to agree first.
+
 ### Enquiries and the newsletter
 
 The enquiry forms write an email; nothing is stored on a server. Filling one in and

@@ -21,7 +21,11 @@
    below; the second rule its ::before and ::after drew 5px inside each is gone. Gone
    too: .menu-card, a card with a second rule 7px outside its border, which no page
    used. (build/design/kitchen/kitchen.css, the staff pages' frozen copy, keeps both:
-   no staff page draws them.) */
+   no staff page draws them.)
+   Rules no page uses, out (13 Nov 2026): the old header (.site-header, .navbar and the
+   language buttons, .lang button: the guest pages' header is in site.css, the staff
+   pages' in kitchen.css), .hero-lead, the nav sheet's .navsheet-label, .navsheet-menu
+   and .navsheet-rule, .sun-divider, .visit-band and .visit-grid. */
 
 /* ------------------------------------------------------------------ base */
 *, *::before, *::after { box-sizing: border-box; }
@@ -56,8 +60,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 /* ------------------------------------------------------------------ shared type */
 /* labels: one style for every small line of capitals */
 .eyebrow, .label, .link-sc, .btn, .lang, .nav-links,
-.subnav a span:not([data-l]), .navsheet-label, .navsheet-menu a span:not([data-l]), .navsheet-meta,
-.facts dt, .visit-grid dt, .legend b, .marks, .tag, .gtk-items dt, .role-meta, .footer-cols h2,
+.subnav a span:not([data-l]), .navsheet-meta,
+.facts dt, .legend b, .marks, .tag, .gtk-items dt, .role-meta, .footer-cols h2,
 .prose h4, .prose summary, .prose thead th, .book-contact dt {
   /* the text serif, not the heading face: Philosopher's capital I reads as an l
      in capitals ("VI" became "Vl") */
@@ -124,23 +128,11 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .btn-sm { min-height: 38px; padding: 8px 16px; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 34px; }
 
-/* ------------------------------------------------------------------ header (desktop) */
-.site-header { position: relative; z-index: 20; }
+/* ------------------------------------------------------------------ header (desktop)
+   The bar under the masthead is site.css's (.sitebar) */
 .masthead { padding-top: 44px; display: flex; justify-content: center; }
 .masthead img { height: 58px; width: auto; }
-.navbar {
-  margin-top: 26px;
-  min-height: 58px;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  border-top: 1px solid var(--line-brand);
-  border-bottom: 1px solid var(--line-brand);
-}
 .lang { display: flex; align-items: center; gap: 6px; justify-self: start; }
-.lang button { min-width: 24px; padding: 10px 2px; letter-spacing: inherit; }
-.lang button[aria-pressed="true"] { color: var(--sol-red); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
-.lang button:hover { color: var(--sol-red); }
 .nav-links { display: flex; align-items: center; color: var(--wood); }
 .nav-links li { display: flex; align-items: center; }
 .nav-links li + li::before {
@@ -153,19 +145,11 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .nav-links a { display: inline-flex; align-items: center; gap: 6px; padding: 12px 0; }
 .nav-links a:hover, .nav-links a[aria-current] { color: var(--sol-red); }
 .caret { width: 12px; height: 12px; transition: transform .15s; }
-.site-header.is-open .caret, .section-menu .caret { transform: rotate(180deg); color: var(--sol-red); }
-.navbar > .btn { justify-self: end; }
 
 /* the Food / Wine / Bar tabs */
 .subnav { display: none; background: var(--surface); }
 .section-menu .subnav { display: block; }
-.site-header.is-open .subnav {
-  display: block;
-  position: absolute;
-  left: 0; right: 0; top: 100%;
-}
 .subnav ul { display: flex; justify-content: center; gap: 56px; padding-top: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
-.site-header.is-open .subnav ul { border-bottom-color: var(--line-brand); }
 .subnav a {
   display: block;
   padding-bottom: 6px;
@@ -202,21 +186,14 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .navsheet-top { height: 64px; flex: none; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; }
 .navsheet-top img { height: 26px; width: auto; margin: 0 auto; }
 .navsheet-close { width: 44px; height: 44px; display: grid; place-items: center; color: var(--wood); justify-self: end; }
-.navsheet-label { margin-top: 36px; color: var(--sol-red); }
-.navsheet-menu a, .navsheet-pages a {
+.navsheet-pages a {
   display: block;
   font-family: var(--display);
   font-size: var(--fs-h2);
   line-height: 48px;
   color: var(--wood);
 }
-.navsheet-menu a span:not([data-l]) {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--ink-muted);
-}
-.navsheet-menu a[aria-current="page"], .navsheet-pages a[aria-current="page"] { color: var(--sol-red); }
-.navsheet-rule { width: auto; margin: 22px 40px; border: 0; border-top: 1px solid var(--line-brand); }
+.navsheet-pages a[aria-current="page"] { color: var(--sol-red); }
 .navsheet-pages a { line-height: 50px; }
 .navsheet-foot { margin-top: auto; padding-top: 32px; }
 .navsheet-foot .btn { width: 100%; }
@@ -234,8 +211,6 @@ html.sheet-open { overflow: hidden; }
   line-height: 1;
   color: var(--sol-red);
 }
-.hero-lead { max-width: 660px; margin: 24px auto 0; font-size: var(--fs-lead); line-height: 1.5; }
-
 .facts {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -244,9 +219,6 @@ html.sheet-open { overflow: hidden; }
 .facts > div { padding: 26px 16px 28px; text-align: center; }
 .facts dt { color: var(--sol-red); }
 .facts dd { margin-top: 8px; line-height: 1.5; }
-
-.sun-divider { display: flex; justify-content: center; margin: 96px 0; color: var(--wood); }
-.sun-divider img { height: 34px; width: auto; }
 
 .split { display: grid; grid-template-columns: 400px 1fr; gap: 80px; }
 .split .h-lg { margin-top: 16px; }
@@ -279,13 +251,6 @@ html.sheet-open { overflow: hidden; }
 .section-intro { text-align: center; }
 .section-intro .h-lg { margin: 14px 0; }
 .section-intro p:last-child { max-width: 640px; margin: 0 auto; font-size: var(--fs-lead); line-height: 1.5; }
-
-.visit-band { margin-top: 120px; text-align: center; }
-.visit-band .h-lg { margin-top: 14px; }
-.visit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 40px; }
-.visit-grid dt { color: var(--sol-red); }
-.visit-grid dd { margin-top: 8px; }
-.visit-grid a:hover { color: var(--sol-red); }
 
 /* ------------------------------------------------------------------ inner pages */
 .page-title { text-align: center; margin-top: 64px; }
@@ -442,7 +407,6 @@ html.sheet-open { overflow: hidden; }
   .trio { grid-template-columns: 1fr; }
   .trio > li { border-left: 0; }
   .trio > li + li { border-top: 1px solid var(--line-brand); }
-  .visit-grid { grid-template-columns: 1fr; gap: 24px; }
   .visit-info { grid-template-columns: 1fr; }
   .visit-info > section { border-left: 0; }
   .visit-info > section + section { border-top: 1px solid var(--line-brand); }
@@ -452,8 +416,7 @@ html.sheet-open { overflow: hidden; }
 
 /* ------------------------------------------------------------------ mobile */
 @media (max-width: 760.98px) {
-  .masthead, .navbar { display: none; }
-  .site-header.is-open .subnav { display: none; }
+  .masthead { display: none; }
   .mbar {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -471,17 +434,13 @@ html.sheet-open { overflow: hidden; }
 
   .hero { margin-top: 36px; }
   .hero-title { margin: 14px 0 12px; }
-  .hero-lead { margin-top: 16px; }
   .actions { display: grid; grid-template-columns: min(100%, 320px); gap: 10px; margin-top: 24px; }
   .facts { margin-top: 40px; }
   .facts > div { padding: 18px 10px 20px; }
-  .sun-divider { margin: 56px 0; }
-  .sun-divider img { height: 24px; }
   .trio { margin-top: 64px; }
   .trio > li { padding: 32px 8px 36px; }
   .pullquote { gap: 14px; margin-top: 64px; margin-bottom: 64px; }
   .pullquote .sun { width: 20px; height: 20px; }
-  .visit-band { margin-top: 80px; }
 
   .page-title { margin-top: 30px; }
   .page-title h1 { margin: 10px 0; }

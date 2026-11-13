@@ -7,6 +7,15 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Role pages: titles and descriptions that fit search results, 13 Nov 2026
+
+The build listed one title over 60 characters and eight descriptions over 160 on the role pages (Google shortens those). The English descriptions now give the figures in millions, as the Vietnamese ones already did. In Vietnamese, one role’s name is long enough to need it: where the whole would be too long, the name drops the English in brackets, as the role’s card on /vi/jobs/ already does. No new words.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /vi/jobs/kitchen-porter/ | browser tab (and the page’s name in the breadcrumb search engines read) | Nhân viên rửa bát & vệ sinh bếp (Kitchen Porter) — Sol, Tây Hồ | Nhân viên rửa bát & vệ sinh bếp — Sol, Tây Hồ |
+| /vi/jobs/kitchen-porter/ | meta description | Tuyển Nhân viên rửa bát & vệ sinh bếp (Kitchen Porter) tại Sol, Tây Hồ, Hà Nội. Lương cơ bản 6,5–7,5 triệu + phí phục vụ ước tính 2–4 triệu/tháng. Hạn nộp 14/11/2026. | Tuyển Nhân viên rửa bát & vệ sinh bếp tại Sol, Tây Hồ, Hà Nội. Lương cơ bản 6,5–7,5 triệu + phí phục vụ ước tính 2–4 triệu/tháng. Hạn nộp 14/11/2026. |
+
 ## One page for privacy and cookies, 13 Nov 2026
 
 The cookie notice (`/vi/privacy/cookies/`) is now on the privacy page, `/vi/privacy/`, under the applicant privacy notice, at `#cookies`, and the old address leads there. Both notices are word for word as they were, with their tables and their “Cập nhật lần cuối” dates (checked by comparing every piece of text on the old pages with the new one, in both languages). One link changed where it goes, not its words: in the cookie notice’s Câu hỏi, “thông báo bảo mật dành cho ứng viên” now goes to that notice’s heading higher up the same page, where it used to open the page again.

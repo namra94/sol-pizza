@@ -8,7 +8,9 @@
    keep their own, build/design/kitchen/kitchen.css.
    One rule at a time, never two side by side (13 Nov 2026): the cookie banner has one
    rule along its top (its ::before drew a second, 4px below it), and where the parts
-   of a page meet (/booking/, /privacy/) only space sets them apart. */
+   of a page meet (/booking/, /privacy/) only space sets them apart.
+   Rules no page uses, out (13 Nov 2026): .btn-sun, and the booking page's closing
+   line (.booking-visit), which the merge with Visit made redundant. */
 
 /* ------------------------------------------------------------------ EN / VI
    Each page is in one language (/… English, /vi/… Vietnamese); EN · VI are links to
@@ -373,8 +375,6 @@ html:not(.is-open) .when-open, html.is-open .when-pre { display: none !important
 .round-closed .round-live { display: none !important; }
 
 /* ------------------------------------------------------------------ booking */
-.booking-visit { margin-top: 40px; text-align: center; font-size: var(--fs-small); line-height: 1.6; color: var(--ink-muted); }
-.booking-visit .link-sc { margin-top: 10px; font-size: var(--fs-label); }
 .page-booking .offer.booking { margin-top: 40px; }
 /* Pages in parts (.page-part). /booking/ is one page in three: the booking box (#book),
    then Visit (#visit) and groups and private dining (#private-dining), each of those two
@@ -413,8 +413,8 @@ html:not(.is-open) .when-open, html.is-open .when-pre { display: none !important
 .after-dark a:not(.btn) { color: var(--cream); border-bottom: 1px solid currentColor; }
 .after-dark a:not(.btn):hover { color: var(--sun); }
 .after-dark .link-sc { color: var(--sun); }
-.after-dark .btn-red, .btn-sun { background: var(--sun); border-color: var(--sun); color: var(--wood); }
-.after-dark .btn-red:hover, .btn-sun:hover { background: var(--cream); border-color: var(--cream); color: var(--wood); }
+.after-dark .btn-red { background: var(--sun); border-color: var(--sun); color: var(--wood); }
+.after-dark .btn-red:hover { background: var(--cream); border-color: var(--cream); color: var(--wood); }
 .after-dark .btn-outline { border-color: var(--cream); color: var(--cream); }
 .after-dark .btn-outline:hover { background: var(--cream); border-color: var(--cream); color: var(--wood); }
 .after-dark .item-desc, .after-dark .offer-note { color: var(--cream); }

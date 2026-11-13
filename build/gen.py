@@ -87,6 +87,23 @@ def write(path, text):
 
 MENU = json.loads(read(os.path.join(HERE, 'menu-data.json')))
 SUN_SPRITE = read(os.path.join(ASSETS, 'suns-sprite.svg')).strip()
+# The eight suns, each a <symbol> of about 2 KB. A page carries only the ones it draws
+# (sun_sprite()): all eight are 16 KB, about half a page's HTML once compressed, and most
+# pages draw two or three, the role pages none.
+SUN_SYMBOLS = {m.group(1): m.group(0) for m in
+               re.finditer(r'<symbol\b[^>]*\bid="(sun-\d+)"[^>]*>.*?</symbol>', SUN_SPRITE, re.S)}
+assert len(SUN_SYMBOLS) == 8 and re.sub(r'<symbol\b.*?</symbol>', '', SUN_SPRITE, flags=re.S).count('<') == 2, \
+    'build/assets/suns-sprite.svg: eight <symbol id="sun-N"> in one <svg>, and nothing else'
+SPRITE_HERE = '<!--sun-sprite-->'       # where a page's suns go: sun_sprite() fills it in
+
+
+def sun_sprite(html):
+    """The sprite for one page: only the suns it draws (sun(n): <use href="#sun-n"/>), in the
+    sprite's own order; nothing for a page that draws none."""
+    used = [k for k in SUN_SYMBOLS if 'href="#%s"' % k in html]
+    if not used:
+        return ''
+    return re.match(r'<svg\b[^>]*>', SUN_SPRITE).group(0) + ''.join(SUN_SYMBOLS[k] for k in used) + '</svg>'
 
 # --------------------------------------------------------------------------
 # fonts
@@ -1286,7 +1303,7 @@ def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website
             main = re.sub(r'(<main\b[^>]*>)', lambda m: m.group(1) + (
                 '<div class="wrap"><p class="gated-label gated-page">%s <code>%s</code>: %s</p></div>'
                 % (t('Content needed', 'Cần nội dung'), key, esc(what))), main, count=1)
-    body = '<body class="%s%s"%s>\n%s\n' % (body_class, ' has-actionbar' if bar and not bare else '', body_attrs, SUN_SPRITE)
+    body = '<body class="%s%s"%s>\n%s\n' % (body_class, ' has-actionbar' if bar and not bare else '', body_attrs, SPRITE_HERE)
     if not bare:
         body += nbsp('<a class="skip" href="#main">%s</a>\n' % t('Skip to content', 'Chuyển đến nội dung chính')
                      + consent_banner() + announcement_bars() + header(cur, en_href, vi_href))
@@ -1300,6 +1317,8 @@ def page(path, body_class, title, desc, main, cur=None, og=None, ogtype='website
     for words in title + desc:              # they go into attributes (content="…") as they are
         assert '"' not in words and '<' not in words, '%s: a title or description with " or <: %s' % (path, words)
     body += '</body>\n</html>\n'
+    sprite = sun_sprite(body)
+    body = body.replace(SPRITE_HERE + '\n', sprite + '\n' if sprite else '', 1)
     # extra: <head> lines, as a string, a function of the language, or a list of either
     extra = extra if isinstance(extra, list) else [extra]
     rec = dict(path=path, kitchen=False, title=title, desc=desc, og=og, ogtype=ogtype, extra=extra,
@@ -2791,6 +2810,11 @@ def trieu(lo_hi):
     return '–'.join(('%g' % (n / 1e6)).replace('.', ',') for n in lo_hi) + ' triệu'
 
 
+def million(lo_hi):
+    """11–14 million, 6.5–7.5 million: trieu() in English (the role pages' descriptions)."""
+    return '–'.join('%g' % (n / 1e6) for n in lo_hi) + ' million'
+
+
 def encode_uri_component(s):
     """JavaScript's encodeURIComponent, for the Apply links' no-JS href."""
     return quote(s, safe="-_.!~*'()")
@@ -3235,13 +3259,23 @@ def build_open_role(r):
     og_title = 'Tuyển %s — Sol, Tây Hồ' % r['name_en']
     og_desc = 'Lương cơ bản %s + phí phục vụ ước tính %s/tháng. Hạn nộp %s.' % (
         trieu(r['base']), trieu(SERVICE), vi_date(CLOSES, True).split(' ')[-1])
-    desc_en = ('%s at Sol, Tây Hồ, Hanoi. Base salary %s VND a month, plus service charge and tips, est. '
-               '%s VND a month. Applications close %d %s %d.'     # no weekday: it would cut the longest (fit)
-               % (r['name_en'], band_en(r['base'], '–'), band_en(SERVICE, '–'),
-                  CLOSES.day, EN_MONTHS[CLOSES.month - 1], CLOSES.year))
+    # Within what search results show (titles 60 characters, descriptions 160: check_search()):
+    # the figures in millions, as the Vietnamese has them, and no weekday. A Vietnamese name
+    # with the English in brackets, "Nhân viên rửa bát & vệ sinh bếp (Kitchen Porter)", drops
+    # the brackets where the whole would be too long (as the role's card on /jobs/ does).
+    desc_en = ('%s at Sol, Tây Hồ, Hanoi: base %s VND a month + service charge and tips (est. %s). '
+               'Applications close %d %s %d.'
+               % (r['name_en'], million(r['base']), million(SERVICE), CLOSES.day, EN_MONTHS[CLOSES.month - 1],
+                  CLOSES.year))
+    short_vi = re.sub(r'\s*\(%s\)$' % re.escape(r['name_en']), '', r['name_vi'])
+    title_vi = '%s — Sol, Tây Hồ' % r['name_vi']
+    if len(title_vi) > 60:
+        title_vi = '%s — Sol, Tây Hồ' % short_vi
     desc_vi = 'Tuyển %s tại Sol, Tây Hồ, Hà Nội. %s' % (r['name_vi'], og_desc)
+    if len(desc_vi) > 160:
+        desc_vi = 'Tuyển %s tại Sol, Tây Hồ, Hà Nội. %s' % (short_vi, og_desc)
     page(open_role_path(r), 'page-role',
-         (esc_attr('%s — Sol, Tây Hồ' % r['name_en']), esc_attr('%s — Sol, Tây Hồ' % r['name_vi'])),
+         (esc_attr('%s — Sol, Tây Hồ' % r['name_en']), esc_attr(title_vi)),
          (esc_attr(fit(desc_en, 200)), esc_attr(fit(desc_vi, 200))), main, cur='role', og='jobs',
          # The Vietnamese page's share card speaks to the ads' Vietnamese readers
          og_text=((esc_attr('%s — Sol, Tây Hồ' % r['name_en']), esc_attr(desc_en)),
@@ -3940,12 +3974,14 @@ def kitchen_page(path, data_page, title, desc, main, extra=''):
     never a /vi/ copy."""
     doc = kitchen_head(path, title, desc,
                        '<meta name="robots" content="noindex, nofollow">' + ('\n' + extra if extra else ''))
-    doc += '<body class="page-kitchen page-%s" data-page="%s">\n%s\n' % (data_page, data_page, SUN_SPRITE)
+    doc += '<body class="page-kitchen page-%s" data-page="%s">\n%s\n' % (data_page, data_page, SPRITE_HERE)
     doc += nbsp('<a class="skip" href="#main">%s</a>\n' % t('Skip to content', 'Chuyển đến nội dung chính')
                 + kitchen_header())
     doc += nbsp(main)
     doc += nbsp(kitchen_footer())
     doc += '</body>\n</html>\n'
+    sprite = sun_sprite(doc)
+    doc = doc.replace(SPRITE_HERE + '\n', sprite + '\n' if sprite else '', 1)
     rec = dict(path=path, kitchen=True, doc=doc, hidden=hidden(path))
     PAGES.append(rec)
     return rec
