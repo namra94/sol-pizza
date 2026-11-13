@@ -116,7 +116,15 @@ switched on, the design-system tokens (`--surface-raised`, `--ink-on-brand`,
 `--ink-on-sun`, `--focus`) and a 2px focus ring with a 2px offset, and the
 footer column headings in EB Garamond SemiBold (600, the one extra weight in
 `FONT_PLAN`; `<strong>` text uses it too). The feedback of 6 Oct 2026 took the
-rules off the home facts row. The header comment in each file lists what
+rules off the home facts row. On 13 Nov 2026 the double lines went: the offer box
+(`.offer`: the booking box, the home page's newsletter, Wine night, Happy hour, Press,
+Jobs, each Eclipse edition's Book) has one rule above and one below, where its
+`::before` and `::after` drew a second 5px inside each; `.menu-card`, a card with a
+second rule 7px outside its border, which no page used, is gone; and in `site.css` the
+cookie banner has one rule along its top, not two, and a placeholder photo inside a
+card (full build) has no border of its own beside the card's. One rule at a time: no
+two run side by side within 8px, on any page, in either language, at a phone's width or
+a laptop's (measured on 13 Nov 2026). The header comment in each file lists what
 changed. Don't restyle them otherwise;
 put anything the design doesn't cover in `design/site.css`.
 `design/site.js` is the guest pages' script: the delivered header script (menu tabs,
@@ -125,7 +133,8 @@ the analytics it allows, the events, the announcements.
 
 `design/kitchen/` is the kitchen pages' own shell, frozen as every page had it on
 12 Oct 2026: `kitchen.css` is tokens.css, printed-menu.css and site.css of that day,
-one after the other; `kitchen.js` is printed-menu.js of that day (the in-page EN / VI
+one after the other (so it still has the double-ruled `.offer` and `.menu-card`, which
+no staff page draws); `kitchen.js` is printed-menu.js of that day (the in-page EN / VI
 switch). Guest pages never load them, and the kitchen never loads the guest files, so
 a change on one side can't reach the other.
 
