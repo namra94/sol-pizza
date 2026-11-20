@@ -1,5 +1,5 @@
 // A local stand-in for the sol-pizza Worker's static assets, for the checks:
-// dist/_redirects (exact and splat rules, query kept), directory index pages,
+// dist/_redirects (exact and splat rules, query kept, #part kept), directory index pages,
 // /x served from x.html, and the nearest 404.html with a 404 status.
 // Not the real thing (no _headers, no compression, no Worker): Lighthouse budgets
 // are for the Preview URL; this is for axe, behaviour and screenshots.
@@ -25,7 +25,10 @@ module.exports = function serve(dist, port) {
         const splat = r.from.endsWith('*') && p.startsWith(r.from.slice(0, -1));
         if (p === r.from || splat) {
           const to = r.to.replace(':splat', splat ? p.slice(r.from.length - 1) : '');
-          res.writeHead(r.code, {Location: to + (to.includes('?') || to.includes('#') ? '' : url.search)});
+          // The query is kept, before the destination's #part, as Cloudflare does (seen 13 Nov
+          // 2026: /book?lang=vi goes to /booking/?lang=vi#book)
+          const [dest, part] = to.split('#');
+          res.writeHead(r.code, {Location: dest + (dest.includes('?') ? '' : url.search) + (part === undefined ? '' : '#' + part)});
           return res.end();
         }
       }

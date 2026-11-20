@@ -5,7 +5,12 @@
    the long-text pages (privacy and cookie notices, role pages), and the parts the
    pages are built from (after-dark sections, image bands, galleries, cards, quotes).
    Brand colours only (tokens.css). The kitchen's pages don't load this file: they
-   keep their own, build/design/kitchen/kitchen.css. */
+   keep their own, build/design/kitchen/kitchen.css.
+   One rule at a time, never two side by side (13 Nov 2026): the cookie banner has one
+   rule along its top (its ::before drew a second, 4px below it), and where the parts
+   of a page meet (/booking/, /privacy/) only space sets them apart.
+   Rules no page uses, out (13 Nov 2026): .btn-sun, and the booking page's closing
+   line (.booking-visit), which the merge with Visit made redundant. */
 
 /* ------------------------------------------------------------------ EN / VI
    Each page is in one language (/… English, /vi/… Vietnamese); EN · VI are links to
@@ -59,7 +64,6 @@ html[data-brand-fonts~="display"]:not(:lang(vi)) :is(h1, h2, h3, .h-lg) [lang="v
 /* "Build it with us": no rules, a plain centred call to action (24 Sep feedback:
    too many lines above the footer). */
 .page-about .offer { border-top: 0; border-bottom: 0; }
-.page-about .offer::before, .page-about .offer::after { content: none; }
 
 /* ------------------------------------------------------------------ characters
    Fixed-colour SVGs, placed as supplied: never recoloured or stretched, and only
@@ -319,9 +323,8 @@ html.js .no-email-copy { display: inline-block; }
   overflow-y: auto;
   padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   background: var(--surface);
-  border-top: 1px solid var(--line-brand);
+  border-top: 1px solid var(--line-brand);       /* one rule: no second line under it (13 Nov 2026) */
 }
-.consent::before { content: ""; display: block; height: 4px; border-bottom: 1px solid var(--line-brand); }
 .consent-ask .consent, .consent-open .consent { display: block; }
 /* While it's up, the page keeps room for it below the footer, and whatever has the focus
    scrolls clear of it (site.js sets --consent-h to its height; the phone bar is hidden). */
@@ -372,9 +375,22 @@ html:not(.is-open) .when-open, html.is-open .when-pre { display: none !important
 .round-closed .round-live { display: none !important; }
 
 /* ------------------------------------------------------------------ booking */
-.booking-visit { margin-top: 40px; text-align: center; font-size: var(--fs-small); line-height: 1.6; color: var(--ink-muted); }
-.booking-visit .link-sc { margin-top: 10px; font-size: var(--fs-label); }
 .page-booking .offer.booking { margin-top: 40px; }
+/* Pages in parts (.page-part). /booking/ is one page in three: the booking box (#book),
+   then Visit (#visit) and groups and private dining (#private-dining), each of those two
+   opening with what was its page title (.section-intro). /privacy/ is two notices: the
+   applicants', then the cookie notice (#cookies), which keeps its own title. Space sets
+   the parts apart, never a rule: the box above and the hours below bring their own. A
+   link to a part lands with its heading clear of the bar that stays at the top
+   (scroll-padding-top, on wide screens) and a little air above it. */
+.page-part { margin-top: 120px; }
+.page-part, .page-part .form-section, .page-booking .page-title { scroll-margin-top: 24px; }
+.page-part .section-intro p:last-child { max-width: 700px; }     /* as wide as the page lead it was */
+.page-part .visit-info { margin-top: 48px; }
+@media (max-width: 760.98px) {
+  .page-part { margin-top: 80px; }
+  .page-part .visit-info { margin-top: 36px; }
+}
 
 /* ------------------------------------------------------------------ legal pages
    The cookie notice: long text with tables. */
@@ -397,8 +413,8 @@ html:not(.is-open) .when-open, html.is-open .when-pre { display: none !important
 .after-dark a:not(.btn) { color: var(--cream); border-bottom: 1px solid currentColor; }
 .after-dark a:not(.btn):hover { color: var(--sun); }
 .after-dark .link-sc { color: var(--sun); }
-.after-dark .btn-red, .btn-sun { background: var(--sun); border-color: var(--sun); color: var(--wood); }
-.after-dark .btn-red:hover, .btn-sun:hover { background: var(--cream); border-color: var(--cream); color: var(--wood); }
+.after-dark .btn-red { background: var(--sun); border-color: var(--sun); color: var(--wood); }
+.after-dark .btn-red:hover { background: var(--cream); border-color: var(--cream); color: var(--wood); }
 .after-dark .btn-outline { border-color: var(--cream); color: var(--cream); }
 .after-dark .btn-outline:hover { background: var(--cream); border-color: var(--cream); color: var(--wood); }
 .after-dark .item-desc, .after-dark .offer-note { color: var(--cream); }
@@ -460,6 +476,7 @@ span.gated .gated-label { margin: 0 6px 0 0; padding: 0 6px; }
 .gated-label code { font-size: inherit; }
 .ph { display: grid; place-items: center; width: 100%; background: repeating-linear-gradient(135deg, var(--cream) 0 14px, #f3dfc4 14px 28px);
   border: 1px solid var(--line-brand); color: var(--ink-muted); font-size: var(--fs-small); text-align: center; padding: 12px; }
+.card > .ph { border: 0; }       /* in a card, the card's rule frames it: not a second one beside it */
 
 /* Safe areas: with viewport-fit=cover, keep text clear of a phone's notch in landscape. */
 body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }

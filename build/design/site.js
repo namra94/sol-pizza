@@ -339,7 +339,8 @@
       else if (/^https:\/\/zalo\.me\//.test(href)) name = 'zalo_click';
       else if (/^https:\/\/wa\.me\//.test(href)) name = 'whatsapp_click';
       else if (/^https:\/\/(www\.)?google\.[a-z.]+\/maps|^https:\/\/maps\.app\.goo\.gl\//.test(href)) name = 'directions_click';
-      else if (/^(\/vi)?\/booking\/(#|$)/.test(href)) name = 'book_click';
+      // only the booking box: Visit and private dining are on the same page (#visit, #private-dining)
+      else if (/^(\/vi)?\/booking\/#book$/.test(href)) name = 'book_click';
     }
     if (!name) return;
     var params = {link_location: where(a)};

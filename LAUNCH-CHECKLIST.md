@@ -64,7 +64,8 @@ Zalo keep the old picture until they look again. Once this is on sol.pizza:
 
 1. https://developers.facebook.com/tools/debug/ → paste each address → **Scrape Again**:
    `https://sol.pizza/`, `/vi/`, `/menu/`, `/menu/wine/`, `/about/`, `/booking/`,
-   `/visit-us/`, `/private-dining/`, `/events/`, `/press/`, `/jobs/`.
+   `/events/`, `/press/`, `/jobs/`. (Visit and private dining are parts of `/booking/`
+   since 13 Nov 2026, which keeps its card, "Find us, and book a table.")
 2. Zalo has no such tool: its previews update by themselves within a few days.
 
 ### 4. Adobe Fonts: show the hand-written line straight away
@@ -103,8 +104,11 @@ reaches `/vi/about/`. Left out: the kitchen (`/dough/`) and the back office
 (`/backoffice/`), which have no Vietnamese address (if the rule is already in place,
 add the `/backoffice` line to it), files
 (addresses with a dot), and the old addresses in `src/_redirects`: those go to their new
-page first, which then opens in Vietnamese. If `src/_redirects` gains an address, add it
-to the list in braces.
+page first, which then opens in Vietnamese. If `src/_redirects` gains an address that has
+no `/vi/` twin there, add it to the list in braces. (The ones added on 13 Nov 2026,
+`/visit-us` and `/private-dining`, have their `/vi/` twins in `src/_redirects`, so they
+work with this rule as it is: `/visit-us/?lang=vi` reaches `/vi/booking/#visit` either
+way.)
 
 ### 6. Cloudflare's bot script (decide)
 
@@ -178,7 +182,7 @@ The listing is "Sol Hanoi" and still carries Sol Pizza's reviews.
         off, which sets a cookie, `m`, on `m.stripe.com` for 13 months.
 
       Ask ResDiary whether Google's tags can be turned off for Sol's widget. Ask the lawyer
-      whether the cookie notice (`/privacy/cookies/`) needs a line until then. (Watched from
+      whether the cookie notice (`/privacy/#cookies`) needs a line until then. (Watched from
       a PC with AdGuard, which stops the ad servers and Cloudflare Insights, and in Google's
       PageSpeed Insights, which has no blocker and where they all went through. No Google
       Analytics hit, `/g/collect`, showed in either. On a PC with a blocker, this list can't
@@ -275,15 +279,16 @@ Drafts waiting in the full preview, each marked "Draft": `/privacy/guests/` and
 `/accessibility/`. (The booking terms on `/booking/` wait for their content first.)
 
 - [ ] The guest privacy notice: the retention periods, the list of companies that handle
-      guests' data, and the wording. Once approved, delete its line in `WAITING`
-      (`build/gen.py`) and merge: it goes live, and into the footer.
+      guests' data, and the wording. Once approved, it joins `/privacy/` as a section
+      beside the applicant and cookie notices, not as a page (CONTENT-NEEDED.md,
+      `legal-guest-privacy`, says how); the footer keeps its one "Privacy & cookies" link.
 - [ ] The accessibility statement: the building's facts (step-free access, the lift, the
       toilets), then the same.
 - [ ] Once the guest notice is live, link it from the enquiry forms and the newsletter
       sign-up.
 
 Already signed off by the lawyer (13 October 2026): the cookie banner and the cookie
-notice, the line on alcohol on the wine and bar pages, Happy hour and Wine night, and no
+notice (moved word for word to `/privacy/#cookies` on 13 Nov 2026), the line on alcohol on the wine and bar pages, Happy hour and Wine night, and no
 age check. The site isn't an e-commerce platform: booking a table needs no notification.
 
 - [ ] **Before selling anything on the site** (gift cards bought online, Eclipse tickets
@@ -302,7 +307,8 @@ hours or the booking page, and search engines are told to leave those pages out.
 ## Opening day
 
 1. [ ] In `build/gen.py`, set `SITE_STATE = 'open'` (and `OPENING_DATE`, if it isn't set
-       already). Merge it: the home page, Booking, Visit, the descriptions and the
+       already). Merge it: the home page, the booking page (its booking box and Visit),
+       the descriptions and the
        structured data all switch, and every "opening soon" line goes. (With an
        `OPENING_DATE` set, the pages already switch in the browser at the opening time;
        this makes it permanent and tells search engines.)

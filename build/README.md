@@ -15,10 +15,12 @@ section still waiting for content, with `noindex`; see "Build modes" below. Eith
    PNG was rendered, or the PNG isn't the one packed after (`og/cards.json`; "Share
    cards" below).
 3. **Pages.** Home, About, the three menu pages (from `menu-data.json`), Events and
-   each Eclipse edition (from `events-data.json`), Private dining, Visit, Booking,
+   each Eclipse edition (from `events-data.json`), Booking (one page with Visit and
+   private dining as its second and third parts),
    Press, Gift cards, Jobs and the opening-team role pages (from `jobs-data.json` and
-   `jobs/*.md`), the filled role pages and the applicant privacy notice (re-wrapped
-   from `src/`), the cookie notice, the guest privacy notice and the accessibility
+   `jobs/*.md`), the filled role pages (re-wrapped from `src/`), Privacy (the
+   applicant privacy notice, re-wrapped from `src/`, then the cookie notice at
+   `#cookies`), the guest privacy notice and the accessibility
    statement, 404, and in the full build the components page (`/styleguide/`). Pages
    in `WAITING` (gift cards, an edition without its details, the legal drafts) are
    built in both modes but written only in the full build. Photographs come from
@@ -33,6 +35,10 @@ section still waiting for content, with `noindex`; see "Build modes" below. Eith
    `office_page()`).
    The public build builds any page in `HIDDEN` but doesn't write it, so a
    mistake in one still stops every build, pull request previews included.
+   Each page carries, inline, only the suns it draws from `assets/suns-sprite.svg`
+   (`sun_sprite()`): the eight together are 16 KB, about half a page's compressed
+   HTML, and most pages draw two or three (the role pages, the ads' landing pages,
+   none).
 4. **Support files.** `sitemap.xml` (every public page in both languages, each listing
    both and English as the default, including the six role pages), `robots.txt`, and
    `dist/_redirects`: `src/_redirects` as it is, or, in a public build while `HIDDEN`
@@ -51,8 +57,11 @@ section still waiting for content, with `noindex`; see "Build modes" below. Eith
 7. **Link check** (public build). Every `href`, `src`, canonical and alternate
    link, `og:url`, `og:image`, JSON-LD address, CSS `url()`, sitemap and
    `robots.txt` address, font preload and redirect destination must be a file in
-   `dist/`, a redirect or an address the Worker answers (`WORKER_PATHS`: the
-   kitchen's and the back office's `/api/`), and none may lead to a page in `HIDDEN` (nor may such a
+   `dist/`, at the address it is served at, or an address the Worker answers
+   (`WORKER_PATHS`: the kitchen's and the back office's `/api/`). None may go through a
+   redirect: not an old address in `_redirects` (`/visit-us/`), and not one that only
+   differs by its last slash (`/menu` for `/menu/`); so no redirect leads to another
+   either. And none may lead to a page in `HIDDEN` (nor may such a
    page be in `dist/`). If one does, the build stops and lists it.
 
 The checks on the data run in both modes: the wine counts (`PROSE_WINE_COUNTS`),
@@ -75,8 +84,9 @@ every photo online (`media.js`).
 
 Every page is public: `HIDDEN`, near the top of `gen.py`, is empty, so the public
 build is the whole site and starts "Build mode: PUBLIC: not yet public: nothing,
-the whole site". To take a page down, add its section's key (`menu`, `about`, `visit`,
-`booking`, `events`, `private-dining`, as in `SECTIONS`); the Public column says what
+the whole site". To take a page down, add its section's key (`menu`, `about`, `events`,
+`booking`, as in `SECTIONS`; `booking` is the one page with the booking box, Visit and
+private dining); the Public column says what
 changes then. Every build prints its mode on its first line.
 
 | | Public (the default) | Full |
@@ -84,13 +94,13 @@ changes then. Every build prints its mode on its first line.
 | Run by | `npm run build`, `npm run deploy` (`--public`), Workers Builds on `main` and on every other branch (pull request previews) | `npm run build:full` (`--full`), Workers Builds on the `full-site` branch and on the `full/…` branches (`WORKERS_CI_BRANCH`), each pull request's full preview |
 | Pages | Every page not in `HIDDEN` (now all of them) or `WAITING` (gift cards, the legal drafts, an Eclipse edition without its details), in both languages. A hidden page isn't written, and neither are the share cards and illustrations only it uses | Every page, in both languages, and the components page |
 | Sections waiting for content (`gate()`) | Left out | Shown, with a yellow "Content needed" label and the key in `CONTENT-NEEDED.md` |
-| Header | The public tabs whose pages exist (`BUILT`), plus Work with us while anything is hidden; no Food / Wine / Bar tabs while Menu is hidden. Now Menu · About · Events · Private dining · Visit | The same, whatever `HIDDEN` says |
-| Footer "More" | The public tabs, Booking, Press, Work with us, Privacy, Cookies (and the waiting pages once they're public) | The same, whatever `HIDDEN` says, with the waiting pages |
+| Header | The public tabs whose pages exist (`BUILT`), plus Work with us while anything is hidden; no Food / Wine / Bar tabs while Menu is hidden. Now Menu · About · Events · Visit (Visit is `/booking/#visit`) | The same, whatever `HIDDEN` says |
+| Footer "More" | The public tabs, Private dining and Booking (the booking page's other two parts), Press, Work with us, Privacy & cookies (and Gift cards and Accessibility once they're public) | The same, whatever `HIDDEN` says, with the waiting pages |
 | Home buttons | The first two of Book a table, See the menu, See open roles and @solhanoi on Instagram whose page is public (red, then outline): now Book a table and See the menu | Book a table, See the menu |
 | 404 buttons | The first two of Menu, Booking, Home and See open roles whose page is public: now Menu and Booking | Menu, Booking |
 | Home JSON-LD | `hasMenu` and `acceptsReservations` only while Menu and Booking are public (now both) | Both |
-| Sitemap | Only public pages (now all of them), in both languages: `/`, About, the three menu pages, Visit, Booking, `/jobs/` and the six open role pages | The same pages, whatever `HIDDEN` says |
-| `_redirects` | While anything is hidden, its pages (with and without the slash, and anything under them, English and `/vi/`) and every old address in `src/_redirects` that leads to one go to the home page in the same language with a **302** (browsers cache a 301, and these pages come back), and the rest of `src/_redirects` stays as it is. Now `src/_redirects` as it is | `src/_redirects` as it is |
+| Sitemap | Only public pages (now all of them), in both languages: `/`, About, the three menu pages, Events, Booking, Press, `/jobs/` and the open role pages | The same pages, whatever `HIDDEN` says |
+| `_redirects` | While anything is hidden, its pages (with and without the slash, and anything under them, English and `/vi/`) and every old address in `src/_redirects` that leads to one (`/visit-us/` and `/private-dining/`, say, while Booking is hidden) go to the home page in the same language with a **302** (browsers cache a 301, and these pages come back), and the rest of `src/_redirects` stays as it is. Now `src/_redirects` as it is | `src/_redirects` as it is |
 | Search | Indexable | `noindex`: `X-Robots-Tag: noindex` in `_headers`, `Disallow: /` in `robots.txt` |
 | Link check | Yes | No |
 
@@ -110,7 +120,15 @@ switched on, the design-system tokens (`--surface-raised`, `--ink-on-brand`,
 `--ink-on-sun`, `--focus`) and a 2px focus ring with a 2px offset, and the
 footer column headings in EB Garamond SemiBold (600, the one extra weight in
 `FONT_PLAN`; `<strong>` text uses it too). The feedback of 6 Oct 2026 took the
-rules off the home facts row. The header comment in each file lists what
+rules off the home facts row. On 13 Nov 2026 the double lines went: the offer box
+(`.offer`: the booking box, the home page's newsletter, Wine night, Happy hour, Press,
+Jobs, each Eclipse edition's Book) has one rule above and one below, where its
+`::before` and `::after` drew a second 5px inside each; `.menu-card`, a card with a
+second rule 7px outside its border, which no page used, is gone; and in `site.css` the
+cookie banner has one rule along its top, not two, and a placeholder photo inside a
+card (full build) has no border of its own beside the card's. One rule at a time: no
+two run side by side within 8px, on any page, in either language, at a phone's width or
+a laptop's (measured on 13 Nov 2026). The header comment in each file lists what
 changed. Don't restyle them otherwise;
 put anything the design doesn't cover in `design/site.css`.
 `design/site.js` is the guest pages' script: the delivered header script (menu tabs,
@@ -119,7 +137,8 @@ the analytics it allows, the events, the announcements.
 
 `design/kitchen/` is the kitchen pages' own shell, frozen as every page had it on
 12 Oct 2026: `kitchen.css` is tokens.css, printed-menu.css and site.css of that day,
-one after the other; `kitchen.js` is printed-menu.js of that day (the in-page EN / VI
+one after the other (so it still has the double-ruled `.offer` and `.menu-card`, which
+no staff page draws); `kitchen.js` is printed-menu.js of that day (the in-page EN / VI
 switch). Guest pages never load them, and the kitchen never loads the guest files, so
 a change on one side can't reach the other.
 
@@ -163,7 +182,11 @@ npm run pack-assets    # reduces the PNGs to 96 colours (Pillow), packs them int
 npm run build          # passes again
 ```
 
-and commit `build/assets.b64.json` and `build/og/cards.json`. `npm run og` needs the
+and commit `build/assets.b64.json` and `build/og/cards.json`. To retire a card, take it
+out of `OG_CARDS`, and its two PNGs out of `assets.b64.json` and their entries out of
+`og/cards.json`: the next build deletes its page and PNGs from `build/og/`, so an older
+checkout can't ship, render or pack it again. (Private dining's went on 13 Nov 2026:
+the booking page, which it is now part of, uses the `visit` card.) `npm run og` needs the
 check package (`npm --prefix check ci`); it answers the cards' font requests
 (`localhost:8897`) from `build/` itself, so no server runs. The build stops while any card
 was rendered from words that have since changed, or was rendered but not packed (the PNG
