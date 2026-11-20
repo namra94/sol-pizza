@@ -7,6 +7,40 @@ For Linh. Every Vietnamese line this build adds or changes, page by page: page �
 - To change a line, edit it in `build/gen.py` (or `build/menu-data.json` for the menu), in the `t('English', 'Tiếng Việt')` pair, and rebuild.
 - Not listed: typographic-only changes (straight to curly quotes, dash spacing), and the applicant privacy notice, whose text is unchanged.
 
+## Hiring round 3: four roles reopen, 20 Nov 2026
+
+Host, Server, Bartender and Kitchen Porter reopen. Applications close on Saturday 28 November, and the start is printed as “Đầu tháng 12/2026”, with the exact date in the offer letter, as before. In those four roles only the dates change: their pay, their cards’ lines, their Apply emails and the rest of each description are word for word what they were. The Restaurant Supervisor is hired, and the Pizzaiolo and the Line Cook sit this round out, so those three leave the site: their cards on `/jobs/`, their pages, and the sentence that gave the Supervisor’s own address, careers@sol.pizza. Their descriptions stay in `build/jobs/`, unchanged, for a later round. Back on the site with their words unchanged, as they are whenever a round is open: “Cùng chúng tôi dựng nên Sol” and its lines on `/about/`, “Chúng tôi sắp khai trương…” on `/jobs/`, and on the role pages the Apply buttons and “Không có ứng dụng email?…” under them. Where a line changed, the old English is in brackets.
+
+### The round
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /jobs/ | each card’s dates: Applications close Sat 28 Nov · Start early December 2026 (was: Applications close Sat 14 Nov · Start late November 2026) | Hạn nộp: thứ Bảy 14/11 · Bắt đầu: cuối tháng 11/2026 | Hạn nộp: thứ Bảy 28/11 · Bắt đầu: đầu tháng 12/2026 |
+| /jobs/ | meta description: We’re hiring our opening team for the floor and the kitchen. Every application gets a reply. (was: We’re hiring a Restaurant Supervisor and our opening team …) | Chúng tôi đang tuyển Giám sát Nhà hàng và đội ngũ khai trương cho khu phục vụ và bếp. Mọi hồ sơ đều được phản hồi. | Chúng tôi đang tuyển đội ngũ khai trương cho khu phục vụ và bếp. Mọi hồ sơ đều được phản hồi. |
+| /jobs/ | meta description, once the round has closed: Work with Sol in Tây Hồ, Hanoi. Applications for our opening team closed on Saturday 28 November 2026. (was: … Saturday 14 November 2026.) | Làm việc cùng Sol tại Tây Hồ, Hà Nội. Đợt tuyển đội ngũ khai trương đã đóng vào thứ Bảy 14/11/2026. | Làm việc cùng Sol tại Tây Hồ, Hà Nội. Đợt tuyển đội ngũ khai trương đã đóng vào thứ Bảy 28/11/2026. |
+| /jobs/, role pages | the closed note: Applications for this round closed on Saturday 28 November. Thank you to everyone who applied. (was: … Saturday 14 November. …) | Đợt tuyển dụng này đã đóng vào thứ Bảy 14/11/2026. Cảm ơn tất cả các bạn đã ứng tuyển. | Đợt tuyển dụng này đã đóng vào thứ Bảy 28/11/2026. Cảm ơn tất cả các bạn đã ứng tuyển. |
+| role pages | meta description, the end: Applications close 28 November 2026. (was: … 14 November 2026.) | Hạn nộp 14/11/2026. | Hạn nộp 28/11/2026. |
+| role pages | share card, the end (Vietnamese only) | Hạn nộp 14/11/2026. | Hạn nộp 28/11/2026. |
+| the four descriptions | fact: Applications close · Saturday 28 November 2026 (was: Saturday 14 November 2026) | Hạn nộp hồ sơ · Thứ Bảy 14/11/2026 | Hạn nộp hồ sơ · Thứ Bảy 28/11/2026 |
+| the four descriptions | fact: Start · Early December 2026 — the exact date is in your offer letter (was: Late November 2026 — …) | Ngày bắt đầu · Cuối tháng 11/2026 — ngày chính xác được ghi trong thư mời nhận việc | Ngày bắt đầu · Đầu tháng 12/2026 — ngày chính xác được ghi trong thư mời nhận việc |
+| the four descriptions | Essential: Able to start in early December 2026. (was: Able to start in late November 2026.) | Có thể bắt đầu đi làm từ cuối tháng 11/2026. | Có thể bắt đầu đi làm từ đầu tháng 12/2026. |
+| the four descriptions | How to apply, the first two sentences: Applications close Saturday 28 November 2026. We expect you to start in early December 2026. (was: Applications close Saturday 14 November 2026. We expect you to start in late November 2026.) The rest of the paragraph is unchanged. | Hạn chót nhận hồ sơ: thứ Bảy, ngày 14 tháng 11 năm 2026. Dự kiến bạn sẽ bắt đầu đi làm từ cuối tháng 11/2026. | Hạn chót nhận hồ sơ: thứ Bảy, ngày 28 tháng 11 năm 2026. Dự kiến bạn sẽ bắt đầu đi làm từ đầu tháng 12/2026. |
+
+### Off the site this round
+
+Nothing replaces these lines: “—” under New VI means the line is no longer shown. The words themselves are kept, in `build/jobs-data.json` and `build/jobs/`, and come back unchanged if the role is listed again.
+
+| Page | English | Old VI | New VI |
+| --- | --- | --- | --- |
+| /jobs/ | How to apply, the sentence taken out, after the jobs@sol.pizza sentence: For the Restaurant Supervisor, email careers@sol.pizza instead. The sentences before and after it are unchanged. | Riêng vị trí Giám sát Nhà hàng, vui lòng gửi tới careers@sol.pizza. | — |
+| /jobs/ | the group of cards above Front of house: Leading the floor (no role in it is listed, so the heading isn’t shown) | Quản lý khu phục vụ | — |
+| /jobs/ | the Restaurant Supervisor’s card: its title, its line (Take full ownership of our dining room and bar: the floor, the team, the budget and the guest experience on every shift.) and its base salary | Giám sát Nhà hàng (Restaurant Supervisor) · Chịu trách nhiệm toàn diện phòng ăn và quầy bar: khu phục vụ, đội ngũ, ngân sách và trải nghiệm của khách trong mọi ca. · Lương cơ bản 16.000.000 – 20.000.000 VNĐ gross/tháng | — |
+| /jobs/ | the Pizzaiolo’s card: its title, Openings: 2, its line (Run the Pavesi oven and the pizza station: every dough ball stretched by hand, every pizza baked to spec.) and its base salary | Đầu bếp Pizza (Pizzaiolo) · Số lượng: 2 · Phụ trách lò Pavesi và trạm pizza: từng viên bột kéo bằng tay, từng chiếc pizza nướng đúng tiêu chuẩn. · Lương cơ bản 11.000.000 – 14.000.000 VNĐ gross/tháng | — |
+| /jobs/ | the Line Cook’s card: its title, Openings: 2, its line (Run a station on our line: the prep, the mise en place and every plate, cooked to the recipe card.) and its base salary | Đầu bếp (Line Cook) · Số lượng: 2 · Phụ trách một trạm trên line: sơ chế, mise en place và từng đĩa, nấu đúng thẻ công thức. · Lương cơ bản 8.000.000 – 10.000.000 VNĐ gross/tháng | — |
+| /jobs/restaurant-supervisor/, /jobs/pizzaiolo/, /jobs/line-cook/ | the three role pages, whole: title, facts, description, Apply buttons, meta description and share card. Their addresses now open `/jobs/`, and `/vi/jobs/` in Vietnamese | every Vietnamese line on `/vi/jobs/restaurant-supervisor/`, `/vi/jobs/pizzaiolo/` and `/vi/jobs/line-cook/`, as listed below under “Hiring round 2: jobs reopened, 8 Nov 2026” and “Jobs: the opening team, 24 Sep 2026” | — |
+
+Not changed: “Vừa tuyển xong” still lists the Restaurant Accountant and the Sous Chef only. The Restaurant Supervisor is not added to it.
+
 ## The back office: Google Chat, 12 Nov 2026
 
 The team moves from Slack to Google Chat on Friday 13 November, so purchase requests now go to Google Chat, to the space “Sol · Supply”. Every back-office line that said Slack says Google Chat, and #supply is Supply: “kênh #supply” became “không gian Supply”. Nothing else in these lines changed, and the 📝 message’s own lines are exactly as they were. The two back-office sections below (31 Oct, 29 Oct) keep the lines that stay as they were; the ones that changed are here, with what they said before. The old English is in brackets.
