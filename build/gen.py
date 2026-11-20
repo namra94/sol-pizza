@@ -2705,7 +2705,9 @@ def visit_part():
 # sections, and a page each at /jobs/<slug>/ in both languages, its
 # job description word for word from build/jobs/<slug>.md. The round's closing
 # instant is in the data once; after it, the cards and pages say the round has
-# closed and hide their Apply buttons (ROUND_SCRIPT).
+# closed and hide their Apply buttons (ROUND_SCRIPT). A role with "listed": false
+# sits the round out: nothing is built from it, and its addresses go to /jobs/
+# (UNLISTED_ROLES, role_redirects()).
 # Filled roles are listed under "Recently filled" and link to their pages, which
 # are re-wrapped from src/jobs/*.html with the copy untouched (ROLES).
 # ==========================================================================
@@ -2931,7 +2933,20 @@ def check_jd(r):
                          '(the ads quote the same numbers and dates).' % (r['slug'], '; '.join(problems + dates)))
 
 
-OPEN_ROLES = [dict(r, jd=read_jd(r['slug'])) for r in JOBS['roles']]
+# A role sitting a round out has "listed": false (build/jobs-data.json, note_listed). Its
+# data and its description stay for a later round, but nothing is built from them, in
+# either language: no card, page, JobPosting or sitemap entry, and no check_jd(), since
+# its description still gives the dates of the last round it ran in. Its addresses go to
+# /jobs/ (role_redirects()). Deleting the line brings the role back.
+for _r in JOBS['roles']:
+    if not isinstance(_r.get('listed', True), bool):
+        raise SystemExit('build/jobs-data.json: %s: "listed" is true or false, without quotes' % _r['slug'])
+    if _r['slug'] in [f['slug'] for f in ROLES]:
+        # one address, two answers: the redirect or the open page would hide the filled one
+        raise SystemExit('build/jobs-data.json: %s is also under "Recently filled" (ROLES in build/gen.py). '
+                         'A role is in one or the other: take it out of one.' % _r['slug'])
+UNLISTED_ROLES = [r for r in JOBS['roles'] if not r.get('listed', True)]
+OPEN_ROLES = [dict(r, jd=read_jd(r['slug'])) for r in JOBS['roles'] if r.get('listed', True)]
 for _r in OPEN_ROLES:
     _r['name_en'], _r['name_vi'] = _r['jd'][0]['title'], _r['jd'][1]['title']
     check_jd(_r)
@@ -3106,6 +3121,8 @@ def build_jobs():
     groups = []
     for sec in JOBS['sections']:
         cards = [role_card(r) for r in OPEN_ROLES if r['section'] == sec['key']]
+        if not cards:
+            continue                    # every role in it sits this round out: no empty heading
         groups.append('  <div class="role-group"><h3 class="label">%s</h3><div class="role-list role-list-3">%s</div></div>'
                       % (t(sec['name'], sec['name_vi']), ''.join(cards)))
     roles = '\n'.join(groups)
@@ -3154,12 +3171,12 @@ def build_jobs():
         sun5=sun(5), h_ben=t('What you get, in any role', 'Quyền lợi, dù bạn ở vị trí nào'),
         benefits=''.join('<li>%s%s</li>' % (sun(i + 1), t(en, vi)) for i, (en, vi) in enumerate(BENEFITS)),
         h_apply=t('How to apply', 'Cách ứng tuyển'),
-        apply=t('Email your CV to jobs@sol.pizza with the role in the subject line. For the Restaurant '
-                'Supervisor, email careers@sol.pizza instead. We read every application within 5 working '
-                'days and reply to everyone, including the people we can’t take forward.',
-                'Gửi CV tới jobs@sol.pizza với tên vị trí ở dòng tiêu đề. Riêng vị trí Giám sát Nhà hàng, '
-                'vui lòng gửi tới careers@sol.pizza. Chúng tôi đọc mọi hồ sơ trong vòng 5 ngày làm việc và '
-                'trả lời tất cả ứng viên, kể cả những bạn chúng tôi chưa thể mời vào vòng tiếp theo.'),
+        apply=t('Email your CV to jobs@sol.pizza with the role in the subject line. We read every '
+                'application within 5 working days and reply to everyone, including the people we can’t '
+                'take forward.',
+                'Gửi CV tới jobs@sol.pizza với tên vị trí ở dòng tiêu đề. Chúng tôi đọc mọi hồ sơ trong '
+                'vòng 5 ngày làm việc và trả lời tất cả ứng viên, kể cả những bạn chúng tôi chưa thể mời '
+                'vào vòng tiếp theo.'),
         email_jobs=t('Email jobs@sol.pizza', 'Gửi email tới jobs@sol.pizza'),
         script=APPLY_SCRIPT,
     )
@@ -3169,10 +3186,8 @@ def build_jobs():
           % (en_date(CLOSES), CLOSES.year),
           'Làm việc cùng Sol tại Tây Hồ, Hà Nội. Đợt tuyển đội ngũ khai trương đã đóng vào %s.'
           % vi_date(CLOSES, True)) if closed else
-         ('We’re hiring a Restaurant Supervisor and our opening team for the floor and the kitchen. '
-          'Every application gets a reply.',
-          'Chúng tôi đang tuyển Giám sát Nhà hàng và đội ngũ khai trương cho khu phục vụ và bếp. Mọi '
-          'hồ sơ đều được phản hồi.'),
+         ('We’re hiring our opening team for the floor and the kitchen. Every application gets a reply.',
+          'Chúng tôi đang tuyển đội ngũ khai trương cho khu phục vụ và bếp. Mọi hồ sơ đều được phản hồi.'),
          main, cur='jobs', og='jobs', extra=ROUND_SCRIPT, body_attrs=' data-page="index"')
     for r in OPEN_ROLES:
         build_open_role(r)
@@ -4772,10 +4787,38 @@ def build_support():
           'User-agent: *\n%s\nSitemap: %s/sitemap.xml\n'
           % ('Disallow: /\n' if FULL else 'Allow: /\n', SITE))
     redirects()
+    role_redirects()
 
 
-# The addresses the public build sends to the home page: the hidden pages' own and
-# the old ones from src/_redirects that led to them (redirects(), check_links()).
+def role_redirects():
+    """The roles sitting this round out ("listed": false in build/jobs-data.json), at the
+    head of dist/_redirects in both builds: /jobs/<slug> and /vi/jobs/<slug>, each with
+    and without the last slash, go to the jobs page in the same language with a 302, not
+    a 301: browsers cache a 301, and the role can come back. So does /jobs/<slug>.html,
+    which reached the page until now and was the address September's role pages were
+    shared at. They go above everything redirects() wrote, so static rules still come
+    first and its splats last. Nothing in dist/ may link to them (HIDDEN_REDIRECTS,
+    check_links())."""
+    if not UNLISTED_ROLES:
+        return
+    rows = [(lang_path(path, lang), lang_path('/jobs/', lang))
+            for r in UNLISTED_ROLES for lang in LANGS
+            for path in ('/jobs/%s' % r['slug'], '/jobs/%s/' % r['slug'], '/jobs/%s.html' % r['slug'])]
+    HIDDEN_REDIRECTS.update(source for source, _ in rows)
+    width = max(len(source) for source, _ in rows)
+    out = os.path.join(DIST, '_redirects')
+    write(out, '\n'.join(
+        ['# Roles sitting this round out, written by build/gen.py from "listed": false in',
+         '# build/jobs-data.json: edit that, not this file. Their addresses go to the jobs',
+         '# page with a 302, not a 301: browsers cache a 301, and a role can come back.',
+         '# Not listed: %s.' % ', '.join(r['slug'] for r in UNLISTED_ROLES)]
+        + ['%-*s %-9s 302' % (width, source, dest) for source, dest in rows]) + '\n\n' + read(out))
+
+
+# The addresses the public build sends away because their page isn't public: the
+# hidden pages' own and the old ones from src/_redirects that led to them, to the home
+# page (redirects()), and those of the roles sitting this round out, to the jobs page
+# (role_redirects()). No address in dist/ may lead to one (check_links()).
 HIDDEN_REDIRECTS = set()
 
 

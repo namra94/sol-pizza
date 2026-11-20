@@ -27,8 +27,8 @@ come" and `README-DEPLOY.md`).
 | `/press/` | Press: the facts, the logo to download, photographs (waiting) and who to ask | Public |
 | `/gift-cards/` | Gift cards: values, how long a card lasts, how to buy | Waits for its facts (`WAITING`) |
 | `/jobs/` | Work with us: the opening-team cards, plus the role pages under `/jobs/` | Public |
-| `/jobs/<slug>/` | The six opening-team roles: `host`, `server`, `bartender`, `pizzaiolo`, `line-cook`, `kitchen-porter` | Public |
-| `/jobs/<slug>` | The three filled roles, under "Recently filled": `restaurant-accountant`, `sous-chef`, `restaurant-supervisor`. Their descriptions are in English only: the Vietnamese pages say so, in Vietnamese, above the English text | Public, `noindex` |
+| `/jobs/<slug>/` | The opening-team roles listed this round: `host`, `server`, `bartender`, `kitchen-porter`. The three sitting it out, `restaurant-supervisor`, `pizzaiolo` and `line-cook`, have no page: their addresses go to `/jobs/` with a 302 ("Jobs", below) | Public |
+| `/jobs/<slug>` | The two filled roles, under "Recently filled": `restaurant-accountant`, `sous-chef`. Their descriptions are in English only: the Vietnamese pages say so, in Vietnamese, above the English text | Public, `noindex` |
 | `/login/` | The site password's sign-in page, with a link to careers (below) | Only while `SITE_PASSWORD` is set, `noindex` |
 | `/privacy/` | Privacy and cookies, two notices on one page: the applicant privacy notice first (the address in the job descriptions and ads; `/privacy/#vi` opens `/vi/privacy/`), then the cookie notice at `#cookies`: what the site keeps in the browser, and the choice. Until 13 Nov 2026 the cookie notice was a page of its own: `/privacy/cookies/` redirects to `#cookies`, in both languages | Public, `noindex`, open while the site password is on |
 | `/privacy/guests/` | Guest privacy notice: bookings, enquiries, the newsletter, rights. A page only while it's a draft: once approved it joins `/privacy/` as a section, not as a page (CONTENT-NEEDED.md, `legal-guest-privacy`) | Draft, waits for the lawyer (`WAITING`) |
@@ -339,15 +339,20 @@ newsletter"), and take people off it when they ask.
 
 ### Jobs
 
-The opening team is seven roles, each with a card on `/jobs/` (grouped by the
-data's `sections`: Leading the floor / Front of house / Kitchen) and a page at
-`/jobs/<slug>/` in both languages:
+The opening team is seven roles in `build/jobs-data.json`. Round 3, which closes on
+Saturday 28 November 2026, lists four of them: Host, Server, Bartender and Kitchen
+Porter. The Restaurant Supervisor (hired), the Pizzaiolo and the Line Cook sit it out
+("Taking a role off for a round", below). Each listed role has a card on `/jobs/`
+(grouped by the data's `sections`: Leading the floor / Front of house / Kitchen; a
+section with no listed role isn't shown) and a page at `/jobs/<slug>/` in both
+languages:
 
 - `build/jobs-data.json`: the round (posted, closing instant, start, service
   charge estimate) and each role's slug, section, openings, base salary, card line
   and apply question, English and Vietnamese, plus its `email` if its applications
-  don't go to jobs@sol.pizza. The cards, the closing script, the share cards, the
-  meta descriptions and the `JobPosting` take their dates and figures from here.
+  don't go to jobs@sol.pizza, and `"listed": false` if it sits the round out. The
+  cards, the closing script, the share cards, the meta descriptions and the
+  `JobPosting` take their dates and figures from here.
 - `build/jobs/<slug>.md`: the job description word for word, the English block
   then the Vietnamese one (`# ` title, the eyebrow line, the facts table, the
   bold standfirst, then `##` / `###` headings, paragraphs and `- ` lists). Its
@@ -357,23 +362,37 @@ data's `sections`: Leading the floor / Front of house / Kitchen) and a page at
   service charge estimate or the total), because the ads quote the same numbers,
   and every email address in the text (each must be the role's own).
 
+**Taking a role off for a round.** Give the role `"listed": false` in
+`build/jobs-data.json`. It keeps its data and its `build/jobs/<slug>.md` for a later
+round, but the build leaves it out in both languages: no card, no page, no
+`JobPosting`, no sitemap entry. The build doesn't check its description either, which
+still gives the dates of the last round it ran in. Its addresses (`/jobs/<slug>`,
+`/jobs/<slug>/`, `/vi/jobs/<slug>`, `/vi/jobs/<slug>/`, and each with `.html`, where
+September's role pages lived) go to `/jobs/` or `/vi/jobs/` with a 302, not a 301,
+because the role can come back: both builds write those rules at the head of
+`dist/_redirects`, from the flag (`role_redirects()` in `build/gen.py`), and the
+public build stops if a page links to one of them. To bring the role back, delete the
+line and bring the dates in its description up to the round's (the build stops until
+they agree). A role is either here or under "Recently filled" (`ROLES` in
+`build/gen.py`), never both: the build stops if it is in both.
+
 The start can be approximate. `starts` is a plain date (`2026-10-12`), or, while the
-date isn't fixed, any `starts` (`2026-11`) with `starts_label` and `starts_label_vi`
-(`Late November 2026`, `Cuối tháng 11/2026`). The label is then all that shows: the
-cards read "Start late November 2026" / "Bắt đầu: cuối tháng 11/2026", and each
+date isn't fixed, any `starts` (`2026-12`) with `starts_label` and `starts_label_vi`
+(`Early December 2026`, `Đầu tháng 12/2026`). The label is then all that shows: the
+cards read "Start early December 2026" / "Bắt đầu: đầu tháng 12/2026", and each
 description's Start row must begin with it.
 
-Apply buttons open an email to the role's address, its `email` or else jobs@sol.pizza
-(the Restaurant Supervisor's go to careers@sol.pizza, for the owners only), with the
-subject (`Pizzaiolo — `) and a body in the page's language. A click on either address
-is a Meta `Lead` (`src/pixel.js`, `build/design/site.js`): a new address goes in both.
+Apply buttons open an email to the role's address, its `email` or else jobs@sol.pizza,
+with the subject (`Host — `) and a body in the page's language. A click on an
+applications address is a Meta `Lead` (`src/pixel.js`, `build/design/site.js`): a new
+address goes in both.
 Under the Apply buttons at the top and end of a role page, a quiet line gives the
 address and the subject as text, with a Copy button, for a computer with no email app.
 After the closing instant a small script in the page head shows "Applications for this
 round closed…" on the cards and pages, hides every Apply button and that line, and takes
 "We're hiring now" off `/jobs/` and "Build it with us" off `/about/`; a build after the
 closing instant leaves them out altogether. To check it, set `closes` to yesterday,
-build with `JOBS_ALLOW_DATE_DRIFT=1 npm run build` (the descriptions still say 14
+build with `JOBS_ALLOW_DATE_DRIFT=1 npm run build` (the descriptions still say 28
 November), look, and set it back. The Vietnamese role pages (`/vi/jobs/<slug>/`) have a
 Vietnamese share card: link job ads for Vietnamese speakers there. Each page carries a
 `JobPosting` for search.

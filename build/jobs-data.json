@@ -1,14 +1,15 @@
 {
-  "note": "The opening-team round on /jobs/: the cards, and the seven role pages at /jobs/<slug>/. Each role's job description is build/jobs/<slug>.md (English, then Vietnamese). The descriptions repeat these dates and figures: edit them together. The build stops if a description's facts table (base salary, openings, closing date and start) or any salary band or email address in its text no longer matches the data here, because the ads quote the same numbers.",
+  "note": "The opening-team round on /jobs/: the cards, and a page at /jobs/<slug>/ for each role listed this round (note_listed). Each role's job description is build/jobs/<slug>.md (English, then Vietnamese). The descriptions repeat these dates and figures: edit them together. The build stops if a description's facts table (base salary, openings, closing date and start) or any salary band or email address in its text no longer matches the data here, because the ads quote the same numbers.",
   "note_vi": "Every *_vi field is the Vietnamese twin of the field above it.",
   "note_starts": "starts: a plain date (2026-10-12), or, while the date isn't fixed, any starts (2026-11) with starts_label and starts_label_vi. The label is then all that shows: on the cards, and at the head of each description's Start row.",
   "note_email": "email, on a role: where its applications go, when that isn't jobs@sol.pizza.",
+  "note_listed": "listed, on a role: false takes it off for a round without deleting it. The role keeps its data here and its build/jobs/<slug>.md, but the build leaves it out in both languages (no card, no page, no JobPosting, no sitemap entry) and doesn't check its description, which still gives the dates of the last round it ran in. Its addresses (/jobs/<slug> and /vi/jobs/<slug>, with and without the last slash, and with .html) go to /jobs/ or /vi/jobs/ with a 302, not a 301, because the role can come back. A section with no listed role isn't shown on /jobs/. To bring a role back, delete the line, and bring the dates in its description up to the round's.",
   "round": {
-    "posted": "2026-11-08",
-    "closes": "2026-11-14T23:59:00+07:00",
-    "starts": "2026-11",
-    "starts_label": "Late November 2026",
-    "starts_label_vi": "Cuối tháng 11/2026",
+    "posted": "2026-11-21",
+    "closes": "2026-11-28T23:59:00+07:00",
+    "starts": "2026-12",
+    "starts_label": "Early December 2026",
+    "starts_label_vi": "Đầu tháng 12/2026",
     "service_charge": [2000000, 4000000],
     "cv_line": "(Please attach your CV.)",
     "cv_line_vi": "(Vui lòng đính kèm CV.)"
@@ -21,6 +22,7 @@
   "roles": [
     {
       "slug": "restaurant-supervisor",
+      "listed": false,
       "section": "lead",
       "openings": null,
       "base": [16000000, 20000000],
@@ -62,6 +64,7 @@
     },
     {
       "slug": "pizzaiolo",
+      "listed": false,
       "section": "kitchen",
       "openings": 2,
       "base": [11000000, 14000000],
@@ -72,6 +75,7 @@
     },
     {
       "slug": "line-cook",
+      "listed": false,
       "section": "kitchen",
       "openings": 2,
       "base": [8000000, 10000000],
